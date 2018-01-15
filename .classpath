@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/exclude/servlet-api.jar"/>
+	<classpathentry kind="lib" path="lib/ldap/api-all-1.0.0.jar"/>
+	<classpathentry kind="lib" path="lib/ldap/commons-collections-3.2.2.jar"/>
+	<classpathentry kind="lib" path="lib/ldap/mina-core-2.0.16.jar"/>
+	<classpathentry kind="lib" path="lib/ldap/slf4j-api-1.7.25.jar"/>
+	<classpathentry kind="lib" path="lib/redis/jedis-jedis-2.9.0.jar"/>
+	<classpathentry kind="lib" path="lib/guava-22.0.jar"/>
+	<classpathentry kind="lib" path="lib/org.json.jar"/>
+	<classpathentry kind="output" path="build"/>
+</classpath>
