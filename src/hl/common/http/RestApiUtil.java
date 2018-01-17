@@ -139,7 +139,12 @@ public class RestApiUtil {
 						{
 							sb.append(sLine);
 						}
-					}finally
+					}
+					catch(IOException ex)
+					{
+						//no data
+					}
+					finally
 					{
 						if(reader!=null)
 							reader.close();
@@ -193,7 +198,12 @@ public class RestApiUtil {
 						{
 							sb.append(sLine);
 						}
-					}finally
+					}
+					catch(IOException ex)
+					{
+						//no data
+					}
+					finally
 					{
 						if(reader!=null)
 							reader.close();
