@@ -1,5 +1,6 @@
 package hl.common;
 
+import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
@@ -240,44 +241,131 @@ public class ImgUtil {
 		ImageIO.write(aBufferedImage, aOutputFileFormat, aOutputFile);
 	}
 	
-	public static String flipBase64Img(String aImageBase64, boolean isFlipHorizontal) throws IOException
+	public static String resizeBase64ImgByHeight(String aImageBase64, long aNewHeight) throws IOException
 	{
-		BufferedImage img = ImgUtil.base64ToImage(aImageBase64);
-		
-        AffineTransform at = new AffineTransform();
-        
-        if(isFlipHorizontal)
-        {
-	        at.concatenate(AffineTransform.getScaleInstance(-1, 1));
-	        at.concatenate(AffineTransform.getTranslateInstance(-img.getWidth(), 0));
-        }
-        else
-        {
-	        at.concatenate(AffineTransform.getScaleInstance(1, -1));
-	        at.concatenate(AffineTransform.getTranslateInstance(0, -img.getHeight()));
-        }
-        
-        BufferedImage newImage = new BufferedImage(img.getWidth(), img.getHeight(), img.getType());
-        Graphics2D g = null;
-        try {
-	        g = newImage.createGraphics();
-	        g.transform(at);
-	        g.drawImage(img, 0, 0, null);
-        }finally {
-        	if(g!=null)
-        		g.dispose();
-        }
-        
-        String sFlippedBase64 = ImgUtil.imageToBase64(newImage, "JPG");
-    	
-        if(newImage!=null)
-    		newImage.flush();
-    	if(img!=null)
-    		img.flush();
-		
-        return sFlippedBase64;
+		return resizeBase64Img(aImageBase64, 0, aNewHeight, true);
 	}
 	
+	public static String resizeBase64ImgByWidth(String aImageBase64, long aNewWidth) throws IOException
+	{
+		return resizeBase64Img(aImageBase64, aNewWidth, 0, true);
+	}
+	
+	public static String resizeBase64Img(String aImageBase64, long aNewWidth, long aNewHeight, boolean isMaintainAspectRatio) throws IOException
+	{
+		BufferedImage img = null;
+		
+		try {
+			img = ImgUtil.base64ToImage(aImageBase64);
+			AffineTransform at = new AffineTransform();
+			double iWidth = img.getWidth();
+			double iHeight = img.getHeight();
+			
+			double dWidthScale 	= 1;
+			double dHeightScale = 1;
+			
+			if(aNewWidth>0)
+			{
+				dWidthScale = ((double)aNewWidth) / iWidth;
+				
+				if(aNewHeight<=0)
+					dHeightScale = dWidthScale;
+			}
+			
+			if(aNewHeight>0)
+			{
+				dHeightScale = ((double)aNewHeight) / iHeight;
+				
+				if(aNewWidth<=0)
+					dWidthScale = dHeightScale;
+			}
+				
+			if(isMaintainAspectRatio)
+			{
+				if(dWidthScale < dHeightScale)
+				{
+					dHeightScale = dWidthScale;
+				}
+				else
+				{
+					dWidthScale = dHeightScale;
+				}
+			}
+			
+			at.setToScale(dWidthScale, dHeightScale);
+	        return ImgUtil.imageToBase64(tranformImage(img, at), "JPG");
+		}
+		finally
+		{
+			if(img!=null)
+	    		img.flush();
+		}
+	}
+	
+	private static BufferedImage tranformImage(BufferedImage aBufferedImage, AffineTransform aAffineTransform) throws IOException
+	{
+		BufferedImage newImage = null;
+		try {
+			
+			double dScaleX = aAffineTransform.getScaleX();
+			double dScaleY = aAffineTransform.getScaleY();
+			
+			double dImgWidth = aBufferedImage.getWidth();
+			double dImgHeight = aBufferedImage.getHeight();
+			
+			if(dScaleX<=0)
+				dScaleX = 1;
+			
+			if(dScaleY<=0)
+				dScaleY = 1;
+			
+			int lWidth = (int)(dImgWidth * dScaleX);
+			int lHeight = (int)(dImgHeight * dScaleY);
+			
+	        newImage = new BufferedImage(lWidth, lHeight, aBufferedImage.getType());
+	        Graphics2D g = null;
+	        try {
+		        g = newImage.createGraphics();
+		        g.transform(aAffineTransform);
+		        g.drawImage(aBufferedImage, 0, 0, null);
+	        }finally {
+	        	if(g!=null)
+	        		g.dispose();
+	        }
+	        return newImage;
+		}
+		finally
+		{
+			if(newImage!=null)
+	    		newImage.flush();
+		}
+	}
+	
+	public static String flipBase64Img(String aImageBase64, boolean isFlipHorizontal) throws IOException
+	{
+		BufferedImage img = null;
+		
+		try {
+			img = ImgUtil.base64ToImage(aImageBase64);
+	        AffineTransform at = new AffineTransform();
+	        if(isFlipHorizontal)
+	        {
+		        at.concatenate(AffineTransform.getScaleInstance(-1, 1));
+		        at.concatenate(AffineTransform.getTranslateInstance(-img.getWidth(), 0));
+	        }
+	        else
+	        {
+		        at.concatenate(AffineTransform.getScaleInstance(1, -1));
+		        at.concatenate(AffineTransform.getTranslateInstance(0, -img.getHeight()));
+	        }
+	        return ImgUtil.imageToBase64(tranformImage(img, at), "JPG");
+		}
+		finally
+		{
+	    	if(img!=null)
+	    		img.flush();
+		}
+	}
 	
 	public static void main(String args[]) throws Exception
 	{
@@ -287,9 +375,13 @@ public class ImgUtil {
 		BufferedImage img = ImgUtil.base64ToImage(sbase64);
 		ImgUtil.saveAsFile(img, "JPG", new File("C:/NLS/huifan.base64.jpg"));
 		
-		sbase64 = ImgUtil.flipBase64Img(sbase64, true);
+		sbase64 = ImgUtil.resizeBase64ImgByWidth(sbase64, 180);
 		img = ImgUtil.base64ToImage(sbase64);
-        ImgUtil.saveAsFile(img, "JPG", new File("C:/NLS/huifan.base64.flipped.jpg"));
+        ImgUtil.saveAsFile(img, "JPG", new File("C:/NLS/huifan.base64.resized1-"+img.getWidth()+"x"+img.getHeight()+".jpg"));
+        
+        sbase64 = ImgUtil.resizeBase64ImgByHeight(sbase64, 180);
+		img = ImgUtil.base64ToImage(sbase64);
+        ImgUtil.saveAsFile(img, "JPG", new File("C:/NLS/huifan.base64.resized2-"+img.getWidth()+"x"+img.getHeight()+".jpg"));
         
         
 	}
