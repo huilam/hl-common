@@ -89,10 +89,19 @@ public class PropUtil{
 	
 	public static void saveProperties(Properties aProp, String aPropFolderName, String aPropFileName) throws IOException
 	{
+		File fileProp = new File(aPropFolderName+File.separator+aPropFileName);
+		saveProperties(aProp, fileProp);
+	}
+	
+	public static void saveProperties(Properties aProp, File aPropFileName) throws IOException
+	{
 		FileOutputStream fileOut = null;
 		
+		if(aPropFileName==null)
+			return;
+		
 		try{
-			File fileProp = new File(aPropFolderName+"/"+aPropFileName);
+			File fileProp = aPropFileName;
 			fileProp.delete();
 			fileOut = new FileOutputStream(fileProp);
 			aProp.store(fileOut, null);
