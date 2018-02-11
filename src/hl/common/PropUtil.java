@@ -22,13 +22,25 @@
 
 package hl.common;
 
+import java.awt.image.BufferedImageFilter;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.sql.Wrapper;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
+import java.util.TreeMap;
 
 
 public class PropUtil{
@@ -95,20 +107,37 @@ public class PropUtil{
 	
 	public static void saveProperties(Properties aProp, File aPropFileName) throws IOException
 	{
-		FileOutputStream fileOut = null;
+		BufferedWriter wrt = null;
 		
 		if(aPropFileName==null)
 			return;
 		
 		try{
-			File fileProp = aPropFileName;
-			fileProp.delete();
-			fileOut = new FileOutputStream(fileProp);
-			aProp.store(fileOut, null);
+			aPropFileName.delete();
+			wrt = new BufferedWriter(new FileWriter(aPropFileName));
+			
+			SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss.ms");
+			String sCurDateTime = df.format(new Date(System.currentTimeMillis()));
+			
+			wrt.write("# "+sCurDateTime);
+			wrt.newLine();
+
+			Map<String, String> map = new TreeMap<String, String>((Map) aProp);
+			for(String sKey : map.keySet())
+			{
+				String sVal = map.get(sKey);
+				if(sVal==null)
+					sVal = "";
+				
+				wrt.write(sKey+"="+sVal);
+				wrt.newLine();
+			}
+			
+			wrt.flush();
 		}finally
 		{
-			if(fileOut!=null)
-				fileOut.close();
+			if(wrt!=null)
+				wrt.close();
 		}
 	}
 	

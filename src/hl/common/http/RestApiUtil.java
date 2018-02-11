@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -22,7 +23,12 @@ public class RestApiUtil {
 	public final static String TYPE_APP_JSON 		= "application/json";
 	public final static String TYPE_TEXT_PLAIN 		= "text/plain";
 	
-	//private final static String CRLF = "\\r\\n";
+	private static int conn_timeout = 5000;
+	
+	public static void setConnTimeout(int aTimeOutMs)
+	{
+		conn_timeout = aTimeOutMs;
+	}
 	
 	public static String getReqContent(HttpServletRequest req)
 	{
@@ -105,6 +111,7 @@ public class RestApiUtil {
 			
 			conn = (HttpURLConnection) url.openConnection();
 			conn.setDoOutput(true);
+			conn.setConnectTimeout(conn_timeout);
 			conn.setRequestMethod(aHttpMethod);
 			conn.setRequestProperty(HEADER_CONTENT_TYPE, aContentType);
 			
@@ -176,6 +183,11 @@ public class RestApiUtil {
     
     public static HttpResp httpGet(String aEndpointURL) throws IOException
     {
+    	return httpGet(aEndpointURL, 0);
+    }
+    
+    public static HttpResp httpGet(String aEndpointURL, int aTimeOutMs) throws IOException
+    {
     	HttpResp httpResp 		= new HttpResp();
     	
 		HttpURLConnection conn 	= null;
@@ -185,6 +197,13 @@ public class RestApiUtil {
 	    	URL url = new URL(aEndpointURL);
 	    	
 			conn = (HttpURLConnection) url.openConnection();
+			if(aTimeOutMs<=0)
+			{
+				aTimeOutMs = conn_timeout;
+			}
+			
+			conn.setConnectTimeout(aTimeOutMs);
+			
 			try {
 				
 		    	StringBuffer sb = new StringBuffer();
@@ -237,4 +256,40 @@ public class RestApiUtil {
 		
 		return httpResp;
     }    
+    
+    public static boolean ping(String aEndpointURL, int aPingTimeOutMs) 
+    {
+		HttpURLConnection conn 	= null;
+	    	
+	    	URL url = null;
+	    	
+	    	try {
+				url = new URL(aEndpointURL);
+			} catch (MalformedURLException e) {
+				e.printStackTrace(System.err);
+				return false;
+			}
+	    	
+			try {
+				conn = (HttpURLConnection) url.openConnection();
+			} catch (IOException e) {
+				e.printStackTrace(System.err);
+				return false;
+			}
+			
+			if(aPingTimeOutMs<=0)
+			{
+				aPingTimeOutMs = conn_timeout;
+			}
+			conn.setConnectTimeout(aPingTimeOutMs);
+			
+			try {
+				conn.connect();
+			} catch (IOException e) {
+				e.printStackTrace(System.err);
+				return false;
+			}
+			
+			return true;
+    }
 }
