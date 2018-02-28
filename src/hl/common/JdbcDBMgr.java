@@ -65,6 +65,7 @@ public class JdbcDBMgr {
 	private Map<String, String> mapSQLtemplate 	= new HashMap<String, String>();
 	private static List<String> listNumericType = null;
 	private static List<String> listDoubleType 	= null;
+	private static List<String> listFloatType32bit 	= null;
 	private static List<String> listBooleanType = null;
 		
 	static{
@@ -77,8 +78,10 @@ public class JdbcDBMgr {
 		listDoubleType = new ArrayList<String>();
 		listDoubleType.add(double.class.getSimpleName());
 		listDoubleType.add(Double.class.getSimpleName());
-		listDoubleType.add(float.class.getSimpleName());
-		listDoubleType.add(Float.class.getSimpleName());
+		
+		listFloatType32bit = new ArrayList<String>();
+		listFloatType32bit.add(float.class.getSimpleName());
+		listFloatType32bit.add(Float.class.getSimpleName());
 		
 		listBooleanType = new ArrayList<String>();
 		listBooleanType.add(boolean.class.getSimpleName());
@@ -272,9 +275,17 @@ public class JdbcDBMgr {
 				{
 					aStatement.setDouble(i+1, Double.parseDouble(param.toString()));
 				}
+				else if(listFloatType32bit.contains(sParamClassName))
+				{
+					aStatement.setFloat(i+1, Float.parseFloat(param.toString()));
+				}
 				else if(listBooleanType.contains(sParamClassName))
 				{
 					aStatement.setBoolean(i+1, Boolean.parseBoolean(param.toString()));
+				}
+				else
+				{
+					throw new SQLException("Unsupported datatype - "+sParamClassName+" : "+String.valueOf(param));
 				}
 				
 			}
