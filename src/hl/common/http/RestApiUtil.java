@@ -257,6 +257,15 @@ public class RestApiUtil {
 		return httpResp;
     }    
     
+    public static boolean isSuccess(HttpResp aHttpResp)
+    {
+    	if(aHttpResp==null)
+    		return false;
+    	
+    	int iHttpStatus = aHttpResp.getHttp_status();
+    	return (iHttpStatus>=200) && (iHttpStatus<300);
+    }
+    
     public static boolean ping(String aEndpointURL, int aPingTimeOutMs) 
     {
 		HttpURLConnection conn 	= null;
