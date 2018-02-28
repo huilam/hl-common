@@ -20,6 +20,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class DBMgr {
 
@@ -37,6 +39,8 @@ public class DBMgr {
 	private static List<String> listNumericType 		= null;
 	private static List<String> listDoubleType 			= null;
 	private static List<String> listFloatType_32bits 	= null;
+	
+	private static Logger logger = Logger.getLogger(DBMgr.class.getName());
 	
 	static{
 		listNumericType = new ArrayList<String>();
@@ -171,6 +175,11 @@ public class DBMgr {
 				else if(listFloatType_32bits.contains(sParamClassName))
 				{
 					aStatement.setFloat(i+1, Float.parseFloat(param.toString()));
+				}
+				else
+				{
+					logger.log(Level.SEVERE, 
+							"Unsupported datatype : "+sParamClassName+" - "+String.valueOf(param));
 				}
 			}
 		}		
@@ -404,7 +413,7 @@ public class DBMgr {
 					
 					sb.append("\"").append(sColName).append("\"").append("=");
 					
-					boolean isNum = false;
+					boolean isNum = true;
 					switch(iColType)
 					{
 						case Types.BIGINT 	: 
@@ -416,7 +425,7 @@ public class DBMgr {
 						case Types.REAL		:
 							break;
 						default :
-							isNum = true;
+							isNum = false;
 					}
 					
 					if(!isNum)
