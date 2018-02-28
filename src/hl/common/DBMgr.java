@@ -33,9 +33,10 @@ public class DBMgr {
 	public String db_uid 		= null;
 	public String db_pwd 		= null;
 	
-	private Map<String, String> mapSQLtemplate = new HashMap<String, String>();
-	private static List<String> listNumericType = null;
-	private static List<String> listDoubleType 	= null;
+	private Map<String, String> mapSQLtemplate 	= new HashMap<String, String>();
+	private static List<String> listNumericType 		= null;
+	private static List<String> listDoubleType 			= null;
+	private static List<String> listFloatType_32bits 	= null;
 	
 	static{
 		listNumericType = new ArrayList<String>();
@@ -47,8 +48,10 @@ public class DBMgr {
 		listDoubleType = new ArrayList<String>();
 		listDoubleType.add(double.class.getSimpleName());
 		listDoubleType.add(Double.class.getSimpleName());
-		listDoubleType.add(float.class.getSimpleName());
-		listDoubleType.add(Float.class.getSimpleName());
+		
+		listFloatType_32bits = new ArrayList<String>();
+		listFloatType_32bits.add(float.class.getSimpleName());
+		listFloatType_32bits.add(Float.class.getSimpleName());
 		
 	}
 	
@@ -165,6 +168,10 @@ public class DBMgr {
 				{
 					aStatement.setDouble(i+1, Double.parseDouble(param.toString()));
 				}
+				else if(listFloatType_32bits.contains(sParamClassName))
+				{
+					aStatement.setFloat(i+1, Float.parseFloat(param.toString()));
+				}
 			}
 		}		
 		return aStatement;
@@ -264,6 +271,7 @@ public class DBMgr {
 						}
 					}
 					break;
+				case Types.REAL : 
 				case Types.FLOAT : 
 					if(m==null)
 					{
@@ -405,6 +413,7 @@ public class DBMgr {
 						case Types.FLOAT 	: 
 						case Types.NUMERIC 	:
 						case Types.DOUBLE 	:
+						case Types.REAL		:
 							break;
 						default :
 							isNum = true;
