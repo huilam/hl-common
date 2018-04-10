@@ -41,12 +41,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Stack;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class JdbcDBMgr {
 
+	private static Logger logger = Logger.getLogger(JdbcDBMgr.class.getName());
+	
 	public static String KEY_DB_CLASSNAME 	= "db.jdbc.classname";
 	public static String KEY_DB_URL 		= "db.url";
 	public static String KEY_DB_UID 		= "db.uid";
@@ -59,9 +63,17 @@ public class JdbcDBMgr {
 	public String db_url 			= null;
 	public String db_uid 			= null;
 	public String db_pwd 			= null;
-	public int db_conn_pool_size	= 2;
 	
-	private Stack<Connection> stackConns 		= new Stack<Connection>();
+	public int db_conn_fetchsize	= 1000;
+	public int db_conn_pool_size	= 2;
+	public int db_conn_max			= 0;
+	//
+	public long conn_wait_interval_ms	= 100; // wait when conn reach db_conn_max count
+	public long conn_timeout_ms 		= 5000; // 5 secs
+	
+	private Stack<Connection> stackConnPool 	= new Stack<Connection>();
+	private Map<Connection, Long> mapConnInUse 	= new HashMap<Connection, Long>();
+	
 	private Map<String, String> mapSQLtemplate 	= new HashMap<String, String>();
 	private static List<String> listNumericType = null;
 	private static List<String> listDoubleType 	= null;
@@ -144,6 +156,16 @@ public class JdbcDBMgr {
 		initDB(prop);
 	}
 	
+	public void setDBFetchSize(int aSize)
+	{
+		db_conn_fetchsize = aSize;
+	}
+	
+	public int getDBFetchSize()
+	{
+		return db_conn_fetchsize;
+	}
+	
 	public void setDBConnPoolSize(int aSize)
 	{
 		db_conn_pool_size = aSize;
@@ -153,7 +175,38 @@ public class JdbcDBMgr {
 	{
 		return db_conn_pool_size;
 	}
-
+	
+	public void setMaxDBConn(int aMaxSize)
+	{
+		db_conn_max = aMaxSize;
+	}
+	
+	public int getMaxDBConn()
+	{
+		return db_conn_max;
+	}
+	
+	public void setWaitingIntervalMs(long aWaitIntervalMs)
+	{
+		conn_wait_interval_ms = aWaitIntervalMs;
+	}
+	
+	public long getWaitingIntervalMs()
+	{
+		return conn_wait_interval_ms;
+	}
+		
+	
+	public void setTimeoutMs(long aIntervalMs)
+	{
+		conn_timeout_ms = aIntervalMs;
+	}
+	
+	public long getTimeoutMs()
+	{
+		return conn_timeout_ms;
+	}
+		
 	public void setReferenceConfig(Map<String, String> aReferenceMap)
 	{
 		this.mapReferenceConfig = aReferenceMap;
@@ -195,7 +248,7 @@ public class JdbcDBMgr {
 				for(int i=0; i<db_conn_pool_size; i++)
 				{
 					Connection connCache = getConnection(false);
-					stackConns.push(connCache);
+					stackConnPool.push(connCache);
 				}
 			}
 		}finally
@@ -217,9 +270,9 @@ public class JdbcDBMgr {
 		if(isGetFromConnPool)
 		{
 			try{
-				while(stackConns.size()>0 && conn==null)
+				while(stackConnPool.size()>0 && conn==null)
 				{
-					conn = stackConns.pop();
+					conn = stackConnPool.pop();
 					if(conn.isClosed() || !conn.isValid(1))
 						conn = null;
 				}
@@ -228,8 +281,33 @@ public class JdbcDBMgr {
 		
 		if(conn==null)
 		{
+			if(db_conn_max>0)
+			{
+				long lFreeConn = db_conn_max-mapConnInUse.size();
+				long totalWaitMs = 0;
+				while(lFreeConn<=0)
+				{
+					lFreeConn = db_conn_max-mapConnInUse.size();
+					try {
+						totalWaitMs += conn_wait_interval_ms;
+						Thread.sleep(conn_wait_interval_ms);
+						if(totalWaitMs >= conn_timeout_ms)
+						{
+							throw new SQLException("Timeout for getting a database connection.");
+						}
+					} catch (InterruptedException e) {
+					}
+				}
+			}
 			conn = DriverManager.getConnection (db_url, db_uid, db_pwd);
 		}
+		
+		//return conn
+		if(conn!=null)
+		{
+			mapConnInUse.put(conn, System.currentTimeMillis());
+		}
+			
 		
 		return conn;
 	}
@@ -241,6 +319,7 @@ public class JdbcDBMgr {
 		else
 			return setParams(aStatement, new Object[]{});
 	}
+	
 	public static PreparedStatement setParams(PreparedStatement aStatement, Object[] aParams ) throws NumberFormatException, SQLException
 	{
 		if(aParams!=null && aParams.length>0 && aStatement!=null)
@@ -297,6 +376,7 @@ public class JdbcDBMgr {
 	{
 		return executeUpdate(aSQL, aParamList.toArray(new Object[aParamList.size()]));
 	}
+	
 	public JSONArray executeUpdate(String aSQL, Object[] aParams ) throws SQLException
 	{
 		JSONArray jArrReturn 	= new JSONArray();
@@ -390,26 +470,44 @@ public class JdbcDBMgr {
 	
 	public void closeQuietly(Connection aConn, PreparedStatement aStmt, ResultSet aResultSet ) throws SQLException
 	{
+		String sSQL = "";
 		try{
 			if(aResultSet!=null)
+			{
+				sSQL = aResultSet.getStatement().toString(); 
 				aResultSet.close();
+			}
 		}catch(Exception ex) { }
 		//
 		try{
 			if(aStmt!=null)
+			{
 				aStmt.close();
+			}
 		}catch(Exception ex) { }
 		//
 		if(aConn!=null)
 		{
-			if(stackConns.size()<db_conn_pool_size)
+			Long LStartTime = mapConnInUse.remove(aConn);
+			if(LStartTime!=null)
 			{
-				stackConns.push(aConn);
+				long lElapsedMs = System.currentTimeMillis()-LStartTime.longValue();
+				
+				if(lElapsedMs > conn_timeout_ms)
+				{
+					//Log warning
+					logger.log(Level.WARNING, "[long SQL] "+lElapsedMs+"ms -"+sSQL);
+				}
+			}
+			
+			if(stackConnPool.size()<db_conn_pool_size)
+			{
+				stackConnPool.push(aConn);
 			}
 			else
 			{
 				aConn.close();
-				stackConns.remove(aConn);
+				stackConnPool.remove(aConn);
 			}
 		}
 	}
