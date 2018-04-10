@@ -64,11 +64,11 @@ public class JdbcDBMgr {
 	public String db_uid 			= null;
 	public String db_pwd 			= null;
 	
-	public int db_conn_fetchsize	= 1000;
+	public int db_conn_fetchsize	= 0;
 	public int db_conn_pool_size	= 2;
 	public int db_conn_max			= 0;
 	//
-	public long conn_wait_interval_ms	= 100; // wait when conn reach db_conn_max count
+	public long conn_wait_interval_ms	= 50; // wait when conn reach db_conn_max count
 	public long conn_timeout_ms 		= 5000; // 5 secs
 	
 	private Stack<Connection> stackConnPool 	= new Stack<Connection>();
@@ -293,7 +293,7 @@ public class JdbcDBMgr {
 						Thread.sleep(conn_wait_interval_ms);
 						if(totalWaitMs >= conn_timeout_ms)
 						{
-							throw new SQLException("Timeout for getting a database connection.");
+							throw new SQLException("Timeout for getting a database connection. db_conn_max:"+db_conn_max+", conn_in_used:"+mapConnInUse.size());
 						}
 					} catch (InterruptedException e) {
 					}
@@ -507,7 +507,6 @@ public class JdbcDBMgr {
 			else
 			{
 				aConn.close();
-				stackConnPool.remove(aConn);
 			}
 		}
 	}
