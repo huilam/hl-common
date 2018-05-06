@@ -402,7 +402,7 @@ public class DBMgr {
 			while(rs.next())
 			{
 				sb.setLength(0);
-				for(int i=0; i<meta.getColumnCount(); i++)
+				for(int i=1; i<=meta.getColumnCount(); i++)
 				{
 					int iColType 		= meta.getColumnType(i);
 					String sColName 	= meta.getColumnName(i);   
