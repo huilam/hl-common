@@ -402,16 +402,16 @@ public class DBMgr {
 			while(rs.next())
 			{
 				sb.setLength(0);
-				for(int i=1; i<=meta.getColumnCount(); i++)
+				for(int i=0; i<meta.getColumnCount(); i++)
 				{
-					int iColType 		= meta.getColumnType(i);
-					String sColName 	= meta.getColumnName(i);   
+					int iColType 		= meta.getColumnType(i+1);
+					String sColName 	= meta.getColumnName(i+1);   
 					String sColValue 	= rs.getString(sColName);
 					
 					if(i>0)
 						sb.append(",");
 					
-					sb.append("\"").append(sColName).append("\"").append("=");
+					sb.append("\"").append(sColName).append("\"").append(":");
 					
 					boolean isNum = true;
 					switch(iColType)
@@ -437,7 +437,7 @@ public class DBMgr {
 						sb.append("\"");
 				}
 				
-				listData.add(sb.toString());
+				listData.add("{"+sb.toString()+"}");
 			}
 			
 		}finally
