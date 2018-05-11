@@ -1,12 +1,70 @@
 package hl.common;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 public class ZipUtil{
+	
+	public static byte[] compress(String data) throws IOException {
+		ByteArrayOutputStream bos 	= null;
+		GZIPOutputStream gzip 		= null;
+		byte[] compressed 			= null;
+		
+		try {
+			bos = new ByteArrayOutputStream(data.length());
+			gzip = new GZIPOutputStream(bos);
+			gzip.write(data.getBytes());
+			gzip.finish();
+			compressed = bos.toByteArray();
+		}finally
+		{
+			if(gzip!=null)
+				gzip.close();
+			if(bos!=null)
+				bos.close();
+		}
+		
+		
+		return compressed;
+	}
+	
+	public static String decompress(byte[] compressed) throws IOException {
+		ByteArrayInputStream bis = null;
+		GZIPInputStream gis = null;
+		BufferedReader br = null;
+		StringBuilder sb = new StringBuilder();
+		
+		try {
+			bis = new ByteArrayInputStream(compressed);
+			gis = new GZIPInputStream(bis);
+			br = new BufferedReader(new InputStreamReader(gis, "UTF-8"));
+			
+			String line;
+			while((line = br.readLine()) != null) {
+				sb.append(line);
+			}
+		}finally {
+			if(br!=null)
+				br.close();
+			
+			if(gis!=null)
+				gis.close();
+			
+			if(bis!=null)
+				bis.close();
+		}
+
+		return sb.toString();
+}
 	
 	public static void unZip(String aZipFile, String aDestFolder) throws IOException
 	{
@@ -59,7 +117,6 @@ public class ZipUtil{
 	
 	public static void main(String args[]) throws Exception
 	{
-		
 	}
 	
 	

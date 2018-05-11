@@ -11,18 +11,23 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import org.json.JSONObject;
 
+import hl.common.ZipUtil;
 
 public class RestApiUtil {
 
-	public final static String HEADER_CONTENT_TYPE 	= "content-type";
+	public final static String HEADER_CONTENT_TYPE 		= "Content-Type";
+	public final static String HEADER_CONTENT_ENCODING 	= "Content-Encoding";	
+
 	public final static String TYPE_APP_JSON 		= "application/json";
 	public final static String TYPE_TEXT_PLAIN 		= "text/plain";
-	
+	public final static String TYPE_ENCODING_GZIP 	= "gzip";
+		
+	private static long GZIP_THRESHOLD_BYTES = 1024 * 8;
 	private static int conn_timeout = 5000;
 	
 	public static void setConnTimeout(int aTimeOutMs)
@@ -65,6 +70,12 @@ public class RestApiUtil {
     public static void processHttpResp(HttpServletResponse res, 
     		int aHttpStatus, String aContentType, String aOutputContent) throws IOException
     {
+    	processHttpResp(res, aHttpStatus, aContentType, aOutputContent, GZIP_THRESHOLD_BYTES);
+    }
+    
+    public static void processHttpResp(HttpServletResponse res, 
+    		int aHttpStatus, String aContentType, String aOutputContent, long aGzipBytesThreshold) throws IOException
+    {
 		if(aHttpStatus>0)
 			res.setStatus(aHttpStatus);
 		
@@ -73,7 +84,17 @@ public class RestApiUtil {
 		
 		if(aOutputContent!=null && aOutputContent.length()>0)
 		{
-			res.getWriter().println(aOutputContent);
+			byte[] byteContent 	= aOutputContent.getBytes();
+			long lContentLen 	= aOutputContent.getBytes().length;
+			
+			if(aGzipBytesThreshold>0 && lContentLen >= aGzipBytesThreshold)
+			{
+				byteContent = ZipUtil.compress(aOutputContent);
+				lContentLen = byteContent.length;
+				res.addHeader(HEADER_CONTENT_ENCODING, TYPE_ENCODING_GZIP);
+			}
+			res.setContentLengthLong(lContentLen);
+			res.getOutputStream().write(byteContent);
 		}
 
 		res.flushBuffer();
