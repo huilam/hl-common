@@ -27,8 +27,8 @@ public class RestApiUtil {
 	public final static String TYPE_TEXT_PLAIN 		= "text/plain";
 	public final static String TYPE_ENCODING_GZIP 	= "gzip";
 		
-	private static long GZIP_THRESHOLD_BYTES = 1024 * 8;
-	private static int conn_timeout = 5000;
+	private static long DEFAULT_GZIP_THRESHOLD_BYTES 	= -1;
+	private static int conn_timeout 			= 5000;
 	
 	public static void setConnTimeout(int aTimeOutMs)
 	{
@@ -70,7 +70,7 @@ public class RestApiUtil {
     public static void processHttpResp(HttpServletResponse res, 
     		int aHttpStatus, String aContentType, String aOutputContent) throws IOException
     {
-    	processHttpResp(res, aHttpStatus, aContentType, aOutputContent, GZIP_THRESHOLD_BYTES);
+    	processHttpResp(res, aHttpStatus, aContentType, aOutputContent, DEFAULT_GZIP_THRESHOLD_BYTES);
     }
     
     public static void processHttpResp(HttpServletResponse res, 
