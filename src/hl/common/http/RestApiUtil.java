@@ -1,7 +1,9 @@
 package hl.common.http;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -227,16 +229,31 @@ public class RestApiUtil {
 			
 			try {
 				
+				boolean isGzipEncoded = TYPE_ENCODING_GZIP.equalsIgnoreCase(conn.getHeaderField(HEADER_CONTENT_ENCODING));
+				
 		    	StringBuffer sb = new StringBuffer();
 				try {
-					BufferedReader reader = null;
+					
+					BufferedInputStream stream = null;
+					ByteArrayOutputStream baos = null;
 					try {
+						baos = new ByteArrayOutputStream();
 						in = conn.getInputStream();
-						reader = new BufferedReader(new InputStreamReader(in));
-						String sLine = null;
-						while((sLine = reader.readLine())!=null)
+						stream = new BufferedInputStream(in);
+						
+						int iBytes;
+						while((iBytes = stream.read()) != -1)
 						{
-							sb.append(sLine);
+							baos.write(iBytes);
+						}
+						
+						if(isGzipEncoded)
+						{
+							sb.append(ZipUtil.decompress(baos.toByteArray()));
+						}
+						else
+						{
+							sb.append(baos.toString());
 						}
 					}
 					catch(IOException ex)
@@ -245,8 +262,11 @@ public class RestApiUtil {
 					}
 					finally
 					{
-						if(reader!=null)
-							reader.close();
+						if(baos!=null)
+							baos.close();
+						
+						if(stream!=null)
+							stream.close();
 					}
 				}
 				finally
@@ -321,5 +341,13 @@ public class RestApiUtil {
 			}
 			
 			return true;
+    }
+    
+    
+    public static void main(String args[]) throws Exception
+    {
+    	HttpResp res = RestApiUtil.httpGet("http://203.127.252.67/scc/webapi/v2/resourcetypes");
+    	System.out.print(res.getContent_data());
+    	
     }
 }
