@@ -262,11 +262,15 @@ public class RestApiUtil {
 					}
 					finally
 					{
-						if(baos!=null)
-							baos.close();
+						try {
+							if(baos!=null)
+								baos.close();
+						}catch(IOException ex) {}
 						
-						if(stream!=null)
-							stream.close();
+						try {
+							if(stream!=null)
+								stream.close();
+						}catch(IOException ex) {}
 					}
 				}
 				finally
