@@ -30,7 +30,7 @@ public class RestApiUtil {
 	public final static String TYPE_ENCODING_GZIP 	= "gzip";
 		
 	private static long DEFAULT_GZIP_THRESHOLD_BYTES 	= -1;
-	private static int conn_timeout 			= 5000;
+	private static int conn_timeout 					= 5000;
 	
 	public static void setConnTimeout(int aTimeOutMs)
 	{
@@ -155,14 +155,14 @@ public class RestApiUtil {
 			httpResp.setHttp_status(conn.getResponseCode());
 			httpResp.setHttp_status_message(conn.getResponseMessage());
 			
-			if(conn.getResponseCode()>=200 || conn.getResponseCode()<300)
-			{
-		    	StringBuffer sb = new StringBuffer();
-		    	InputStream in 	= null;
+	    	StringBuffer sb = new StringBuffer();
+	    	InputStream in 	= null;
+			try {
+				BufferedReader reader = null;
 				try {
-					BufferedReader reader = null;
-					try {
-						in = conn.getInputStream();
+					in = conn.getInputStream();
+					if(in!=null)
+					{
 						reader = new BufferedReader(new InputStreamReader(in));
 						String sLine = null;
 						while((sLine = reader.readLine())!=null)
@@ -170,31 +170,30 @@ public class RestApiUtil {
 							sb.append(sLine);
 						}
 					}
-					catch(IOException ex)
-					{
-						//no data
-					}
-					finally
-					{
-						if(reader!=null)
-							reader.close();
-					}
+				}
+				catch(IOException ex)
+				{
+					//no data
 				}
 				finally
 				{
-					if(in!=null)
-						in.close();
+					if(reader!=null)
+						reader.close();
 				}
-				
-				httpResp.setContent_type(conn.getHeaderField(HEADER_CONTENT_TYPE));
-				
-				if(sb.length()>0)
-				{
-					httpResp.setContent_data(sb.toString());
-				}
-				
+			}
+			finally
+			{
+				if(in!=null)
+					in.close();
 			}
 			
+			httpResp.setContent_type(conn.getHeaderField(HEADER_CONTENT_TYPE));
+			
+			if(sb.length()>0)
+			{
+				httpResp.setContent_data(sb.toString());
+			}
+						
 		}
 		catch(FileNotFoundException ex)
 		{

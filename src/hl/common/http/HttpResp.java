@@ -8,6 +8,13 @@ public class HttpResp {
 	private String content_data 		= null;
 	private String content_type 		= null;
 	//
+	
+	public boolean isSuccess()
+	{
+		int iStatus = getHttp_status();
+		return (iStatus>=200 && iStatus<300);
+	}
+	
 	public int getHttp_status() {
 		return http_status;
 	}
