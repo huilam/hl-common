@@ -36,11 +36,11 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.EmptyStackException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Stack;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -72,9 +72,9 @@ public class JdbcDBMgr {
 	public long conn_timeout_ms 		= 5000; // 5 secs
 	
 	private Stack<Connection> stackConnPool 	= new Stack<Connection>();
-	private Map<Connection, Long> mapConnInUse 	= new HashMap<Connection, Long>();
+	private Map<Connection, Long> mapConnInUse 	= new ConcurrentHashMap<Connection, Long>();
 	
-	private Map<String, String> mapSQLtemplate 	= new HashMap<String, String>();
+	private Map<String, String> mapSQLtemplate 	= new ConcurrentHashMap<String, String>();
 	private static List<String> listNumericType = null;
 	private static List<String> listDoubleType 	= null;
 	private static List<String> listFloatType32bit 	= null;
@@ -237,23 +237,25 @@ public class JdbcDBMgr {
 		Class.forName (db_classname).newInstance();
 		
 		//Test connection
-		Connection conn = null;
+		boolean isGetConnSuccess = false;
 		
+		Connection connTest = null;
 		try {
-			conn = getConnection(false);
-			
-			//Init connection pool
-			if(conn!=null && db_conn_pool_size>0)
-			{
-				for(int i=0; i<db_conn_pool_size; i++)
-				{
-					Connection connCache = getConnection(false);
-					stackConnPool.push(connCache);
-				}
-			}
+			//test connection
+			connTest = getConnection(false);
+			isGetConnSuccess = (connTest!=null);
 		}finally
 		{
-			closeQuietly(conn, null, null);
+			closeQuietly(connTest, null, null);
+		}
+			
+		//Init connection pool
+		if(isGetConnSuccess && db_conn_pool_size>0)
+		{
+			for(int i=0; i<db_conn_pool_size; i++)
+			{
+				stackConnPool.push(getConnection(false));
+			}
 		}
 		
 	}
@@ -281,13 +283,14 @@ public class JdbcDBMgr {
 		
 		if(conn==null)
 		{
+			//if there's a MAX connection defined
 			if(db_conn_max>0)
 			{
-				long lFreeConn = db_conn_max-mapConnInUse.size();
+				long lFreeConn = getTotalAvailConn();
 				long totalWaitMs = 0;
 				while(lFreeConn<=0)
 				{
-					lFreeConn = db_conn_max-mapConnInUse.size();
+					lFreeConn = getTotalAvailConn();
 					try {
 						totalWaitMs += conn_wait_interval_ms;
 						Thread.sleep(conn_wait_interval_ms);
@@ -302,7 +305,6 @@ public class JdbcDBMgr {
 			conn = DriverManager.getConnection (db_url, db_uid, db_pwd);
 		}
 		
-		//return conn
 		if(conn!=null)
 		{
 			mapConnInUse.put(conn, System.currentTimeMillis());
@@ -310,6 +312,37 @@ public class JdbcDBMgr {
 			
 		
 		return conn;
+	}
+	
+	protected long getTotalAvailConn()
+	{
+		if(db_conn_max>0)
+		{
+			return db_conn_max - getTotalConnInUse();
+		}
+		else
+		{
+			//if no max specified 
+			return 10000;
+		}
+	}
+	
+	public long getTotalConnInUse()
+	{
+		return mapConnInUse.size();
+	}
+	
+	public void closeAllConnInUse()
+	{
+		for(Connection conn : mapConnInUse.keySet())
+		{
+			mapConnInUse.remove(conn);
+			try {
+				conn.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	public static PreparedStatement setParams(PreparedStatement aStatement, List<Object> aParamList ) throws NumberFormatException, SQLException
@@ -468,24 +501,27 @@ public class JdbcDBMgr {
 	}
 	
 	
-	public void closeQuietly(Connection aConn, PreparedStatement aStmt, ResultSet aResultSet ) throws SQLException
+	public void closeQuietly(Connection aConn, PreparedStatement aStmt, ResultSet aResultSet ) 
 	{
 		String sSQL = "";
-		try{
-			if(aResultSet!=null)
-			{
-				sSQL = aResultSet.getStatement().toString(); 
+		if(aResultSet!=null)
+		{
+			try{
+				if(aResultSet.getStatement()!=null)
+				{
+					sSQL = aResultSet.getStatement().toString(); 
+				}
 				aResultSet.close();
-			}
-		}catch(Exception ex) { }
-		//
-		try{
-			if(aStmt!=null)
-			{
+			}catch(Exception ex) { }
+		}
+		///////////////////
+		if(aStmt!=null)
+		{
+			try{
 				aStmt.close();
-			}
-		}catch(Exception ex) { }
-		//
+			}catch(Exception ex) { }
+		}
+		///////////////////
 		if(aConn!=null)
 		{
 			Long LStartTime = mapConnInUse.remove(aConn);
@@ -506,7 +542,14 @@ public class JdbcDBMgr {
 			}
 			else
 			{
-				aConn.close();
+				if(aConn!=null)
+				{
+					try {
+						aConn.close();
+					} catch (SQLException e) {
+						//ignore
+					}
+				}
 			}
 		}
 	}
