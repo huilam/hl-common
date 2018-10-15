@@ -7,8 +7,8 @@ public class LatLngUtil {
 	private static Logger logger 	= Logger.getLogger(LatLngUtil.class.getName());
 	/**
 	EARTH Radius in KM 		= 6371
-	Latitude Degree Range 	= (S/-)180 to (N/+)180
-	Longitude Degree Range 	= (W/-) 90 to (E/+) 90
+	Latitude Degree Range 	= (S/-) 90 to (N/+) 90
+	Longitude Degree Range 	= (W/-) 180 to (E/+) 180
 	**/
     private static double EARTH_RADIUS 	= 6378.16;
     private static double PIx = Math.PI / 180;
@@ -25,7 +25,8 @@ public class LatLngUtil {
         double dlng = deg2radius(lng2 - lng1);
         double dlat = deg2radius(lat2 - lat1);
 
-        double a = (Math.sin(dlat / 2) * Math.sin(dlat / 2)) + Math.cos(deg2radius(lat1)) * Math.cos(deg2radius(lat2)) * (Math.sin(dlng / 2) * Math.sin(dlng / 2));
+        double a = (Math.sin(dlat / 2) * Math.sin(dlat / 2)) 
+        		+ Math.cos(deg2radius(lat1)) * Math.cos(deg2radius(lat2)) * (Math.sin(dlng / 2) * Math.sin(dlng / 2));
         double angle = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return angle * EARTH_RADIUS;
     }
