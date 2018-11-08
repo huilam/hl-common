@@ -39,6 +39,7 @@ public class HLProcessConfig {
 	public static String _PROP_KEY_DEP_TIMEOUT_MS 		= _PROP_KEY_DEP+"timeout.ms";
 	
 	
+	private String osName = null;
 	private Pattern pattProcessId = Pattern.compile(_PROP_PREFIX_PROCESS+"(.+?)\\.");
 	private Map<String, HLProcess> mapProcesses = new HashMap<String, HLProcess>();
 	//
@@ -77,12 +78,14 @@ public class HLProcessConfig {
 		Matcher m = null;
 		Iterator iter = aProperties.keySet().iterator();
 		
-		String sOsName = System.getProperty("os.name").toLowerCase();
+		this.osName = System.getProperty("os.name").toLowerCase();
 		
-		if(sOsName.indexOf("windows")>-1)
-			sOsName = "win";
-		else if(sOsName.indexOf("linux")>-1)
-			sOsName = "linux";
+		if(this.osName.indexOf("windows")>-1)
+			this.osName = "win";
+		else if(this.osName.indexOf("linux")>-1)
+			this.osName = "linux";
+		else if(this.osName.indexOf("mac")>-1)
+			this.osName = "mac";
 		
 		while(iter.hasNext())
 		{
@@ -112,7 +115,7 @@ public class HLProcessConfig {
 				{
 					if(sConfigKey.indexOf(_PROP_KEY_SHELL_COMMAND)>-1)
 					{
-						if(sConfigKey.endsWith("."+sOsName))
+						if(sConfigKey.endsWith("."+this.osName))
 						{
 							p.setProcessCommand(sConfigVal.split(" "));
 						}
@@ -185,7 +188,7 @@ public class HLProcessConfig {
 		{
 			if(p.getProcessCommand().trim().length()==0)
 			{
-				throw new RuntimeException("Process command cannot be empty ! - "+p.getProcessId());
+				throw new RuntimeException("["+p.getProcessId()+"] Process command cannot be empty ! - "+_PROP_KEY_SHELL_COMMAND+osName);
 			}
 		}
 	}

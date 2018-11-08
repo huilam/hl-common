@@ -1,6 +1,8 @@
 package hl.common.shell;
 
 import java.io.IOException;
+import java.io.PrintStream;
+
 import hl.common.shell.HLProcess;
 import hl.common.shell.HLProcessConfig;
 
@@ -29,8 +31,19 @@ public class HLProcessMgr
 	
 	public void startAllProcesses()
 	{
+		startAllProcesses(null);
+	}
+	
+	public void startAllProcesses(PrintStream aPrintStream)
+	{
 		long lStart = System.currentTimeMillis();
 		int lPendingStart = procConfig.getProcesses().length;
+		
+		for(HLProcess p : procConfig.getProcesses())
+		{
+			p.out = aPrintStream;
+		}
+		
 		while(lPendingStart>0)
 		{
 			for(HLProcess p : procConfig.getProcesses())
