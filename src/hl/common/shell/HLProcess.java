@@ -26,44 +26,77 @@ public class HLProcess implements Runnable
 	private long init_timeout_ms		= 0;
 	
 	private long run_start_timestamp	= 0;
+	private long delay_start_ms			= 0;
 	
-	private long dep_wait_interval_ms	= 100;
+	private long dep_check_interval_ms	= 100;
 	private long dep_wait_timeout_ms	= 10000;
 	
 	private Collection<HLProcess> depends = new ArrayList<HLProcess>();
 	private String[] commands			= null;
 	private Process proc 				= null;
 	
-	private static Logger logger = Logger.getLogger(HLProcess.class.getName());
+	public static Logger logger = Logger.getLogger(HLProcess.class.getName());
 	
-	public HLProcess(String[] aShellCmd)
+	public HLProcess(String aId, String[] aShellCmd)
+	{
+		this.id = aId;
+		this.commands = aShellCmd;
+	}
+
+	public HLProcess(String aId)
+	{
+		this.id = aId;
+	}
+
+	public void setProcessCommand(String[] aShellCmd)
 	{
 		this.commands = aShellCmd;
 	}
-	
-	public String getCommand()
+
+	public String getProcessCommand()
 	{
-		return String.join(" ",commands);
+		if(this.commands==null)
+			return "";
+		return String.join(" ",this.commands);
 	}
 
-	public List<String> getOutputHist()
+	public List<String> getProcessOutputHist()
 	{
 		return this.listOutput;
 	}
 	
-	public void setId(String aId)
+	public void setProcessId(String aId)
 	{
 		this.id = aId;
 	}
 	
-	public void setMaxOutputHist(long aMaxHistLines)
+	public String getProcessId()
+	{
+		return this.id;
+	}	
+	public void setProcessOutputMaxHist(long aMaxHistLines)
 	{
 		this.output_hist_max_lines = aMaxHistLines;
 	}
-
+	
+	public void setProcessStartDelayMs(long aDelayMs)
+	{
+		this.delay_start_ms = aDelayMs;
+	}
+	
+	public long getProcessStartDelayMs()
+	{
+		return this.delay_start_ms;
+	}
+	
 	public boolean isInitSuccess()
 	{
 		return this.is_init_success;
+	}
+	
+	public void setInitTimeoutMs(long aInitTimeoutMs)
+	{
+		this.init_timeout_ms = aInitTimeoutMs;
 	}
 	
 	public void setInitSuccessRegex(String aRegex)
@@ -73,6 +106,7 @@ public class HLProcess implements Runnable
 		else
 			this.patt_init_success = Pattern.compile(aRegex);
 	}
+	//
 	
 	public void addDependProcess(HLProcess aDepProcess)
 	{
@@ -84,6 +118,16 @@ public class HLProcess implements Runnable
 		depends.clear();;
 	}
 
+	public void setDependTimeoutMs(long aTimeoutMs)
+	{
+		this.dep_wait_timeout_ms = aTimeoutMs;
+	}
+	
+	public void setDependCheckIntervalMs(long aCheckIntervalMs)
+	{
+		this.dep_check_interval_ms = aCheckIntervalMs;
+	}
+	//
 	public boolean isRunning()
 	{
 		return this.run_start_timestamp>0 || (proc!=null && proc.isAlive());
@@ -100,7 +144,7 @@ public class HLProcess implements Runnable
 	
 	@Override
 	public void run() {
-		logger.log(Level.INFO, "HLProcess.run() start. - ["+getCommand()+"]");
+		logger.log(Level.INFO, "HLProcess.run() start. - ["+getProcessCommand()+"]");
 		String sPrefix = (id==null?"":"["+id+"] ");
 		this.run_start_timestamp = System.currentTimeMillis();
 		try {
@@ -129,7 +173,7 @@ public class HLProcess implements Runnable
 						{
 							sbDepCmd.append("\n - ");
 							sbDepCmd.append(d.id).append(" : ");
-							sbDepCmd.append(d.getCommand());
+							sbDepCmd.append(d.getProcessCommand());
 						}
 						
 						if(lElapsed >= this.dep_wait_timeout_ms)
@@ -139,7 +183,7 @@ public class HLProcess implements Runnable
 					}
 					
 					try {
-						Thread.sleep(this.dep_wait_interval_ms);
+						Thread.sleep(this.dep_check_interval_ms);
 					} catch (InterruptedException e) {
 						logger.log(Level.WARNING, e.getMessage(), e);
 					}
@@ -204,7 +248,7 @@ public class HLProcess implements Runnable
 							long lElapsed = System.currentTimeMillis() - lStart;
 							if(lElapsed>=init_timeout_ms)
 							{
-								throw new RuntimeException(sPrefix+"Init timeout ! "+getCommand());
+								throw new RuntimeException(sPrefix+"Init timeout ! "+getProcessCommand());
 							}
 							
 						}
@@ -228,8 +272,36 @@ public class HLProcess implements Runnable
 		finally
 		{
 			logDebug(sPrefix+"end - Elapsed: "+(System.currentTimeMillis()-this.run_start_timestamp));
-			logger.log(Level.INFO, "HLProcess.run() completed. - ["+getCommand()+"]");
+			logger.log(Level.INFO, "HLProcess.run() completed. - ["+getProcessCommand()+"]");
 		}
+	}
+	
+	public String toString()
+	{
+		String sPrefix = "["+getProcessId()+"]";
+		StringBuffer sb = new StringBuffer();
+		sb.append("\n").append(sPrefix).append("process.command=").append(getProcessCommand());
+		sb.append("\n").append(sPrefix).append("process.start.delay.ms=").append(getProcessStartDelayMs());
+		
+		sb.append("\n").append(sPrefix).append("init.timeout.ms=").append(this.init_timeout_ms);
+		sb.append("\n").append(sPrefix).append("init.success.regex=").append(this.patt_init_success==null?"":this.patt_init_success.pattern());
+		
+		StringBuffer sbDeps = new StringBuffer();
+		if(this.depends!=null)
+		{
+			for(HLProcess d : this.depends)
+			{
+				if(sbDeps.length()>0)
+				{
+					sbDeps.append(",");
+				}
+				sbDeps.append(d.getProcessId());
+			}
+		}
+		sb.append("\n").append(sPrefix).append("dep.processes=").append(sbDeps.toString());
+		sb.append("\n").append(sPrefix).append("dep.timeout.ms=").append(this.dep_wait_timeout_ms);
+		sb.append("\n").append(sPrefix).append("dep.check.interval.ms=").append(this.dep_check_interval_ms);
+		return sb.toString();
 	}
 	
 }
