@@ -144,9 +144,9 @@ public class HLProcess implements Runnable
 	
 	@Override
 	public void run() {
-		logger.log(Level.INFO, "HLProcess.run() start. - ["+getProcessCommand()+"]");
-		String sPrefix = (id==null?"":"["+id+"] ");
 		this.run_start_timestamp = System.currentTimeMillis();
+		logger.log(Level.INFO, "HLProcess.run() start. - "+getProcessId());
+		String sPrefix = (id==null?"":"["+id+"] ");
 		try {
 			if(depends!=null && depends.size()>0)
 			{
@@ -272,7 +272,7 @@ public class HLProcess implements Runnable
 		finally
 		{
 			logDebug(sPrefix+"end - Elapsed: "+(System.currentTimeMillis()-this.run_start_timestamp));
-			logger.log(Level.INFO, "HLProcess.run() completed. - ["+getProcessCommand()+"]");
+			logger.log(Level.INFO, "HLProcess.run() completed. - "+getProcessId()+":"+getProcessCommand());
 		}
 	}
 	

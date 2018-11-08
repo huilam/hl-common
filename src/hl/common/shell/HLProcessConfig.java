@@ -20,8 +20,11 @@ public class HLProcessConfig {
 
 	//-- SHELL
 	public static String _PROP_KEY_SHELL				= "shell.";
-	public static String _PROP_KEY_SHELL_COMMAND 		= _PROP_KEY_SHELL+"command";
-	public static String _PROP_KEY_SHELL_START_DELAY	= _PROP_KEY_SHELL+"start.delay";
+	public static String _PROP_KEY_SHELL_COMMAND	 	= _PROP_KEY_SHELL+"command.";
+	public static String _PROP_KEY_SHELL_COMMAND_WIN 	= _PROP_KEY_SHELL_COMMAND+"win";
+	public static String _PROP_KEY_SHELL_COMMAND_LINUX 	= _PROP_KEY_SHELL_COMMAND+"linux";	
+	
+	public static String _PROP_KEY_SHELL_START_DELAY	= _PROP_KEY_SHELL+"start.delay.ms";
 	public static String _PROP_KEY_SHELL_MAX_HIST		= _PROP_KEY_SHELL+"output.max.history";
 	
 	//-- INIT
@@ -73,6 +76,14 @@ public class HLProcessConfig {
 		
 		Matcher m = null;
 		Iterator iter = aProperties.keySet().iterator();
+		
+		String sOsName = System.getProperty("os.name").toLowerCase();
+		
+		if(sOsName.indexOf("windows")>-1)
+			sOsName = "win";
+		else if(sOsName.indexOf("linux")>-1)
+			sOsName = "linux";
+		
 		while(iter.hasNext())
 		{
 			String sKey = (String) iter.next();
@@ -99,9 +110,12 @@ public class HLProcessConfig {
 				
 				if(sConfigKey.startsWith(_PROP_KEY_SHELL))
 				{
-					if(sConfigKey.equals(_PROP_KEY_SHELL_COMMAND))
+					if(sConfigKey.indexOf(_PROP_KEY_SHELL_COMMAND)>-1)
 					{
-						p.setProcessCommand(sConfigVal.split(" "));
+						if(sConfigKey.endsWith("."+sOsName))
+						{
+							p.setProcessCommand(sConfigVal.split(" "));
+						}
 					}
 					else if(sConfigKey.equals(_PROP_KEY_SHELL_MAX_HIST))
 					{
@@ -176,7 +190,12 @@ public class HLProcessConfig {
 		}
 	}
 	
-	public HLProcess[] getProcesses()
+	protected HLProcess getProcess(String aProcessID)
+	{
+		return mapProcesses.get(aProcessID);
+	}
+	
+	protected HLProcess[] getProcesses()
 	{
 		Collection<HLProcess> c = mapProcesses.values();
 		return c.toArray(new HLProcess[c.size()]);
