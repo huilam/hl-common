@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 
 public class HLProcess implements Runnable
 {
-	private PrintStream out 			= System.out;
+	private PrintStream out 			= null;//System.out;
 	
 	private String id					= null;
 	private List<String> listOutput		= new ArrayList<String>();
