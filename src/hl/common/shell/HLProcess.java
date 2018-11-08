@@ -145,8 +145,9 @@ public class HLProcess implements Runnable
 	@Override
 	public void run() {
 		this.run_start_timestamp = System.currentTimeMillis();
-		logger.log(Level.INFO, "HLProcess.run() start. - "+getProcessId());
 		String sPrefix = (id==null?"":"["+id+"] ");
+		
+		logger.log(Level.INFO, "HLProcess.run() start - "+getProcessId());
 		try {
 			if(depends!=null && depends.size()>0)
 			{
@@ -178,7 +179,9 @@ public class HLProcess implements Runnable
 						
 						if(lElapsed >= this.dep_wait_timeout_ms)
 						{
-							throw new RuntimeException(sPrefix+"Dependance process(es) init timeout ! "+sbDepCmd.toString());
+							String sErr = sPrefix+"Dependance process(es) init timeout ! "+sbDepCmd.toString();
+							logger.log(Level.SEVERE, sErr);
+							throw new RuntimeException(sErr);
 						}
 					}
 					
@@ -234,7 +237,8 @@ public class HLProcess implements Runnable
 								this.is_init_success = m.find();
 								if(this.is_init_success)
 								{
-									logDebug(sPrefix + "init_success - Elapsed: "+(System.currentTimeMillis()-this.run_start_timestamp));
+									logger.log(Level.INFO, 
+											sPrefix + "init_success - Elapsed: "+(System.currentTimeMillis()-this.run_start_timestamp));
 								}
 							}
 						}
@@ -248,7 +252,9 @@ public class HLProcess implements Runnable
 							long lElapsed = System.currentTimeMillis() - lStart;
 							if(lElapsed>=init_timeout_ms)
 							{
-								throw new RuntimeException(sPrefix+"Init timeout ! "+getProcessCommand());
+								String sErr = sPrefix+"Init timeout ! "+getProcessCommand();
+								logger.log(Level.SEVERE, sErr);
+								throw new RuntimeException(sErr);
 							}
 							
 						}
@@ -263,16 +269,32 @@ public class HLProcess implements Runnable
 					try {
 						rdr.close();
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
 					}
 			}
 			
 		}
 		finally
 		{
-			logDebug(sPrefix+"end - Elapsed: "+(System.currentTimeMillis()-this.run_start_timestamp));
-			logger.log(Level.INFO, "HLProcess.run() completed. - "+getProcessId()+":"+getProcessCommand());
+			float lElapsed = (System.currentTimeMillis()-this.run_start_timestamp);
+			String sTimeUnit = "ms";
+			
+			if(lElapsed>=3600000)
+			{
+				lElapsed = lElapsed / 3600000;
+				sTimeUnit = "hours";
+			}
+			else if(lElapsed>=60000)
+			{
+				lElapsed = lElapsed / 60000;
+				sTimeUnit = "mins";
+			}
+			else if(lElapsed>=1000)
+			{
+				lElapsed = lElapsed / 1000;
+				sTimeUnit = "secs";
+			}
+			
+			logger.log(Level.INFO, "HLProcess.run() end - "+getProcessId()+" (elapsed:"+lElapsed+" "+sTimeUnit+")");
 		}
 	}
 	

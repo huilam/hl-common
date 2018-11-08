@@ -35,7 +35,6 @@ public class HLProcessMgr
 		{
 			for(HLProcess p : procConfig.getProcesses())
 			{
-				p.out = System.out;
 				if(!p.isRunning())
 				{
 					long lElapsed = System.currentTimeMillis()-lStart;
