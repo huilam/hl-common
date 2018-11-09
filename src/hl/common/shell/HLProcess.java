@@ -35,6 +35,7 @@ public class HLProcess implements Runnable
 	private String[] commands			= null;
 	
 	private boolean remote_ref			= false;
+	private String remote_hostname		= null;
 	private Process proc 				= null;
 	
 	public static Logger logger = Logger.getLogger(HLProcess.class.getName());
@@ -73,6 +74,16 @@ public class HLProcess implements Runnable
 	public boolean isRemoteRef()
 	{
 		return this.remote_ref;
+	}	
+	
+	public void setRemoteHost(String aRemoteHost)
+	{
+		this.remote_hostname = aRemoteHost;
+	}
+	
+	public String getRemoteHost()
+	{
+		return this.remote_hostname;
 	}	
 	
 	public void setProcessOutputMaxHist(long aMaxHistLines)
@@ -219,7 +230,7 @@ public class HLProcess implements Runnable
 							sbDepCmd.append("\n - ");
 							sbDepCmd.append(d.id).append(" : ");
 							if(d.isRemoteRef())
-								sbDepCmd.append("(remote)");
+								sbDepCmd.append("(remote)").append(d.getRemoteHost()==null?"":d.getRemoteHost());
 							else
 								sbDepCmd.append(d.getProcessCommand());
 						}

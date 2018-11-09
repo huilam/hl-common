@@ -240,7 +240,8 @@ public class HLProcessConfig {
 	process.p1.shell.output.max.history=100
 	process.p1.init.timeout.ms=5000
 	process.p1.init.success.regex=Request timed out
-	process.p1.dependance.processes= p2,  p3
+	process.p1.dependance.processes.local= p2,  p3
+	process.p1.dependance.processes.remote=
 	process.p1.dependance.check.interval.ms=100
 	process.p1.dependance.timeout.ms=10000
 	 **/
