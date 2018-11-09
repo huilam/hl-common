@@ -48,7 +48,11 @@ public class HLProcessMgr
 		{
 			for(HLProcess p : procConfig.getProcesses())
 			{
-				if(!p.isRunning())
+				if(p.isRemoteRef())
+				{
+					lPendingStart--;
+				}
+				else if(!p.isRunning())
 				{
 					long lElapsed = System.currentTimeMillis()-lStart;
 					if(lElapsed >= p.getProcessStartDelayMs())

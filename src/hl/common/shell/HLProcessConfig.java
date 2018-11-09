@@ -20,9 +20,7 @@ public class HLProcessConfig {
 
 	//-- SHELL
 	public static String _PROP_KEY_SHELL				= "shell.";
-	public static String _PROP_KEY_SHELL_COMMAND	 	= _PROP_KEY_SHELL+"command.";
-	public static String _PROP_KEY_SHELL_COMMAND_WIN 	= _PROP_KEY_SHELL_COMMAND+"win";
-	public static String _PROP_KEY_SHELL_COMMAND_LINUX 	= _PROP_KEY_SHELL_COMMAND+"linux";	
+	public static String _PROP_KEY_SHELL_COMMAND	 	= _PROP_KEY_SHELL+"command.{os.name}";
 	
 	public static String _PROP_KEY_SHELL_START_DELAY	= _PROP_KEY_SHELL+"start.delay.ms";
 	public static String _PROP_KEY_SHELL_MAX_HIST		= _PROP_KEY_SHELL+"output.max.history";
@@ -34,14 +32,29 @@ public class HLProcessConfig {
 
 	//-- DEPENDANCE
 	public static String _PROP_KEY_DEP					= "dependance.";
-	public static String _PROP_KEY_DEP_PROCESSES 		= _PROP_KEY_DEP+"processes";
+	public static String _PROP_KEY_DEP_PROCESSES_LOCAL	= _PROP_KEY_DEP+"processes.local";
+	public static String _PROP_KEY_DEP_PROCESSES_REMOTE	= _PROP_KEY_DEP+"processes.remote";
 	public static String _PROP_KEY_DEP_CHK_INTERVAL_MS 	= _PROP_KEY_DEP+"check.interval.ms";
 	public static String _PROP_KEY_DEP_TIMEOUT_MS 		= _PROP_KEY_DEP+"timeout.ms";
 	
-	
-	private String osName = null;
+	public static String osname = null;
 	private Pattern pattProcessId = Pattern.compile(_PROP_PREFIX_PROCESS+"(.+?)\\.");
 	private Map<String, HLProcess> mapProcesses = new HashMap<String, HLProcess>();
+	//
+	
+	static {
+		String sOsNameAttrKey = "os.name";
+		String sOsName = System.getProperty(sOsNameAttrKey).toLowerCase();
+		if(sOsName.indexOf("windows")>-1)
+			sOsName = "win";
+		else if(sOsName.indexOf("linux")>-1)
+			sOsName = "linux";
+		else if(sOsName.indexOf("mac")>-1)
+			sOsName = "mac";
+		osname = sOsName;
+		_PROP_KEY_SHELL_COMMAND = _PROP_KEY_SHELL_COMMAND.replaceAll("\\{"+sOsNameAttrKey+"\\}", osname);
+	}
+	
 	//
 	public HLProcessConfig(String aPropFileName) throws IOException
 	{
@@ -77,16 +90,7 @@ public class HLProcessConfig {
 		
 		Matcher m = null;
 		Iterator iter = aProperties.keySet().iterator();
-		
-		this.osName = System.getProperty("os.name").toLowerCase();
-		
-		if(this.osName.indexOf("windows")>-1)
-			this.osName = "win";
-		else if(this.osName.indexOf("linux")>-1)
-			this.osName = "linux";
-		else if(this.osName.indexOf("mac")>-1)
-			this.osName = "mac";
-		
+
 		while(iter.hasNext())
 		{
 			String sKey = (String) iter.next();
@@ -115,10 +119,7 @@ public class HLProcessConfig {
 				{
 					if(sConfigKey.indexOf(_PROP_KEY_SHELL_COMMAND)>-1)
 					{
-						if(sConfigKey.endsWith("."+this.osName))
-						{
-							p.setProcessCommand(sConfigVal.split(" "));
-						}
+						p.setProcessCommand(sConfigVal.split(" "));
 					}
 					else if(sConfigKey.equals(_PROP_KEY_SHELL_MAX_HIST))
 					{
@@ -145,11 +146,13 @@ public class HLProcessConfig {
 				}
 				else if(sConfigKey.startsWith(_PROP_KEY_DEP))
 				{
-					if(sConfigKey.equals(_PROP_KEY_DEP_PROCESSES))
+					if(sConfigKey.equals(_PROP_KEY_DEP_PROCESSES_LOCAL)
+						|| sConfigKey.equals(_PROP_KEY_DEP_PROCESSES_REMOTE))
 					{
 						String[] sDepIds = sConfigVal.split(",");
 						for(String sDepId : sDepIds)
 						{
+							boolean isRemoteProc = sConfigKey.equals(_PROP_KEY_DEP_PROCESSES_REMOTE);
 							sDepId = sDepId.trim();
 							if(sDepId.length()>0)
 							{
@@ -157,8 +160,21 @@ public class HLProcessConfig {
 								if(procDep==null)
 								{
 									procDep = new HLProcess(sDepId);
+									if(isRemoteProc)
+									{
+										procDep.setRemoteRef(true);
+										procDep.setDependCheckIntervalMs(0);
+										procDep.setDependTimeoutMs(0);
+										procDep.setProcessOutputMaxHist(0);
+									}
 									mapProcesses.put(sDepId, procDep);
 								}
+								
+								if(procDep.isRemoteRef() != isRemoteProc)
+								{
+									throw new RuntimeException("["+sPID+"] Mismatch dependancies configuration - "+sDepId);
+								}
+								
 								p.addDependProcess(procDep);
 							}
 						}
@@ -186,9 +202,23 @@ public class HLProcessConfig {
 	{
 		for(HLProcess p : getProcesses())
 		{
-			if(p.getProcessCommand().trim().length()==0)
+			if(p.isRemoteRef())
 			{
-				throw new RuntimeException("["+p.getProcessId()+"] Process command cannot be empty ! - "+_PROP_KEY_SHELL_COMMAND+osName);
+				if(p.getProcessCommand().trim().length()>0
+					 
+					 || p.getDependCheckIntervalMs()>0
+					 || p.getDependTimeoutMs()>0
+					 
+					 || p.getProcessStartDelayMs()>0
+					 || p.getProcessOutputMaxHist()>0
+					)
+				{
+					throw new RuntimeException("["+p.getProcessId()+"] Remote Process should not have local configuration !");
+				}
+			}
+			else if(p.getProcessCommand().trim().length()==0)
+			{
+				throw new RuntimeException("["+p.getProcessId()+"] Process command cannot be empty ! - "+_PROP_KEY_SHELL_COMMAND);
 			}
 		}
 	}
