@@ -142,11 +142,6 @@ public class HLProcessConfig {
 			}				
 		}
 		
-		for(String s : list.toArray(new String[list.size()]))
-		{
-			System.out.print("["+s+"]");
-		}
-		
 		return list.toArray(new String[list.size()]);
 	}
 	
@@ -340,6 +335,7 @@ public class HLProcessConfig {
 	//--
 	/** sample 'process.properties'
 	//--
+	process.pid.shell.command.block=[]
 	process.pid.shell.start.delay.ms=	
 	process.pid.shell.command.win=
 	process.pid.shell.command.linux=
