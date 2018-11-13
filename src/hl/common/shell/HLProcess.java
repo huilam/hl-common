@@ -10,6 +10,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -61,6 +62,11 @@ public class HLProcess implements Runnable
 		this.commands = aShellCmd;
 	}
 	
+	public void setProcessCommand(List<String> aShellCmdList)
+	{
+		this.commands = aShellCmdList.toArray(new String[aShellCmdList.size()]);
+	}
+
 	public void setProcessId(String aId)
 	{
 		this.id = aId;
@@ -248,7 +254,6 @@ public class HLProcess implements Runnable
 			return null;
 		
 		sScript = sScript.substring(0, iPath);
-		System.out.println("getCommandScriptDir="+sScript);
 		return new File(sScript);
 	}
 	
@@ -313,7 +318,6 @@ public class HLProcess implements Runnable
 			
 			ProcessBuilder pb = new ProcessBuilder(this.commands);
 			try {
-				pb.redirectErrorStream(true);
 				
 				if(this.is_def_script_dir)
 				{
@@ -323,7 +327,7 @@ public class HLProcess implements Runnable
 						pb.directory(fileDir);
 					}
 				}
-				
+				pb.redirectErrorStream(true);
 				proc = pb.start();
 			} catch (IOException e1) {
 				throw new RuntimeException(e1);
@@ -355,14 +359,21 @@ public class HLProcess implements Runnable
 					}
 				}
 				
-				String sLine = rdr.readLine();
-				while(proc.isAlive())
+				String sLine = null;
+				
+				if(rdr.ready())
+					sLine = rdr.readLine();
+				
+				String sDebugLine = null;
+				while(proc.isAlive() || sLine!=null)
 				{
 					if(sLine!=null)
 					{
+						sDebugLine = sPrefix + df.format(System.currentTimeMillis()) + sLine;
+
 						if(wrt!=null)
 						{
-							wrt.write(sPrefix + df.format(System.currentTimeMillis()) + sLine);
+							wrt.write(sDebugLine);
 							wrt.newLine();
 							wrt.flush();
 						}
@@ -371,6 +382,8 @@ public class HLProcess implements Runnable
 						{
 							System.out.println(sLine);
 						}
+						
+						logDebug(sDebugLine);
 						
 						if(sLine.length()>0)
 						{

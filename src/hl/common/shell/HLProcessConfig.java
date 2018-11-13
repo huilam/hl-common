@@ -1,11 +1,14 @@
 package hl.common.shell;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,6 +24,7 @@ public class HLProcessConfig {
 	//-- SHELL
 	public static String _PROP_KEY_SHELL				= "shell.";
 	public static String _PROP_KEY_SHELL_COMMAND	 	= _PROP_KEY_SHELL+"command.{os.name}";
+	public static String _PROP_KEY_SHELL_CMD_BLOCK		= _PROP_KEY_SHELL+"command.block";
 	
 	public static String _PROP_KEY_SHELL_START_DELAY	= _PROP_KEY_SHELL+"start.delay.ms";
 	public static String _PROP_KEY_SHELL_OUTPUT_FILENAME= _PROP_KEY_SHELL+"output.filename";
@@ -40,8 +44,11 @@ public class HLProcessConfig {
 	public static String _PROP_KEY_DEP_CHK_INTERVAL_MS 	= _PROP_KEY_DEP+"check.interval.ms";
 	public static String _PROP_KEY_DEP_TIMEOUT_MS 		= _PROP_KEY_DEP+"timeout.ms";
 	
-	public static String osname = null;
-	private Pattern pattProcessId = Pattern.compile(_PROP_PREFIX_PROCESS+"(.+?)\\.");
+	public static String osname 	= null;
+	public char commandBlockStart 	= '[';
+	public char commandBlockEnd 	= ']';
+	
+	private Pattern pattProcessId 	= Pattern.compile(_PROP_PREFIX_PROCESS+"(.+?)\\.");	
 	private Map<String, HLProcess> mapProcesses = new HashMap<String, HLProcess>();
 	//
 	
@@ -86,13 +93,75 @@ public class HLProcessConfig {
 		init(props);
 	}
 	
+	private String[] splitCommands(String aCmdString)
+	{
+		List<String> list = new ArrayList<String>();
+		
+		StringBuffer sb = new StringBuffer();
+		
+		boolean isSameBlockChar = commandBlockStart==commandBlockEnd;
+		boolean isGrouping = false;
+		for(char ch : aCmdString.toCharArray())
+		{
+			if(commandBlockStart == ch || commandBlockEnd == ch)
+			{
+				if(sb.length()>0)
+				{
+					list.add(sb.toString());
+				}
+				sb.setLength(0);
+				
+				if(isSameBlockChar)
+				{
+					isGrouping = !isGrouping;
+				}
+				else
+				{
+					isGrouping = commandBlockStart == ch;
+				}
+			}
+			
+			else if(' ' == ch)
+			{
+				if(isGrouping)
+				{
+					sb.append(ch);
+				}
+				else
+				{
+					if(sb.length()>0)
+					{
+						list.add(sb.toString());
+					}
+					sb.setLength(0);
+				}
+			}
+			else
+			{
+				sb.append(ch);
+			}				
+		}
+		
+		for(String s : list.toArray(new String[list.size()]))
+		{
+			System.out.print("["+s+"]");
+		}
+		
+		return list.toArray(new String[list.size()]);
+	}
+	
 	public void init(Properties aProperties) throws IOException
 	{		
 		if(aProperties==null)
 			aProperties = new Properties();
 		
 		Matcher m = null;
-		Iterator iter = aProperties.keySet().iterator();
+		
+		Map map = new TreeMap();
+		map.putAll(aProperties);
+		
+		
+		Iterator iter = map.keySet().iterator();
 
 		while(iter.hasNext())
 		{
@@ -122,7 +191,7 @@ public class HLProcessConfig {
 				{
 					if(sConfigKey.indexOf(_PROP_KEY_SHELL_COMMAND)>-1)
 					{
-						p.setProcessCommand(sConfigVal.split(" "));
+						p.setProcessCommand(splitCommands(sConfigVal));
 					}
 					else if(sConfigKey.equals(_PROP_KEY_SHELL_OUTPUT_CONSOLE))
 					{
@@ -141,8 +210,28 @@ public class HLProcessConfig {
 					{
 						p.setDefaultToScriptDir("true".equalsIgnoreCase(sConfigVal));
 					}
-					
-					
+					else if(sConfigKey.equals(_PROP_KEY_SHELL_CMD_BLOCK))
+					{
+						if(sConfigVal.trim().length()==1)
+						{
+							this.commandBlockStart = sConfigVal.trim().charAt(0);
+						}
+					}
+					else if(sConfigKey.equals(_PROP_KEY_SHELL_CMD_BLOCK))
+					{
+						sConfigVal = sConfigVal.trim();
+						
+						if(sConfigVal.length()==1)
+						{
+							this.commandBlockStart = sConfigVal.charAt(0);
+							this.commandBlockEnd = this.commandBlockStart;
+						}
+						else if(sConfigVal.length()==2)
+						{
+							this.commandBlockStart = sConfigVal.charAt(0);
+							this.commandBlockEnd = sConfigVal.charAt(1);
+						}
+					}
 				}
 				else if(sConfigKey.startsWith(_PROP_KEY_INIT))
 				{
@@ -248,20 +337,25 @@ public class HLProcessConfig {
 		return c.toArray(new HLProcess[c.size()]);
 	}
 	
+	//--
 	/** sample 'process.properties'
 	//--
-	process.p1.shell.start.delay.ms=100
-	process.p1.shell.command.win=cmd.exe /c   ping   www.google.com
-	process.p1.shell.command.linux=ping   www.google.com -c 1
-	process.p1.shell.output.max.history=100
+	process.pid.shell.start.delay.ms=	
+	process.pid.shell.command.win=
+	process.pid.shell.command.linux=
+	process.pid.shell.command.mac=
+	process.pid.shell.default.to.script.dir=
+	process.pid.shell.output.filename=
+	process.pid.shell.output.console=true
 	//--
-	process.p1.init.timeout.ms=5000
-	process.p1.init.success.regex=Request timed out
+	process.pid.init.timeout.ms=
+	process.pid.init.success.regex=
+	process.pid.init.failed.regex=
 	//--
-	process.p1.dependance.processes.local= p2,  p3
+	process.p1.dependance.processes.local=
 	process.p1.dependance.processes.remote=
-	process.p1.dependance.check.interval.ms=100
-	process.p1.dependance.timeout.ms=10000
+	process.pid.dependance.check.interval.ms=
+	process.pid.dependance.timeout.ms=
 	//--
 	**/
 	
