@@ -28,6 +28,8 @@ public class HLProcess implements Runnable
 	private boolean is_init_failed		= false;
 	private long init_timeout_ms		= 0;
 	
+	private int exit_value				= 0;
+	
 	private long run_start_timestamp	= 0;
 	private long delay_start_ms			= 0;
 	
@@ -126,6 +128,11 @@ public class HLProcess implements Runnable
 	public long getProcessStartDelayMs()
 	{
 		return this.delay_start_ms;
+	}
+	
+	public int getExitValue()
+	{
+		return this.exit_value;
 	}
 	
 	public void setInitTimeoutMs(long aInitTimeoutMs)
@@ -247,6 +254,7 @@ public class HLProcess implements Runnable
 	
 	@Override
 	public void run() {
+		
 		this.run_start_timestamp = System.currentTimeMillis();
 		String sPrefix = (id==null?"":"["+id+"] ");
 		
@@ -347,20 +355,10 @@ public class HLProcess implements Runnable
 					}
 				}
 				
-				String sLine = "";
+				String sLine = rdr.readLine();
 				while(proc.isAlive())
 				{
-					sLine = "";
-					if(rdr.ready())
-					{
-						sLine = rdr.readLine();
-						if(sLine==null)
-						{
-							sLine = "";
-						}
-					}
-										
-					if(sLine.length()>0)
+					if(sLine!=null)
 					{
 						if(wrt!=null)
 						{
@@ -374,33 +372,32 @@ public class HLProcess implements Runnable
 							System.out.println(sLine);
 						}
 						
-						if(!this.is_init_failed && this.patt_init_failed!=null)
+						if(sLine.length()>0)
 						{
-							Matcher m = this.patt_init_failed.matcher(sLine);
-							this.is_init_failed =  m.find();
-							if(this.is_init_failed)
+							if(!this.is_init_failed && this.patt_init_failed!=null)
 							{
-								String sErr = sPrefix + "init_error - Elapsed: "+milisec2Words(System.currentTimeMillis()-this.run_start_timestamp);
-								logger.log(Level.SEVERE, sErr);
-								throw new RuntimeException(sErr);
-							}
-						}
-					
-						if(!this.is_init_success)
-						{
-							if(this.patt_init_success!=null)
-							{
-								Matcher m = this.patt_init_success.matcher(sLine);
-								this.is_init_success = m.find();
-								if(this.is_init_success)
+								Matcher m = this.patt_init_failed.matcher(sLine);
+								this.is_init_failed =  m.find();
+								if(this.is_init_failed)
 								{
-									logger.log(Level.INFO, 
-											sPrefix + "init_success - Elapsed: "+milisec2Words(System.currentTimeMillis()-this.run_start_timestamp));
+									String sErr = sPrefix + "init_error - Elapsed: "+milisec2Words(System.currentTimeMillis()-this.run_start_timestamp);
+									logger.log(Level.SEVERE, sErr);
+									throw new RuntimeException(sErr);
 								}
 							}
-							else
+						
+							if(!this.is_init_success)
 							{
-								is_init_success = true;
+								if(this.patt_init_success!=null)
+								{
+									Matcher m = this.patt_init_success.matcher(sLine);
+									this.is_init_success = m.find();
+									if(this.is_init_success)
+									{
+										logger.log(Level.INFO, 
+												sPrefix + "init_success - Elapsed: "+milisec2Words(System.currentTimeMillis()-this.run_start_timestamp));
+									}
+								}
 							}
 						}
 					}
@@ -415,19 +412,34 @@ public class HLProcess implements Runnable
 						}
 					}
 					
-					if(!this.is_init_success && this.init_timeout_ms>0)
+					if(!this.is_init_success)
 					{
-						long lElapsed = System.currentTimeMillis() - lStart;
-						if(lElapsed>=this.init_timeout_ms)
+						if(this.init_timeout_ms>0)
 						{
-							String sErr = sPrefix+"Init timeout ! "+milisec2Words(lElapsed)+" - "+getProcessCommand();
-							logger.log(Level.SEVERE, sErr);
-							throw new RuntimeException(sErr);
+							long lElapsed = System.currentTimeMillis() - lStart;
+							if(lElapsed>=this.init_timeout_ms)
+							{
+								String sErr = sPrefix+"Init timeout ! "+milisec2Words(lElapsed)+" - "+getProcessCommand();
+								logger.log(Level.SEVERE, sErr);
+								throw new RuntimeException(sErr);
+							}
 						}
-					}				
+						
+						if(this.patt_init_success==null)
+						{
+							this.is_init_success = true;
+						}
+					}
+					
+					sLine = null;
+					if(rdr.ready())
+					{
+						sLine = rdr.readLine();
+					}
 				}
-			} catch (IOException e) {
-				logger.log(Level.WARNING, e.getMessage(), e);
+			} catch (Throwable e) {
+				this.exit_value = -1;
+				logger.log(Level.SEVERE, e.getMessage(), e);
 			}
 			finally
 			{
@@ -454,7 +466,19 @@ public class HLProcess implements Runnable
 		{
 			long lElapsed = (System.currentTimeMillis()-this.run_start_timestamp);
 			logger.log(Level.INFO, "HLProcess.run() end - "+getProcessId()+" (elapsed: "+milisec2Words(lElapsed)+")");
+			
+			if(this.is_init_failed || !this.is_init_success)
+			{
+				this.exit_value = -1;
+			}
+			onProcessEnd(this);
 		}
+	}
+	
+	
+	public void onProcessEnd(HLProcess aHLProcess)
+	{
+		//System.out.println("[onProcessEnd]"+aHLProcess.getProcessId()+" exitValue:"+aHLProcess.getExitValue());
 	}
 	
 	private String milisec2Words(long aElapsed)
