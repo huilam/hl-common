@@ -23,12 +23,15 @@ public class HLProcessConfig {
 	public static String _PROP_KEY_SHELL_COMMAND	 	= _PROP_KEY_SHELL+"command.{os.name}";
 	
 	public static String _PROP_KEY_SHELL_START_DELAY	= _PROP_KEY_SHELL+"start.delay.ms";
-	public static String _PROP_KEY_SHELL_MAX_HIST		= _PROP_KEY_SHELL+"output.max.history";
+	public static String _PROP_KEY_SHELL_OUTPUT_FILENAME= _PROP_KEY_SHELL+"output.filename";
+	public static String _PROP_KEY_SHELL_OUTPUT_CONSOLE = _PROP_KEY_SHELL+"output.console";
+	public static String _PROP_KEY_SHELL_DEF2_SCRIPT_DIR = _PROP_KEY_SHELL+"default.to.script.dir";
 	
 	//-- INIT
 	public static String _PROP_KEY_INIT					= "init.";
 	public static String _PROP_KEY_INIT_TIMEOUT_MS 		= _PROP_KEY_INIT+"timeout.ms";
 	public static String _PROP_KEY_INIT_SUCCESS_REGEX	= _PROP_KEY_INIT+"success.regex";
+	public static String _PROP_KEY_INIT_FAILED_REGEX	= _PROP_KEY_INIT+"failed.regex";
 
 	//-- DEPENDANCE
 	public static String _PROP_KEY_DEP					= "dependance.";
@@ -121,22 +124,35 @@ public class HLProcessConfig {
 					{
 						p.setProcessCommand(sConfigVal.split(" "));
 					}
-					else if(sConfigKey.equals(_PROP_KEY_SHELL_MAX_HIST))
+					else if(sConfigKey.equals(_PROP_KEY_SHELL_OUTPUT_CONSOLE))
 					{
-						long lVal = Long.parseLong(sConfigVal);
-						p.setProcessOutputMaxHist(lVal);
+						p.setOutputConsole("true".equalsIgnoreCase(sConfigVal));
+					}
+					else if(sConfigKey.equals(_PROP_KEY_SHELL_OUTPUT_FILENAME))
+					{
+						p.setProcessOutputFilename(sConfigVal);
 					}
 					else if(sConfigKey.equals(_PROP_KEY_SHELL_START_DELAY))
 					{
 						long lVal = Long.parseLong(sConfigVal);
 						p.setProcessStartDelayMs(lVal);
 					}
+					else if(sConfigKey.equals(_PROP_KEY_SHELL_DEF2_SCRIPT_DIR))
+					{
+						p.setDefaultToScriptDir("true".equalsIgnoreCase(sConfigVal));
+					}
+					
+					
 				}
 				else if(sConfigKey.startsWith(_PROP_KEY_INIT))
 				{
 					if(sConfigKey.equals(_PROP_KEY_INIT_SUCCESS_REGEX))
 					{
 						p.setInitSuccessRegex(sConfigVal);
+					}
+					else if(sConfigKey.equals(_PROP_KEY_INIT_FAILED_REGEX))
+					{
+						p.setInitFailedRegex(sConfigVal);
 					}
 					else if(sConfigKey.equals(_PROP_KEY_INIT_TIMEOUT_MS))
 					{
@@ -165,7 +181,6 @@ public class HLProcessConfig {
 										procDep.setRemoteRef(true);
 										procDep.setDependCheckIntervalMs(0);
 										procDep.setDependTimeoutMs(0);
-										procDep.setProcessOutputMaxHist(0);
 									}
 									mapProcesses.put(sDepId, procDep);
 								}
@@ -210,7 +225,6 @@ public class HLProcessConfig {
 					 || p.getDependTimeoutMs()>0
 					 
 					 || p.getProcessStartDelayMs()>0
-					 || p.getProcessOutputMaxHist()>0
 					)
 				{
 					throw new RuntimeException("["+p.getProcessId()+"] Remote Process should not have local configuration !");
@@ -235,15 +249,20 @@ public class HLProcessConfig {
 	}
 	
 	/** sample 'process.properties'
+	//--
 	process.p1.shell.start.delay.ms=100
-	process.p1.shell.command=cmd.exe /c   ping   www.google.com
+	process.p1.shell.command.win=cmd.exe /c   ping   www.google.com
+	process.p1.shell.command.linux=ping   www.google.com -c 1
 	process.p1.shell.output.max.history=100
+	//--
 	process.p1.init.timeout.ms=5000
 	process.p1.init.success.regex=Request timed out
+	//--
 	process.p1.dependance.processes.local= p2,  p3
 	process.p1.dependance.processes.remote=
 	process.p1.dependance.check.interval.ms=100
 	process.p1.dependance.timeout.ms=10000
-	 **/
+	//--
+	**/
 	
 }
