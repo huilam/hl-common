@@ -34,9 +34,14 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
+import java.util.logging.Level;
+
+import com.sun.istack.internal.logging.Logger;
 
 
 public class PropUtil{
+	
+	private static Logger logger = Logger.getLogger(PropUtil.class);
 	
 	public static String getValue(Properties aProp, String aPropKey, String aDefaultValue)
 	{
@@ -84,7 +89,7 @@ public class PropUtil{
 					lReturnValue = Long.parseLong(sValue);
 				}catch(NumberFormatException ex)
 				{
-					System.err.println("Invalid value ! ["+aPropKey+"]=["+sValue+"]");
+					logger.log(Level.SEVERE, "Invalid value ! ["+aPropKey+"]=["+sValue+"]", ex);
 				}
 			}
 			
@@ -162,7 +167,7 @@ public class PropUtil{
 			if(fileProp.isFile())
 			{
 				try {
-					System.out.println("Trying to load from file ... "+fileProp.getAbsolutePath());
+					logger.log(Level.FINEST, "Trying to load from file ... "+fileProp.getAbsolutePath());
 					//
 					in = new FileInputStream(fileProp);
 					prop = new Properties();
@@ -175,7 +180,7 @@ public class PropUtil{
 			{
 				InputStream is = null;
 				try{					
-					System.out.println("Trying to load from resource ... "+"/" + aPropFileName);
+					logger.log(Level.FINEST, "Trying to load from resource ... "+"/" + aPropFileName);
 					//
 					is = PropUtil.class.getResourceAsStream("/" + aPropFileName);				
 					prop = new Properties();
@@ -195,7 +200,7 @@ public class PropUtil{
 			if(in!=null)
 				in.close();
 		}
-		System.out.println("Loaded properties size - "+ prop.size());
+		logger.log(Level.FINEST, "Loaded properties size - "+ prop.size());
 		return prop;
 	}
 	
