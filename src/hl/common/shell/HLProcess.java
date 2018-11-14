@@ -56,6 +56,11 @@ public class HLProcess implements Runnable
 	{
 		this.id = aId;
 	}
+	
+	public static String getVersion()
+	{
+		return "HLProcess alpha 0.4";
+	}
 
 	public void setProcessCommand(String[] aShellCmd)
 	{
