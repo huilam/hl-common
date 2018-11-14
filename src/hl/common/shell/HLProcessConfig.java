@@ -31,6 +31,8 @@ public class HLProcessConfig {
 	public static String _PROP_KEY_SHELL_OUTPUT_CONSOLE = _PROP_KEY_SHELL+"output.console";
 	public static String _PROP_KEY_SHELL_DEF2_SCRIPT_DIR = _PROP_KEY_SHELL+"default.to.script.dir";
 	
+	public static String _PROP_KEY_SHELL_TERMINATE_CMD	= _PROP_KEY_SHELL+"terminated.command.{os.name}";
+
 	//-- INIT
 	public static String _PROP_KEY_INIT					= "init.";
 	public static String _PROP_KEY_INIT_TIMEOUT_MS 		= _PROP_KEY_INIT+"timeout.ms";
@@ -65,6 +67,7 @@ public class HLProcessConfig {
 			sOsName = "mac";
 		osname = sOsName;
 		_PROP_KEY_SHELL_COMMAND = _PROP_KEY_SHELL_COMMAND.replaceAll("\\{"+sOsNameAttrKey+"\\}", osname);
+		_PROP_KEY_SHELL_TERMINATE_CMD = _PROP_KEY_SHELL_TERMINATE_CMD.replaceAll("\\{"+sOsNameAttrKey+"\\}", osname);
 	}
 	
 	//
@@ -208,6 +211,10 @@ public class HLProcessConfig {
 						long lVal = Long.parseLong(sConfigVal);
 						p.setProcessStartDelayMs(lVal);
 					}
+					else if(sConfigKey.equals(_PROP_KEY_SHELL_TERMINATE_CMD))
+					{
+						p.setTerminatedCommand(sConfigVal);
+					}
 					else if(sConfigKey.equals(_PROP_KEY_SHELL_DEF2_SCRIPT_DIR))
 					{
 						p.setDefaultToScriptDir("true".equalsIgnoreCase(sConfigVal));
@@ -345,23 +352,26 @@ public class HLProcessConfig {
 	//--
 	/** sample 'process.properties'
 	//--
-	process.pid.shell.command.block=[]
-	process.pid.shell.start.delay.ms=	
-	process.pid.shell.command.win=
-	process.pid.shell.command.linux=
-	process.pid.shell.command.mac=
-	process.pid.shell.default.to.script.dir=
-	process.pid.shell.output.filename=
-	process.pid.shell.output.console=true
-	//--
-	process.pid.init.timeout.ms=
-	process.pid.init.success.regex=
-	process.pid.init.failed.regex=
-	//--
-	process.p1.dependance.processes.local=
-	process.p1.dependance.processes.remote=
-	process.pid.dependance.check.interval.ms=
-	process.pid.dependance.timeout.ms=
+# process.@.shell.start.delay.ms=
+# process.@.shell.default.to.script.dir=false
+# process.@.shell.command.block=
+# process.@.shell.command.win=
+# process.@.shell.command.linux=
+# process.@.shell.command.mac=
+# process.@.shell.output.filename=
+# process.@.shell.output.console=false
+# process.@.shell.terminated.command.win=
+# process.@.shell.terminated.command.linux=
+# process.@.shell.terminated.command.mac=
+
+# process.@.init.timeout.ms=
+# process.@.init.success.regex=
+# process.@.init.failed.regex=
+
+# process.@.dependance.processes.local=
+# process.@.dependance.processes.remote=
+# process.@.dependance.check.interval.ms=
+# process.@.dependance.timeout.ms=
 	//--
 	**/
 	

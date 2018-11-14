@@ -39,7 +39,7 @@ public class HLProcess implements Runnable
 	
 	private Collection<HLProcess> depends = new ArrayList<HLProcess>();
 	private String[] commands			= null;
-	
+	private String terminated_command  	= null;
 	private boolean remote_ref			= false;
 	private String remote_hostname		= null;
 	private Process proc 				= null;
@@ -59,7 +59,7 @@ public class HLProcess implements Runnable
 	
 	public static String getVersion()
 	{
-		return "HLProcess alpha 0.4";
+		return "HLProcess alpha v0.4";
 	}
 
 	public void setProcessCommand(String[] aShellCmd)
@@ -72,6 +72,16 @@ public class HLProcess implements Runnable
 		this.commands = aShellCmdList.toArray(new String[aShellCmdList.size()]);
 	}
 
+	public void setTerminatedCommand(String aShellCommand)
+	{
+		this.terminated_command = aShellCommand;
+	}
+	
+	public String getTerminatedCommand()
+	{
+		return terminated_command;
+	}
+	
 	public void setProcessId(String aId)
 	{
 		this.id = aId;
@@ -268,7 +278,7 @@ public class HLProcess implements Runnable
 		this.run_start_timestamp = System.currentTimeMillis();
 		String sPrefix = (id==null?"":"["+id+"] ");
 		
-		logger.log(Level.INFO, "HLProcess.run() start - "+getProcessId());
+		logger.log(Level.INFO, sPrefix+"start - "+getProcessId());
 		try {			
 			if(depends!=null && depends.size()>0)
 			{
@@ -483,7 +493,28 @@ public class HLProcess implements Runnable
 		finally
 		{
 			long lElapsed = (System.currentTimeMillis()-this.run_start_timestamp);
-			logger.log(Level.INFO, "HLProcess.run() end - "+getProcessId()+" (elapsed: "+milisec2Words(lElapsed)+")");
+			logger.log(Level.INFO, sPrefix+"end - "+getProcessId()+" (elapsed: "+milisec2Words(lElapsed)+")");
+			
+			String sEndCmd = getTerminatedCommand();
+			if(sEndCmd!=null && sEndCmd.trim().length()>0)
+			{
+				try {
+					logger.log(Level.INFO, sPrefix+"execute terminated command  - "+sEndCmd);
+					ProcessBuilder pb = new ProcessBuilder(sEndCmd.split(" "));
+					File fileDir = new File(sEndCmd);
+					if(fileDir.isFile())
+					{
+						if(fileDir.getParentFile()!=null)
+							pb.directory(fileDir.getParentFile());
+					}
+					pb.redirectErrorStream(true);
+					pb.inheritIO();
+					pb.start();
+
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 			
 			if(this.is_init_failed || !this.is_init_success)
 			{
