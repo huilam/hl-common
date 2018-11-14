@@ -45,8 +45,10 @@ public class HLProcessConfig {
 	public static String _PROP_KEY_DEP_TIMEOUT_MS 		= _PROP_KEY_DEP+"timeout.ms";
 	
 	public static String osname 	= null;
-	public char commandBlockStart 	= '[';
-	public char commandBlockEnd 	= ']';
+	
+	public static char commandSpace = ' ';
+	public char commandBlockStart 	= commandSpace;
+	public char commandBlockEnd 	= commandSpace;
 	
 	private Pattern pattProcessId 	= Pattern.compile(_PROP_PREFIX_PROCESS+"(.+?)\\.");	
 	private Map<String, HLProcess> mapProcesses = new HashMap<String, HLProcess>();
@@ -95,6 +97,11 @@ public class HLProcessConfig {
 	
 	private String[] splitCommands(String aCmdString)
 	{
+		if(commandSpace == commandBlockStart && commandSpace == commandBlockEnd)
+		{
+			return aCmdString.split(""+commandSpace);
+		}
+		
 		List<String> list = new ArrayList<String>();
 		
 		StringBuffer sb = new StringBuffer();
@@ -121,7 +128,7 @@ public class HLProcessConfig {
 				}
 			}
 			
-			else if(' ' == ch)
+			else if(commandSpace == ch)
 			{
 				if(isGrouping)
 				{
