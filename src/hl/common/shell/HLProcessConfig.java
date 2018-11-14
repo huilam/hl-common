@@ -328,6 +328,9 @@ public class HLProcessConfig {
 	
 	protected HLProcess[] getProcesses()
 	{
+		if(mapProcesses==null)
+			return new HLProcess[]{};
+		
 		Collection<HLProcess> c = mapProcesses.values();
 		return c.toArray(new HLProcess[c.size()]);
 	}
