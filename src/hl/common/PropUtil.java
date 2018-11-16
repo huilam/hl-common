@@ -35,13 +35,11 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 import java.util.logging.Level;
-
-import com.sun.istack.internal.logging.Logger;
-
+import java.util.logging.Logger;
 
 public class PropUtil{
 	
-	private static Logger logger = Logger.getLogger(PropUtil.class);
+	private static Logger logger = Logger.getLogger(PropUtil.class.getName());
 	
 	public static String getValue(Properties aProp, String aPropKey, String aDefaultValue)
 	{
