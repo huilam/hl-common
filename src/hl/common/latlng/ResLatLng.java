@@ -2,21 +2,23 @@ package hl.common.latlng;
 
 public class ResLatLng {
 
-	private String resource_name 	= null;
+	private String resource_uid		= null;
 	private long epoch_timestamp 	= 0;
 	private double latitude 		= 0;
 	private double longitude 		= 0;
+	private double altitude  		= 0;
+	private String altitude_unit	= "m";
 	
-	public ResLatLng(String aResName)
+	public ResLatLng(String aResUID)
 	{
-		setResource_name(aResName);
+		setResource_uid(aResUID);
 	}
 	
-	public String getResource_name() {
-		return resource_name;
+	public String getResource_uid() {
+		return this.resource_uid;
 	}
-	public void setResource_name(String resource_name) {
-		this.resource_name = resource_name;
+	public void setResource_uid(String resource_uid) {
+		this.resource_uid = resource_uid;
 	}
 	////
 	public long getEpoch_timestamp() {
@@ -36,6 +38,20 @@ public class ResLatLng {
 	}
 	public void setLongitude(double longitude) {
 		this.longitude = longitude;
+	}
+	
+	public double getAltitude() {
+		return altitude;
+	}
+	public void setAltitude(double altitude) {
+		this.altitude = altitude;
+	}
+	
+	public String getAltitudeUnit() {
+		return altitude_unit;
+	}
+	public void setAltitudeUnit(String altitude_unit) {
+		this.altitude_unit = altitude_unit;
 	}
 	
 	//
