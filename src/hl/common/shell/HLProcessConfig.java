@@ -8,7 +8,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -162,11 +161,9 @@ public class HLProcessConfig {
 		
 		Matcher m = null;
 		
-		Map map = new TreeMap();
-		map.putAll(aProperties);
+		Map<String, Map<String, String>> mapPID = new HashMap<String, Map<String, String>> ();
 		
-		
-		Iterator iter = map.keySet().iterator();
+		Iterator iter = aProperties.keySet().iterator();
 
 		while(iter.hasNext())
 		{
@@ -187,125 +184,156 @@ public class HLProcessConfig {
 				if(sConfigVal.length()==0)
 					continue;
 				
-				HLProcess p = mapProcesses.get(sPID);
-				if(p==null)
-					p = new HLProcess(sPID);
-				//
+				Map<String, String> mapProcessConfig = mapPID.get(sPID);
+				if(mapProcessConfig==null)
+					mapProcessConfig = new HashMap<String, String>();
 				
-				if(sConfigKey.startsWith(_PROP_KEY_SHELL))
-				{
-					if(sConfigKey.indexOf(_PROP_KEY_SHELL_COMMAND)>-1)
-					{
-						p.setProcessCommand(splitCommands(sConfigVal));
-					}
-					else if(sConfigKey.equals(_PROP_KEY_SHELL_OUTPUT_CONSOLE))
-					{
-						p.setOutputConsole("true".equalsIgnoreCase(sConfigVal));
-					}
-					else if(sConfigKey.equals(_PROP_KEY_SHELL_OUTPUT_FILENAME))
-					{
-						p.setProcessOutputFilename(sConfigVal);
-					}
-					else if(sConfigKey.equals(_PROP_KEY_SHELL_START_DELAY))
-					{
-						long lVal = Long.parseLong(sConfigVal);
-						p.setProcessStartDelayMs(lVal);
-					}
-					else if(sConfigKey.equals(_PROP_KEY_SHELL_TERMINATE_CMD))
-					{
-						p.setTerminatedCommand(sConfigVal);
-					}
-					else if(sConfigKey.equals(_PROP_KEY_SHELL_DEF2_SCRIPT_DIR))
-					{
-						p.setDefaultToScriptDir("true".equalsIgnoreCase(sConfigVal));
-					}
-					else if(sConfigKey.equals(_PROP_KEY_SHELL_CMD_BLOCK))
-					{
-						if(sConfigVal.trim().length()==1)
-						{
-							this.commandBlockStart = sConfigVal.trim().charAt(0);
-						}
-					}
-					else if(sConfigKey.equals(_PROP_KEY_SHELL_CMD_BLOCK))
-					{
-						sConfigVal = sConfigVal.trim();
-						
-						if(sConfigVal.length()==1)
-						{
-							this.commandBlockStart = sConfigVal.charAt(0);
-							this.commandBlockEnd = this.commandBlockStart;
-						}
-						else if(sConfigVal.length()==2)
-						{
-							this.commandBlockStart = sConfigVal.charAt(0);
-							this.commandBlockEnd = sConfigVal.charAt(1);
-						}
-					}
-				}
-				else if(sConfigKey.startsWith(_PROP_KEY_INIT))
-				{
-					if(sConfigKey.equals(_PROP_KEY_INIT_SUCCESS_REGEX))
-					{
-						p.setInitSuccessRegex(sConfigVal);
-					}
-					else if(sConfigKey.equals(_PROP_KEY_INIT_FAILED_REGEX))
-					{
-						p.setInitFailedRegex(sConfigVal);
-					}
-					else if(sConfigKey.equals(_PROP_KEY_INIT_TIMEOUT_MS))
-					{
-						long lVal = Long.parseLong(sConfigVal);
-						p.setInitTimeoutMs(lVal);
-					}
-				}
-				else if(sConfigKey.startsWith(_PROP_KEY_DEP))
-				{
-					if(sConfigKey.equals(_PROP_KEY_DEP_PROCESSES_LOCAL)
-						|| sConfigKey.equals(_PROP_KEY_DEP_PROCESSES_REMOTE))
-					{
-						String[] sDepIds = sConfigVal.split(",");
-						for(String sDepId : sDepIds)
-						{
-							boolean isRemoteProc = sConfigKey.equals(_PROP_KEY_DEP_PROCESSES_REMOTE);
-							sDepId = sDepId.trim();
-							if(sDepId.length()>0)
-							{
-								HLProcess procDep = mapProcesses.get(sDepId);
-								if(procDep==null)
-								{
-									procDep = new HLProcess(sDepId);
-									if(isRemoteProc)
-									{
-										procDep.setRemoteRef(true);
-										procDep.setDependCheckIntervalMs(0);
-										procDep.setDependTimeoutMs(0);
-									}
-									mapProcesses.put(sDepId, procDep);
-								}
-								
-								if(procDep.isRemoteRef() != isRemoteProc)
-								{
-									throw new RuntimeException("["+sPID+"] Mismatch dependancies configuration - "+sDepId);
-								}
-								
-								p.addDependProcess(procDep);
-							}
-						}
-					}
-					else if(sConfigKey.equals(_PROP_KEY_DEP_TIMEOUT_MS))
-					{
-						long lVal = Long.parseLong(sConfigVal);
-						p.setDependTimeoutMs(lVal);
-					}
-					else if(sConfigKey.equals(_PROP_KEY_DEP_CHK_INTERVAL_MS))
-					{
-						long lVal = Long.parseLong(sConfigVal);
-						p.setDependCheckIntervalMs(lVal);
-					}
-				}
-				//
-				mapProcesses.put(sPID, p);
+				mapProcessConfig.put(sConfigKey, sConfigVal);
+				mapPID.put(sPID, mapProcessConfig);
 			}
+		}
+				
+		
+		iter = mapPID.keySet().iterator();
+		String sConfigVal = null;
+		while(iter.hasNext())
+		{
+			String sPID = (String) iter.next();
+			Map<String, String> mapProcessConfig = mapPID.get(sPID);
+		
+			HLProcess p = mapProcesses.get(sPID);
+			if(p==null)
+			{
+				p = new HLProcess(sPID);
+			}
+				
+			// SHELL
+			sConfigVal = mapProcessConfig.get(_PROP_KEY_SHELL_CMD_BLOCK);
+			if(sConfigVal!=null)
+			{
+				sConfigVal = sConfigVal.trim();
+				
+				if(sConfigVal.length()==1)
+				{
+					this.commandBlockStart = sConfigVal.charAt(0);
+					this.commandBlockEnd = this.commandBlockStart;
+				}
+				else if(sConfigVal.length()==2)
+				{
+					this.commandBlockStart = sConfigVal.charAt(0);
+					this.commandBlockEnd = sConfigVal.charAt(1);
+				}
+			}
+			// 
+			sConfigVal = mapProcessConfig.get(_PROP_KEY_SHELL_COMMAND);
+			if(sConfigVal!=null)
+			{
+				p.setProcessCommand(splitCommands(sConfigVal));
+			}
+			//
+			sConfigVal = mapProcessConfig.get(_PROP_KEY_SHELL_OUTPUT_CONSOLE);
+			if(sConfigVal!=null)
+			{
+				p.setOutputConsole("true".equalsIgnoreCase(sConfigVal));
+			}
+			//
+			sConfigVal = mapProcessConfig.get(_PROP_KEY_SHELL_OUTPUT_FILENAME);
+			if(sConfigVal!=null)
+			{
+				p.setProcessOutputFilename(sConfigVal);
+			}
+			//
+			sConfigVal = mapProcessConfig.get(_PROP_KEY_SHELL_START_DELAY);
+			if(sConfigVal!=null)
+			{
+				long lVal = Long.parseLong(sConfigVal);
+				p.setProcessStartDelayMs(lVal);
+			}
+			//
+			sConfigVal = mapProcessConfig.get(_PROP_KEY_SHELL_TERMINATE_CMD);
+			if(sConfigVal!=null)
+			{
+				p.setTerminatedCommand(sConfigVal);
+			}
+			//
+			sConfigVal = mapProcessConfig.get(_PROP_KEY_SHELL_DEF2_SCRIPT_DIR);
+			if(sConfigVal!=null)
+			{
+				p.setDefaultToScriptDir("true".equalsIgnoreCase(sConfigVal));
+			}
+
+			//INIT
+			sConfigVal = mapProcessConfig.get(_PROP_KEY_INIT_SUCCESS_REGEX);
+			if(sConfigVal!=null)
+			{
+				p.setInitSuccessRegex(sConfigVal);
+			}
+			//
+			sConfigVal = mapProcessConfig.get(_PROP_KEY_INIT_FAILED_REGEX);
+			if(sConfigVal!=null)
+			{
+				p.setInitFailedRegex(sConfigVal);
+			}
+			//
+			sConfigVal = mapProcessConfig.get(_PROP_KEY_INIT_TIMEOUT_MS);
+			if(sConfigVal!=null)
+			{
+				long lVal = Long.parseLong(sConfigVal);
+				p.setInitTimeoutMs(lVal);
+			}
+			
+			//DEPENDANCIES
+			for(String sConfigKey : new String[] {_PROP_KEY_DEP_PROCESSES_LOCAL, _PROP_KEY_DEP_PROCESSES_REMOTE})
+			{
+				sConfigVal = mapProcessConfig.get(sConfigKey);
+				if(sConfigVal!=null)
+				{
+					String[] sDepIds = sConfigVal.split(",");
+					for(String sDepId : sDepIds)
+					{
+						boolean isRemoteProc = sConfigKey.equals(_PROP_KEY_DEP_PROCESSES_REMOTE);
+						sDepId = sDepId.trim();
+						if(sDepId.length()>0)
+						{
+							HLProcess procDep = mapProcesses.get(sDepId);
+							if(procDep==null)
+							{
+								procDep = new HLProcess(sDepId);
+								if(isRemoteProc)
+								{
+									procDep.setRemoteRef(true);
+									procDep.setDependCheckIntervalMs(0);
+									procDep.setDependTimeoutMs(0);
+								}
+								mapProcesses.put(sDepId, procDep);
+							}
+							
+							if(procDep.isRemoteRef() != isRemoteProc)
+							{
+								throw new RuntimeException("["+sPID+"] Mismatch dependancies configuration - "+sDepId);
+							}
+							
+							p.addDependProcess(procDep);
+						}
+					}
+				}
+			}
+			//
+			sConfigVal = mapProcessConfig.get(_PROP_KEY_DEP_TIMEOUT_MS);
+			if(sConfigVal!=null)
+			{
+				long lVal = Long.parseLong(sConfigVal);
+				p.setDependTimeoutMs(lVal);
+			}
+			//
+			sConfigVal = mapProcessConfig.get(_PROP_KEY_DEP_CHK_INTERVAL_MS);
+			if(sConfigVal!=null)
+			{
+				long lVal = Long.parseLong(sConfigVal);
+				p.setDependCheckIntervalMs(lVal);
+			}
+			//
+			mapProcesses.put(sPID, p);
 		}
 		validateProcessConfigs();
 	}

@@ -493,7 +493,7 @@ public class HLProcess implements Runnable
 		finally
 		{
 			long lElapsed = (System.currentTimeMillis()-this.run_start_timestamp);
-			logger.log(Level.INFO, sPrefix+"end - "+getProcessId()+" (elapsed: "+milisec2Words(lElapsed)+")");
+			logger.log(Level.INFO, sPrefix+"end - "+getProcessCommand()+" (elapsed: "+milisec2Words(lElapsed)+")");
 			
 			String sEndCmd = getTerminatedCommand();
 			if(sEndCmd!=null && sEndCmd.trim().length()>0)
