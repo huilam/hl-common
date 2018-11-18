@@ -1,12 +1,15 @@
 package hl.common.shell;
 
 import java.io.IOException;
+import java.util.logging.Level;
+
 import hl.common.shell.HLProcess;
 import hl.common.shell.HLProcessConfig;
 
 public class HLProcessMgr
 {
 	private HLProcessConfig procConfig = null;
+	private static Level logLevel = HLProcess.logger.getLevel();
 	
 	public HLProcessMgr(String aPropFileName)
 	{
@@ -15,6 +18,18 @@ public class HLProcessMgr
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+	}
+	
+	public void setLogLevel(Level aLogLevel)
+	{
+		logLevel = aLogLevel;
+		HLProcess.logger.setLevel(aLogLevel);
+		HLProcessConfig.logger.setLevel(aLogLevel);
+	}
+	
+	public Level getLogLevel()
+	{
+		return logLevel;
 	}
 	
 	public HLProcess[] getAllProcesses()
