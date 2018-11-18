@@ -38,6 +38,9 @@ public class HLProcess implements Runnable
 	private long dep_wait_timeout_ms	= 30000;
 	
 	private Collection<HLProcess> depends = new ArrayList<HLProcess>();
+	private String command_block_start	= "";
+	private String command_block_end	= "";
+	
 	private String[] commands			= null;
 	private String terminated_command  	= null;
 	private boolean remote_ref			= false;
@@ -61,6 +64,27 @@ public class HLProcess implements Runnable
 	{
 		return "HLProcess alpha v0.4";
 	}
+
+	public void setCommandBlockStart(String aBlockSeparator)
+	{
+		this.command_block_start = aBlockSeparator;
+	}
+	
+	public String getCommandBlockStart()
+	{
+		return this.command_block_start;
+	}
+	
+	public void setCommandBlockEnd(String aBlockSeparator)
+	{
+		this.command_block_end = aBlockSeparator;
+	}
+	
+	public String getCommandBlockEnd()
+	{
+		return this.command_block_end;
+	}
+	
 
 	public void setProcessCommand(String[] aShellCmd)
 	{
@@ -570,6 +594,8 @@ public class HLProcess implements Runnable
 		sb.append("\n").append(sPrefix).append("is.remote=").append(isRemoteRef());
 		
 		sb.append("\n").append(sPrefix).append("process.command.").append(HLProcessConfig.osname).append("=").append(getProcessCommand());
+		sb.append("\n").append(sPrefix).append("process.command.block.start").append("=").append(getCommandBlockStart());
+		sb.append("\n").append(sPrefix).append("process.command.block.end").append("=").append(getCommandBlockEnd());
 		sb.append("\n").append(sPrefix).append("process.start.delay.ms=").append(getProcessStartDelayMs());
 		
 		sb.append("\n").append(sPrefix).append("init.timeout.ms=").append(this.init_timeout_ms);

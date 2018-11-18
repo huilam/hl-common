@@ -8,6 +8,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,11 +50,11 @@ public class HLProcessConfig {
 	public static String osname 	= null;
 	
 	public static char commandSpace = ' ';
-	public char commandBlockStart 	= commandSpace;
-	public char commandBlockEnd 	= commandSpace;
 	
 	private Pattern pattProcessId 	= Pattern.compile(_PROP_PREFIX_PROCESS+"(.+?)\\.");	
 	private Map<String, HLProcess> mapProcesses = new HashMap<String, HLProcess>();
+	
+	public static Logger logger = Logger.getLogger(HLProcessConfig.class.getName());
 	//
 	
 	static {
@@ -97,22 +99,35 @@ public class HLProcessConfig {
 		init(props);
 	}
 	
-	private String[] splitCommands(String aCmdString)
+	private String[] splitCommands(HLProcess aHLProcess, String aCmdString)
 	{
-		if(commandSpace == commandBlockStart && commandSpace == commandBlockEnd)
+		String sGrpStart = aHLProcess.getCommandBlockStart();
+		String sGrpEnd = aHLProcess.getCommandBlockEnd();
+		String sCmdSpace = String.valueOf(this.commandSpace);
+		
+		if(sGrpStart==null)
+			sGrpStart = "";
+		
+		if(sGrpEnd==null)
+			sGrpEnd = "";
+
+
+		if(sGrpStart.trim().length()==0 && sGrpEnd.trim().length()==0)
 		{
-			return aCmdString.split(""+commandSpace);
+			return aCmdString.split(sCmdSpace);
 		}
+		
+		boolean isSameStartEndChar = sGrpStart.equals(sGrpEnd);
 		
 		List<String> list = new ArrayList<String>();
 		
 		StringBuffer sb = new StringBuffer();
 		
-		boolean isSameBlockChar = commandBlockStart==commandBlockEnd;
 		boolean isGrouping = false;
 		for(char ch : aCmdString.toCharArray())
 		{
-			if(commandBlockStart == ch || commandBlockEnd == ch)
+			String sCh = String.valueOf(ch);
+			if(sGrpStart.equals(sCh) || sGrpEnd.equals(sCh) )
 			{
 				if(sb.length()>0)
 				{
@@ -120,13 +135,13 @@ public class HLProcessConfig {
 				}
 				sb.setLength(0);
 				
-				if(isSameBlockChar)
+				if(isSameStartEndChar)
 				{
 					isGrouping = !isGrouping;
 				}
 				else
 				{
-					isGrouping = commandBlockStart == ch;
+					isGrouping = sGrpStart.equals(sCh);
 				}
 			}
 			
@@ -151,6 +166,11 @@ public class HLProcessConfig {
 			}				
 		}
 		
+		if(sb.length()>0)
+		{
+			list.add(sb.toString());
+		}
+		
 		return list.toArray(new String[list.size()]);
 	}
 	
@@ -161,7 +181,7 @@ public class HLProcessConfig {
 		
 		Matcher m = null;
 		
-		Map<String, Map<String, String>> mapPID = new HashMap<String, Map<String, String>> ();
+		Map<String, Map<String, String>> mapPidConfigs = new HashMap<String, Map<String, String>> ();
 		
 		Iterator iter = aProperties.keySet().iterator();
 
@@ -184,22 +204,42 @@ public class HLProcessConfig {
 				if(sConfigVal.length()==0)
 					continue;
 				
-				Map<String, String> mapProcessConfig = mapPID.get(sPID);
+				Map<String, String> mapProcessConfig = mapPidConfigs.get(sPID);
 				if(mapProcessConfig==null)
 					mapProcessConfig = new HashMap<String, String>();
 				
 				mapProcessConfig.put(sConfigKey, sConfigVal);
-				mapPID.put(sPID, mapProcessConfig);
+				mapPidConfigs.put(sPID, mapProcessConfig);
 			}
 		}
-				
 		
-		iter = mapPID.keySet().iterator();
+		if(logger.isLoggable(Level.FINEST)) 
+		{
+			//Debug
+			logger.finest("Loaded configuration :");
+			iter = mapPidConfigs.keySet().iterator();
+			while(iter.hasNext())
+			{
+				String sPID = (String) iter.next();
+				Map<String, String> mapProcessConfig = mapPidConfigs.get(sPID);
+				logger.finest("["+sPID+"]");
+				Iterator iter2 = mapProcessConfig.keySet().iterator();
+				while(iter2.hasNext())
+				{
+					String sKey = (String) iter2.next();
+					String sVal = mapProcessConfig.get(sKey);
+					logger.finest("   - "+sKey+":"+sVal);
+				}
+			}
+			//
+		}	
+		
+		iter = mapPidConfigs.keySet().iterator();
 		String sConfigVal = null;
 		while(iter.hasNext())
 		{
 			String sPID = (String) iter.next();
-			Map<String, String> mapProcessConfig = mapPID.get(sPID);
+			Map<String, String> mapProcessConfig = mapPidConfigs.get(sPID);
 		
 			HLProcess p = mapProcesses.get(sPID);
 			if(p==null)
@@ -215,20 +255,20 @@ public class HLProcessConfig {
 				
 				if(sConfigVal.length()==1)
 				{
-					this.commandBlockStart = sConfigVal.charAt(0);
-					this.commandBlockEnd = this.commandBlockStart;
+					p.setCommandBlockStart(String.valueOf(sConfigVal.charAt(0)));
+					p.setCommandBlockEnd(p.getCommandBlockStart());
 				}
 				else if(sConfigVal.length()==2)
 				{
-					this.commandBlockStart = sConfigVal.charAt(0);
-					this.commandBlockEnd = sConfigVal.charAt(1);
+					p.setCommandBlockStart(String.valueOf(sConfigVal.charAt(0)));
+					p.setCommandBlockEnd(String.valueOf(sConfigVal.charAt(1)));
 				}
 			}
 			// 
 			sConfigVal = mapProcessConfig.get(_PROP_KEY_SHELL_COMMAND);
 			if(sConfigVal!=null)
 			{
-				p.setProcessCommand(splitCommands(sConfigVal));
+				p.setProcessCommand(splitCommands(p, sConfigVal));
 			}
 			//
 			sConfigVal = mapProcessConfig.get(_PROP_KEY_SHELL_OUTPUT_CONSOLE);
