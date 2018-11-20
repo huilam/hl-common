@@ -33,6 +33,7 @@ public class HLProcessConfig {
 	public static String _PROP_KEY_SHELL_DEF2_SCRIPT_DIR = _PROP_KEY_SHELL+"default.to.script.dir";
 	
 	public static String _PROP_KEY_SHELL_TERMINATE_CMD	= _PROP_KEY_SHELL+"terminated.command.{os.name}";
+	public static String _PROP_KEY_SHELL_SHUTDOWN_ALL_ON_TEMINATE = _PROP_KEY_SHELL+"shutdown.all.on.termination";
 
 	//-- INIT
 	public static String _PROP_KEY_INIT					= "init.";
@@ -294,6 +295,12 @@ public class HLProcessConfig {
 			if(sConfigVal!=null)
 			{
 				p.setTerminatedCommand(sConfigVal);
+			}
+			//
+			sConfigVal = mapProcessConfig.get(_PROP_KEY_SHELL_SHUTDOWN_ALL_ON_TEMINATE);
+			if(sConfigVal!=null)
+			{
+				p.setShutdownAllOnTermination("true".equalsIgnoreCase(sConfigVal));
 			}
 			//
 			sConfigVal = mapProcessConfig.get(_PROP_KEY_SHELL_DEF2_SCRIPT_DIR);

@@ -45,6 +45,9 @@ public class HLProcess implements Runnable
 	private String terminated_command  	= null;
 	private boolean remote_ref			= false;
 	private String remote_hostname		= null;
+	private boolean is_terminated 		= false;
+	private boolean shutdown_all_on_termination  = false;
+	private Thread thread 				= null;
 	private Process proc 				= null;
 	
 	public static Logger logger 		= Logger.getLogger(HLProcess.class.getName());
@@ -114,6 +117,16 @@ public class HLProcess implements Runnable
 	public String getProcessId()
 	{
 		return this.id;
+	}	
+	
+	public void setShutdownAllOnTermination(boolean aShutdownAll)
+	{
+		this.shutdown_all_on_termination = aShutdownAll;
+	}
+	
+	public boolean isShutdownAllOnTermination()
+	{
+		return this.shutdown_all_on_termination;
 	}	
 	
 	public void setRemoteRef(boolean aRemoteRef)
@@ -263,9 +276,14 @@ public class HLProcess implements Runnable
 	}	
 	//////////
 	
+	public boolean isTerminated()
+	{
+		return this.is_terminated && this.run_start_timestamp>0;
+	}
+	
 	public boolean isRunning()
 	{
-		return this.run_start_timestamp>0 || (proc!=null && proc.isAlive());
+		return (this.run_start_timestamp>0 || (proc!=null && proc.isAlive()));
 	}
 	
 	public boolean isInitSuccess()
@@ -545,6 +563,11 @@ public class HLProcess implements Runnable
 				this.exit_value = -1;
 			}
 			onProcessEnd(this);
+			
+			if(isShutdownAllOnTermination())
+			{
+				System.exit(this.exit_value);
+			}
 		}
 	}
 	
@@ -552,6 +575,14 @@ public class HLProcess implements Runnable
 	public void onProcessEnd(HLProcess aHLProcess)
 	{
 		//System.out.println("[onProcessEnd]"+aHLProcess.getProcessId()+" exitValue:"+aHLProcess.getExitValue());
+	}
+	
+	public Thread startProcess()
+	{
+		is_terminated = false;
+		thread = new Thread(this);
+		thread.start();
+		return thread;
 	}
 	
 	private String milisec2Words(long aElapsed)
@@ -594,9 +625,11 @@ public class HLProcess implements Runnable
 		sb.append("\n").append(sPrefix).append("is.remote=").append(isRemoteRef());
 		
 		sb.append("\n").append(sPrefix).append("process.command.").append(HLProcessConfig.osname).append("=").append(getProcessCommand());
-		sb.append("\n").append(sPrefix).append("process.command.block.start").append("=").append(getCommandBlockStart());
-		sb.append("\n").append(sPrefix).append("process.command.block.end").append("=").append(getCommandBlockEnd());
+		sb.append("\n").append(sPrefix).append("process.command.block.start=").append(getCommandBlockStart());
+		sb.append("\n").append(sPrefix).append("process.command.block.end=").append(getCommandBlockEnd());
 		sb.append("\n").append(sPrefix).append("process.start.delay.ms=").append(getProcessStartDelayMs());
+		sb.append("\n").append(sPrefix).append("process.terminated.cmd=").append(getTerminatedCommand());
+		sb.append("\n").append(sPrefix).append("process.shutdown.all.on.termination=").append(isShutdownAllOnTermination());
 		
 		sb.append("\n").append(sPrefix).append("init.timeout.ms=").append(this.init_timeout_ms);
 		sb.append("\n").append(sPrefix).append("init.success.regex=").append(this.patt_init_success==null?"":this.patt_init_success.pattern());

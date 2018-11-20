@@ -2,6 +2,7 @@ package hl.common.shell;
 
 import java.io.IOException;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import hl.common.shell.HLProcess;
 import hl.common.shell.HLProcessConfig;
@@ -9,7 +10,7 @@ import hl.common.shell.HLProcessConfig;
 public class HLProcessMgr
 {
 	private HLProcessConfig procConfig = null;
-	private static Level logLevel = HLProcess.logger.getLevel();
+	private static Logger logger  = Logger.getLogger(HLProcessMgr.class.getName());
 	
 	public HLProcessMgr(String aPropFileName)
 	{
@@ -22,14 +23,14 @@ public class HLProcessMgr
 	
 	public void setLogLevel(Level aLogLevel)
 	{
-		logLevel = aLogLevel;
+		logger.setLevel(aLogLevel);
 		HLProcess.logger.setLevel(aLogLevel);
 		HLProcessConfig.logger.setLevel(aLogLevel);
 	}
 	
 	public Level getLogLevel()
 	{
-		return logLevel;
+		return logger.getLevel();
 	}
 	
 	public HLProcess[] getAllProcesses()
@@ -60,7 +61,7 @@ public class HLProcessMgr
 					long lElapsed = System.currentTimeMillis()-lStart;
 					if(lElapsed >= p.getProcessStartDelayMs())
 					{
-						new Thread(p).start();
+						p.startProcess();
 						lPendingStart--;
 					}
 				}
