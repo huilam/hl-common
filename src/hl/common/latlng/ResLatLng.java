@@ -6,6 +6,7 @@ public class ResLatLng {
 	private long epoch_timestamp 	= 0;
 	private double latitude 		= 0;
 	private double longitude 		= 0;
+	private int level_no  			= 0;
 	private double altitude  		= 0;
 	private String altitude_unit	= "m";
 	
@@ -45,6 +46,13 @@ public class ResLatLng {
 	}
 	public void setAltitude(double altitude) {
 		this.altitude = altitude;
+	}
+	
+	public int getLevelNo() {
+		return level_no;
+	}
+	public void setLevelNo(int aLevelNo) {
+		this.level_no = aLevelNo;
 	}
 	
 	public String getAltitudeUnit() {
