@@ -65,7 +65,7 @@ public class HLProcess implements Runnable
 	
 	public static String getVersion()
 	{
-		return "HLProcess alpha v0.4";
+		return "HLProcess alpha v0.44";
 	}
 
 	public void setCommandBlockStart(String aBlockSeparator)
