@@ -1,12 +1,17 @@
 package hl.common;
 
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Vector;
 
 public class FileUtil {
 
@@ -67,6 +72,87 @@ public class FileUtil {
 	        	bos.close();
         }
     }
+    
+	public static List<String[]> loadCSV(File aCSVFile) throws IOException
+	{
+		List<String[]> list = new ArrayList<String[]>();
+		
+		BufferedReader rdr = null;
+		try {
+			rdr = new BufferedReader(new FileReader(aCSVFile));
+			
+			String sLine = null;
+			
+			while((sLine = rdr.readLine())!=null)
+			{
+				Vector<String> vStr = new Vector<String>();
+				
+				StringBuffer sb = new StringBuffer();
+				boolean isQuoted = false;
+				for(int i=0; i<sLine.length(); i++)
+				{
+					if(i==0)
+					{
+						isQuoted = sLine.charAt(0)=='\"';
+						if(isQuoted)
+							continue;
+					}
+					
+					if(isQuoted)
+					{
+						if(sLine.charAt(i)=='\"')
+						{
+							if(sLine.length()>i && sLine.charAt(i+1)=='\"')
+							{
+								//Escape
+								i++;
+								sb.append(sLine.charAt(i));
+								continue;
+							}
+							
+							isQuoted = false;
+							continue;
+						}
+						else
+						{
+							sb.append(sLine.charAt(i));
+						}
+					}
+					else
+					{
+						if(sLine.charAt(i)==',')
+						{
+							vStr.add(sb.toString());
+							sb.setLength(0);
+							continue;
+						}
+						else
+						{
+							sb.append(sLine.charAt(i));
+						}
+					}
+					
+				}
+				if(sb.length()>0)
+				{
+					vStr.add(sb.toString());
+				}
+				
+				list.add(vStr.toArray(new String[vStr.size()]));
+			}
+		}
+		finally
+		{
+			try {
+				if(rdr!=null);
+				rdr.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return list;
+	}
     
     public static void main(String args[]) throws IOException
     {
