@@ -36,6 +36,7 @@ public class HLProcess implements Runnable
 	
 	private long dep_check_interval_ms	= 100;
 	private long dep_wait_timeout_ms	= 30000;
+	private long shutdown_timeout_ms	= 30000;
 	
 	private Collection<HLProcess> depends = new ArrayList<HLProcess>();
 	private String command_block_start	= "";
@@ -43,12 +44,16 @@ public class HLProcess implements Runnable
 	
 	private String[] commands			= null;
 	private String terminated_command  	= null;
+	private boolean disabled			= false;
+	
 	private boolean remote_ref			= false;
 	private String remote_hostname		= null;
 	private boolean is_terminated 		= false;
+	private boolean is_running 			= false;
 	private boolean shutdown_all_on_termination  = false;
 	private Thread thread 				= null;
 	private Process proc 				= null;
+	private HLProcessEvent listener		= null; 
 	
 	public static Logger logger 		= Logger.getLogger(HLProcess.class.getName());
 	
@@ -65,7 +70,7 @@ public class HLProcess implements Runnable
 	
 	public static String getVersion()
 	{
-		return "HLProcess alpha v0.44";
+		return "HLProcess alpha v0.45";
 	}
 
 	public void setCommandBlockStart(String aBlockSeparator)
@@ -139,6 +144,17 @@ public class HLProcess implements Runnable
 		return this.remote_ref;
 	}	
 	
+	public void setDisabled(boolean aDisabled)
+	{
+		this.disabled = aDisabled;
+	}
+	
+	public boolean isDisabled()
+	{
+		return this.disabled;
+	}	
+	
+	
 	public void setRemoteHost(String aRemoteHost)
 	{
 		this.remote_hostname = aRemoteHost;
@@ -193,9 +209,19 @@ public class HLProcess implements Runnable
 		return this.exit_value;
 	}
 	
-	public void setInitTimeoutMs(long aInitTimeoutMs)
+	public void setShutdownTimeoutMs(long aTimeoutMs)
 	{
-		this.init_timeout_ms = aInitTimeoutMs;
+		this.shutdown_timeout_ms = aTimeoutMs;
+	}
+	
+	public long getShutdownTimeoutMs()
+	{
+		return this.shutdown_timeout_ms;
+	}
+	
+	public void setInitTimeoutMs(long aTimeoutMs)
+	{
+		this.init_timeout_ms = aTimeoutMs;
 	}
 	
 	public long getInitTimeoutMs()
@@ -283,7 +309,12 @@ public class HLProcess implements Runnable
 	
 	public boolean isRunning()
 	{
-		return (this.run_start_timestamp>0 || (proc!=null && proc.isAlive()));
+		return (proc!=null && proc.isAlive());
+	}
+	
+	public boolean isStarted()
+	{
+		return this.run_start_timestamp>0;
 	}
 	
 	public boolean isInitSuccess()
@@ -314,64 +345,76 @@ public class HLProcess implements Runnable
 		return new File(sScript);
 	}
 	
+	private void checkDependenciesB4Start()
+	{
+		String sPrefix = (id==null?"":"["+id+"] ");
+		
+		if(depends!=null && depends.size()>0)
+		{
+			logger.log(Level.INFO, 
+					sPrefix + "wait_dependances ...");
+
+			Collection<HLProcess> tmpDepends = new ArrayList<HLProcess>();
+			tmpDepends.addAll(depends);
+			
+			boolean isDependTimeOut = (this.dep_wait_timeout_ms>0);
+			StringBuffer sbDepCmd = new StringBuffer();
+			while(tmpDepends.size()>0)
+			{
+				sbDepCmd.setLength(0);
+				
+				Iterator<HLProcess> iter = tmpDepends.iterator();
+				long lElapsed = System.currentTimeMillis() - this.run_start_timestamp;
+				while(iter.hasNext())
+				{
+					HLProcess d = iter.next();
+					
+					if(d.isInitSuccess())
+					{
+						iter.remove();
+						continue;
+					}
+					else
+					{
+						sbDepCmd.append("\n - ");
+						sbDepCmd.append(d.id).append(" : ");
+						if(d.isRemoteRef())
+							sbDepCmd.append("(remote)").append(d.getRemoteHost()==null?"":d.getRemoteHost());
+						else
+							sbDepCmd.append(d.getProcessCommand());
+					}
+					
+					if(isDependTimeOut && lElapsed >= this.dep_wait_timeout_ms)
+					{
+						String sErr = sPrefix+"Dependance process(es) init timeout ! "+this.dep_wait_timeout_ms+"ms : "+sbDepCmd.toString();
+						logger.log(Level.SEVERE, sErr);
+						this.is_running = false;
+						onProcessError(this, new Exception(sErr));
+					}
+				}
+				
+				try {
+					Thread.sleep(this.dep_check_interval_ms);
+				} catch (InterruptedException e) {
+					logger.log(Level.WARNING, e.getMessage(), e);
+					onProcessError(this, e);
+				}
+			}
+		}
+				
+	}
+	
 	@Override
 	public void run() {
 		
 		this.run_start_timestamp = System.currentTimeMillis();
+		this.is_terminated = false;
+		
 		String sPrefix = (id==null?"":"["+id+"] ");
 		
 		logger.log(Level.INFO, sPrefix+"start - "+getProcessId());
 		try {			
-			if(depends!=null && depends.size()>0)
-			{
-				logger.log(Level.INFO, 
-						sPrefix + "wait_dependances ...");
-
-				Collection<HLProcess> tmpDepends = new ArrayList<HLProcess>();
-				tmpDepends.addAll(depends);
-				
-				boolean isDependTimeOut = (this.dep_wait_timeout_ms>0);
-				StringBuffer sbDepCmd = new StringBuffer();
-				while(tmpDepends.size()>0)
-				{
-					sbDepCmd.setLength(0);
-					
-					Iterator<HLProcess> iter = tmpDepends.iterator();
-					long lElapsed = System.currentTimeMillis() - this.run_start_timestamp;
-					while(iter.hasNext())
-					{
-						HLProcess d = iter.next();
-						
-						if(d.isInitSuccess())
-						{
-							iter.remove();
-							continue;
-						}
-						else
-						{
-							sbDepCmd.append("\n - ");
-							sbDepCmd.append(d.id).append(" : ");
-							if(d.isRemoteRef())
-								sbDepCmd.append("(remote)").append(d.getRemoteHost()==null?"":d.getRemoteHost());
-							else
-								sbDepCmd.append(d.getProcessCommand());
-						}
-						
-						if(isDependTimeOut && lElapsed >= this.dep_wait_timeout_ms)
-						{
-							String sErr = sPrefix+"Dependance process(es) init timeout ! "+this.dep_wait_timeout_ms+"ms : "+sbDepCmd.toString();
-							logger.log(Level.SEVERE, sErr);
-							throw new RuntimeException(sErr);
-						}
-					}
-					
-					try {
-						Thread.sleep(this.dep_check_interval_ms);
-					} catch (InterruptedException e) {
-						logger.log(Level.WARNING, e.getMessage(), e);
-					}
-				}
-			}
+			checkDependenciesB4Start();
 			
 			ProcessBuilder pb = new ProcessBuilder(this.commands);
 			try {
@@ -387,9 +430,11 @@ public class HLProcess implements Runnable
 				pb.redirectErrorStream(true);
 				proc = pb.start();
 			} catch (IOException e1) {
-				throw new RuntimeException(e1);
+				this.is_running = false;
+				onProcessError(this, e1);
 			}
 			
+			onProcessStart(this);
 			long lStart = System.currentTimeMillis();
 			BufferedReader rdr = null;
 			BufferedWriter wrt = null;
@@ -422,8 +467,11 @@ public class HLProcess implements Runnable
 					sLine = rdr.readLine();
 				
 				String sDebugLine = null;
+				this.is_running = true;
+				
 				while(proc.isAlive() || sLine!=null)
 				{
+
 					if(sLine!=null)
 					{
 						sDebugLine = sPrefix + df.format(System.currentTimeMillis()) + sLine;
@@ -452,7 +500,8 @@ public class HLProcess implements Runnable
 								{
 									String sErr = sPrefix + "init_error - Elapsed: "+milisec2Words(System.currentTimeMillis()-this.run_start_timestamp);
 									logger.log(Level.SEVERE, sErr);
-									throw new RuntimeException(sErr);
+									this.is_running = false;
+									onProcessError(this, new Exception(sErr));
 								}
 							}
 						
@@ -473,12 +522,14 @@ public class HLProcess implements Runnable
 					}
 					else
 					{
+						
 						try {
 							//let the process rest awhile when no output
 							Thread.sleep(100);
 						} catch (InterruptedException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
+							onProcessError(this,e);
 						}
 					}
 					
@@ -490,8 +541,10 @@ public class HLProcess implements Runnable
 							if(lElapsed>=this.init_timeout_ms)
 							{
 								String sErr = sPrefix+"Init timeout ! "+milisec2Words(lElapsed)+" - "+getProcessCommand();
+								this.is_init_success = false;
 								logger.log(Level.SEVERE, sErr);
-								throw new RuntimeException(sErr);
+								this.is_running = false;
+								onProcessError(this, new Exception(sErr));
 							}
 						}
 						
@@ -510,9 +563,11 @@ public class HLProcess implements Runnable
 			} catch (Throwable e) {
 				this.exit_value = -1;
 				logger.log(Level.SEVERE, e.getMessage(), e);
+				onProcessError(this, e);
 			}
 			finally
 			{
+				this.is_running = false;
 				if(wrt!=null)
 				{
 					try {
@@ -562,19 +617,31 @@ public class HLProcess implements Runnable
 			{
 				this.exit_value = -1;
 			}
-			onProcessEnd(this);
+			this.is_terminated = true;
 			
-			if(isShutdownAllOnTermination())
-			{
-				System.exit(this.exit_value);
-			}
+			onProcessTerminate(this);
 		}
 	}
 	
-	
-	public void onProcessEnd(HLProcess aHLProcess)
+	public void setEventListener(HLProcessEvent event)
 	{
-		//System.out.println("[onProcessEnd]"+aHLProcess.getProcessId()+" exitValue:"+aHLProcess.getExitValue());
+		this.listener = event;
+	}
+
+	private void onProcessStart(HLProcess aHLProcess)
+	{
+		if(this.listener!=null)
+			listener.onProcessStart(aHLProcess);
+	}
+	private void onProcessError(HLProcess aHLProcess, Throwable e)
+	{
+		if(this.listener!=null)
+			listener.onProcessError(aHLProcess, e);
+	}
+	private void onProcessTerminate(HLProcess aHLProcess)
+	{
+		if(this.listener!=null)
+			listener.onProcessTerminate(aHLProcess);
 	}
 	
 	public Thread startProcess()
@@ -583,6 +650,11 @@ public class HLProcess implements Runnable
 		thread = new Thread(this);
 		thread.start();
 		return thread;
+	}
+	
+	public void terminateProcess()
+	{
+		this.is_running = false;
 	}
 	
 	private String milisec2Words(long aElapsed)

@@ -21,6 +21,8 @@ public class HLProcessConfig {
 	public static String _PROP_FILENAME 			= "process.properties";
 	//
 	public static String _PROP_PREFIX_PROCESS 		= "process.";
+	
+	public static String _PROP_KEY_DISABLED 		= "disabled";;
 
 	//-- SHELL
 	public static String _PROP_KEY_SHELL				= "shell.";
@@ -33,7 +35,8 @@ public class HLProcessConfig {
 	public static String _PROP_KEY_SHELL_DEF2_SCRIPT_DIR = _PROP_KEY_SHELL+"default.to.script.dir";
 	
 	public static String _PROP_KEY_SHELL_TERMINATE_CMD	= _PROP_KEY_SHELL+"terminated.command.{os.name}";
-	public static String _PROP_KEY_SHELL_SHUTDOWN_ALL_ON_TEMINATE = _PROP_KEY_SHELL+"shutdown.all.on.termination";
+	public static String _PROP_KEY_SHELL_SHUTDOWN_ALL_ON_TEMINATE 	= _PROP_KEY_SHELL+"shutdown.all.on.termination";
+	public static String _PROP_KEY_SHELL_SHUTDOWN_ALL_TIMEOUT_MS 	= _PROP_KEY_SHELL+"shutdown.all.timeout.ms";
 
 	//-- INIT
 	public static String _PROP_KEY_INIT					= "init.";
@@ -54,6 +57,7 @@ public class HLProcessConfig {
 	
 	private Pattern pattProcessId 	= Pattern.compile(_PROP_PREFIX_PROCESS+"(.+?)\\.");	
 	private Map<String, HLProcess> mapProcesses = new HashMap<String, HLProcess>();
+	private Map<String, HLProcess> mapDisabledProcesses = new HashMap<String, HLProcess>();
 	
 	public static Logger logger = Logger.getLogger(HLProcessConfig.class.getName());
 	//
@@ -248,6 +252,13 @@ public class HLProcessConfig {
 				p = new HLProcess(sPID);
 			}
 				
+			// DISABLED
+			sConfigVal = mapProcessConfig.get(_PROP_KEY_DISABLED);
+			if(sConfigVal!=null)
+			{
+				p.setDisabled("true".equalsIgnoreCase(sConfigVal));
+			}
+			
 			// SHELL
 			sConfigVal = mapProcessConfig.get(_PROP_KEY_SHELL_CMD_BLOCK);
 			if(sConfigVal!=null)
@@ -302,6 +313,13 @@ public class HLProcessConfig {
 			{
 				p.setShutdownAllOnTermination("true".equalsIgnoreCase(sConfigVal));
 			}
+			//
+			sConfigVal = mapProcessConfig.get(_PROP_KEY_SHELL_SHUTDOWN_ALL_TIMEOUT_MS);
+			if(sConfigVal!=null)
+			{
+				long lVal = Long.parseLong(sConfigVal);
+				p.setShutdownTimeoutMs(lVal);
+			}			
 			//
 			sConfigVal = mapProcessConfig.get(_PROP_KEY_SHELL_DEF2_SCRIPT_DIR);
 			if(sConfigVal!=null)
@@ -380,7 +398,14 @@ public class HLProcessConfig {
 				p.setDependCheckIntervalMs(lVal);
 			}
 			//
-			mapProcesses.put(sPID, p);
+			if(!p.isDisabled())
+			{
+				mapProcesses.put(sPID, p);
+			}
+			else
+			{
+				mapDisabledProcesses.put(sPID, p);
+			}
 		}
 		validateProcessConfigs();
 	}
@@ -421,6 +446,15 @@ public class HLProcessConfig {
 			return new HLProcess[]{};
 		
 		Collection<HLProcess> c = mapProcesses.values();
+		return c.toArray(new HLProcess[c.size()]);
+	}
+	
+	protected HLProcess[] getDisabledProcesses()
+	{
+		if(mapDisabledProcesses==null)
+			return new HLProcess[]{};
+		
+		Collection<HLProcess> c = mapDisabledProcesses.values();
 		return c.toArray(new HLProcess[c.size()]);
 	}
 	
