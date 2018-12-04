@@ -23,20 +23,17 @@ public class HLProcessMgr
 			
 			event = new HLProcessEvent()
 					{
-						@Override
 						public void onProcessStart(HLProcess p) {
 						}
 						
-						@Override
 						public void onProcessError(HLProcess p, Throwable e) {
 						}
 
-						@Override
 						public void onProcessTerminate(HLProcess p) 
 						{
 							if(p.isShutdownAllOnTermination())
 							{
-								logger.log(Level.INFO, p.getProcessId()+" terminating other process ...");
+								logger.log(Level.INFO, p.getProcessId()+" waiting for other processes to terminate ...");
 								terminateAllProcesses();
 								
 								long lStart = System.currentTimeMillis();

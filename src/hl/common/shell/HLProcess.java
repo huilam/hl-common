@@ -50,6 +50,8 @@ public class HLProcess implements Runnable
 	private String remote_hostname		= null;
 	private boolean is_terminated 		= false;
 	private boolean is_running 			= false;
+
+	private boolean is_exec_terminate_cmd  		 = false;
 	private boolean shutdown_all_on_termination  = false;
 	private Thread thread 				= null;
 	private Process proc 				= null;
@@ -404,7 +406,6 @@ public class HLProcess implements Runnable
 				
 	}
 	
-	@Override
 	public void run() {
 		
 		this.run_start_timestamp = System.currentTimeMillis();
@@ -502,6 +503,7 @@ public class HLProcess implements Runnable
 									logger.log(Level.SEVERE, sErr);
 									this.is_running = false;
 									onProcessError(this, new Exception(sErr));
+									break;
 								}
 							}
 						
@@ -530,6 +532,7 @@ public class HLProcess implements Runnable
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 							onProcessError(this,e);
+							break;
 						}
 					}
 					
@@ -545,6 +548,7 @@ public class HLProcess implements Runnable
 								logger.log(Level.SEVERE, sErr);
 								this.is_running = false;
 								onProcessError(this, new Exception(sErr));
+								break;
 							}
 						}
 						
@@ -558,6 +562,11 @@ public class HLProcess implements Runnable
 					if(rdr.ready())
 					{
 						sLine = rdr.readLine();
+					}
+					
+					if(!this.is_running)
+					{
+						executeTerminateCmd();
 					}
 				}
 			} catch (Throwable e) {
@@ -591,7 +600,25 @@ public class HLProcess implements Runnable
 		{
 			long lElapsed = (System.currentTimeMillis()-this.run_start_timestamp);
 			logger.log(Level.INFO, sPrefix+"end - "+getProcessCommand()+" (elapsed: "+milisec2Words(lElapsed)+")");
+
+			executeTerminateCmd();
 			
+			if(this.is_init_failed || !this.is_init_success)
+			{
+				this.exit_value = -1;
+			}
+			this.is_terminated = true;
+			
+			onProcessTerminate(this);
+		}
+	}
+	
+	private void executeTerminateCmd()
+	{
+		String sPrefix = (id==null?"":"["+id+"] ");
+		if(!this.is_exec_terminate_cmd)
+		{
+			this.is_exec_terminate_cmd = true;
 			String sEndCmd = getTerminatedCommand();
 			if(sEndCmd!=null && sEndCmd.trim().length()>0)
 			{
@@ -607,20 +634,12 @@ public class HLProcess implements Runnable
 					pb.redirectErrorStream(true);
 					pb.inheritIO();
 					pb.start();
-
+	
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
-			
-			if(this.is_init_failed || !this.is_init_success)
-			{
-				this.exit_value = -1;
-			}
-			this.is_terminated = true;
-			
-			onProcessTerminate(this);
-		}
+		}		
 	}
 	
 	public void setEventListener(HLProcessEvent event)
@@ -692,6 +711,7 @@ public class HLProcess implements Runnable
 	{
 		String sPrefix = "["+getProcessId()+"]";
 		StringBuffer sb = new StringBuffer();
+		sb.append("\n").append(sPrefix).append("is.disabled=").append(isDisabled());
 		sb.append("\n").append(sPrefix).append("is.running=").append(isRunning());
 		sb.append("\n").append(sPrefix).append("is.init.success=").append(isInitSuccess());
 		sb.append("\n").append(sPrefix).append("is.remote=").append(isRemoteRef());
@@ -700,8 +720,9 @@ public class HLProcess implements Runnable
 		sb.append("\n").append(sPrefix).append("process.command.block.start=").append(getCommandBlockStart());
 		sb.append("\n").append(sPrefix).append("process.command.block.end=").append(getCommandBlockEnd());
 		sb.append("\n").append(sPrefix).append("process.start.delay.ms=").append(getProcessStartDelayMs());
-		sb.append("\n").append(sPrefix).append("process.terminated.cmd=").append(getTerminatedCommand());
+		sb.append("\n").append(sPrefix).append("process.terminate.cmd=").append(getTerminatedCommand());
 		sb.append("\n").append(sPrefix).append("process.shutdown.all.on.termination=").append(isShutdownAllOnTermination());
+		sb.append("\n").append(sPrefix).append("process.shutdown.all.timeout.ms=").append(isShutdownAllOnTermination());
 		
 		sb.append("\n").append(sPrefix).append("init.timeout.ms=").append(this.init_timeout_ms);
 		sb.append("\n").append(sPrefix).append("init.success.regex=").append(this.patt_init_success==null?"":this.patt_init_success.pattern());

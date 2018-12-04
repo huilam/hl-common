@@ -34,7 +34,7 @@ public class HLProcessConfig {
 	public static String _PROP_KEY_SHELL_OUTPUT_CONSOLE = _PROP_KEY_SHELL+"output.console";
 	public static String _PROP_KEY_SHELL_DEF2_SCRIPT_DIR = _PROP_KEY_SHELL+"default.to.script.dir";
 	
-	public static String _PROP_KEY_SHELL_TERMINATE_CMD	= _PROP_KEY_SHELL+"terminated.command.{os.name}";
+	public static String _PROP_KEY_SHELL_TERMINATE_CMD	= _PROP_KEY_SHELL+"terminate.command.{os.name}";
 	public static String _PROP_KEY_SHELL_SHUTDOWN_ALL_ON_TEMINATE 	= _PROP_KEY_SHELL+"shutdown.all.on.termination";
 	public static String _PROP_KEY_SHELL_SHUTDOWN_ALL_TIMEOUT_MS 	= _PROP_KEY_SHELL+"shutdown.all.timeout.ms";
 
