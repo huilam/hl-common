@@ -87,7 +87,7 @@ public class RestApiUtil {
 		if(aOutputContent!=null && aOutputContent.length()>0)
 		{
 			byte[] byteContent 	= aOutputContent.getBytes("UTF-8");
-			long lContentLen 	= aOutputContent.getBytes().length;
+			long lContentLen 	= byteContent.length;
 			
 			if(aGzipBytesThreshold>0 && lContentLen >= aGzipBytesThreshold)
 			{
