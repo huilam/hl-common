@@ -37,8 +37,8 @@ public class HLProcessMgr
 								terminateAllProcesses();
 								
 								long lStart = System.currentTimeMillis();
-								long lShutdownElapsed = 0;
-								long lShutdown_timeout_ms = p.getShutdownTimeoutMs();
+								long lShutdownElapsed 		= 0;
+								long lShutdown_timeout_ms 	= p.getShutdownTimeoutMs();
 								int iActiveProcess = 1;
 								while(iActiveProcess>0)
 								{
@@ -53,10 +53,25 @@ public class HLProcessMgr
 									
 									lShutdownElapsed = System.currentTimeMillis() - lStart;
 									
-									if(lShutdownElapsed >= lShutdown_timeout_ms)
+									if(lShutdown_timeout_ms>0 && lShutdownElapsed >= lShutdown_timeout_ms)
 									{
 										//kill all 
-										logger.log(Level.WARNING, "Shutdown timeout - "+lShutdown_timeout_ms);
+										StringBuffer sb = new StringBuffer();
+										
+										
+										sb.append("Shutdown timeout - ").append(lShutdown_timeout_ms).append("ms, processes pending termination:");
+										
+										int i = 1;
+										for(HLProcess proc : getAllProcesses())
+										{
+											if(!proc.getProcessId().equals(p.getProcessId()) && proc.isRunning())
+											{
+												sb.append("\n ").append(i++).append(". [").append(proc.getProcessId()).append("]:").append(proc.getProcessCommand());
+											}
+										}
+
+										logger.log(Level.WARNING, sb.toString());
+										
 										System.exit(1);
 									}
 									try {
@@ -117,30 +132,6 @@ public class HLProcessMgr
 				procPendingShutdown.add(p);
 			}
 		}
-				
-		int iPendingShutdown = 1;
-		while(iPendingShutdown>0)
-		{
-			iPendingShutdown = 0;
-			for(HLProcess p : procPendingShutdown)
-			{
-				if(p.isRunning())
-				{
-					iPendingShutdown++;
-				}
-			}
-			
-			if(iPendingShutdown>0)
-			{
-				try {
-					Thread.sleep(200);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		}
-		
 	}
 
 	public synchronized void startAllProcesses()
