@@ -19,6 +19,16 @@ public class HLProcessMgr
 	public HLProcessMgr(String aPropFileName)
 	{
 		try {
+			
+			Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+				@Override
+				public void run() {
+					terminateAllProcesses();
+					waitForAllProcessesToBeTerminated(null);
+					
+				}
+			}));
+			
 			procConfig = new HLProcessConfig(aPropFileName);
 			
 			event = new HLProcessEvent()
@@ -33,54 +43,8 @@ public class HLProcessMgr
 						{
 							if(p.isShutdownAllOnTermination())
 							{
-								logger.log(Level.INFO, p.getProcessId()+" waiting for other processes to terminate ...");
 								terminateAllProcesses();
-								
-								long lStart = System.currentTimeMillis();
-								long lShutdownElapsed 		= 0;
-								long lShutdown_timeout_ms 	= p.getShutdownTimeoutMs();
-								int iActiveProcess = 1;
-								while(iActiveProcess>0)
-								{
-									iActiveProcess = 0;
-									for(HLProcess proc : getAllProcesses())
-									{
-										if(!proc.getProcessId().equals(p.getProcessId()) && proc.isRunning())
-										{
-											iActiveProcess++;
-										}
-									}
-									
-									lShutdownElapsed = System.currentTimeMillis() - lStart;
-									
-									if(lShutdown_timeout_ms>0 && lShutdownElapsed >= lShutdown_timeout_ms)
-									{
-										//kill all 
-										StringBuffer sb = new StringBuffer();
-										
-										
-										sb.append("Shutdown timeout - ").append(lShutdown_timeout_ms).append("ms, processes pending termination:");
-										
-										int i = 1;
-										for(HLProcess proc : getAllProcesses())
-										{
-											if(!proc.getProcessId().equals(p.getProcessId()) && proc.isRunning())
-											{
-												sb.append("\n ").append(i++).append(". [").append(proc.getProcessId()).append("]:").append(proc.getProcessCommand());
-											}
-										}
-
-										logger.log(Level.WARNING, sb.toString());
-										
-										System.exit(1);
-									}
-									try {
-										Thread.sleep(100);
-									} catch (InterruptedException e) {
-										// TODO Auto-generated catch block
-										e.printStackTrace();
-									}
-								}
+								waitForAllProcessesToBeTerminated(p);
 							}
 						}
 					};
@@ -89,6 +53,81 @@ public class HLProcessMgr
 			throw new RuntimeException(e);
 		}
 	}
+	
+	private void waitForAllProcessesToBeTerminated(HLProcess aCurrentProcess)
+	{
+		long lStart = System.currentTimeMillis();
+		long lShutdownElapsed 		= 0;
+		long lShutdown_timeout_ms 	= 0;
+		Vector<HLProcess> vProcesses = new Vector<HLProcess>();
+		
+		for(HLProcess proc : getAllProcesses())
+		{
+			if(aCurrentProcess!=null)
+			{
+				if(!proc.getProcessId().equals(aCurrentProcess.getProcessId()) && proc.isRunning())
+				{
+					vProcesses.add(proc);
+				}
+			}
+			else
+			{
+				vProcesses.add(proc);
+			}
+		}
+		
+		if(aCurrentProcess!=null)
+		{
+			lShutdown_timeout_ms 	= aCurrentProcess.getShutdownTimeoutMs();
+			logger.log(Level.INFO, "Waiting for all processes to be terminated ...");
+		}
+		
+		int iActiveProcess = 1;
+		while(iActiveProcess>0)
+		{
+			iActiveProcess = 0;
+			for(HLProcess proc : vProcesses)
+			{
+				if(proc.isRunning())
+				{
+					iActiveProcess++;
+				}
+			}
+			
+			if(lShutdown_timeout_ms>0)
+			{
+				lShutdownElapsed = System.currentTimeMillis() - lStart;
+				if(lShutdownElapsed >= lShutdown_timeout_ms)
+				{
+					//kill all 
+					StringBuffer sb = new StringBuffer();
+					
+					sb.append("Shutdown timeout - ").append(lShutdown_timeout_ms).append("ms, processes pending termination:");
+					
+					int i = 1;
+					for(HLProcess proc : getAllProcesses())
+					{
+						if(proc.isRunning())
+						{
+							sb.append("\n ").append(i++).append(". [").append(proc.getProcessId()).append("]:").append(proc.getProcessCommand());
+						}
+					}
+	
+					logger.log(Level.WARNING, sb.toString());
+					System.exit(1);
+				}
+			}
+			
+			///////
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		logger.log(Level.INFO, "All processes terminated");
+	}
+	
 	
 	public void setLogLevel(Level aLogLevel)
 	{
@@ -134,7 +173,12 @@ public class HLProcessMgr
 		}
 	}
 
-	public synchronized void startAllProcesses()
+	public void startAllProcesses()
+	{
+		startAllProcesses(200);
+	}
+	
+	private synchronized void startAllProcesses(long lSleepMs)
 	{
 		if(is_terminating)
 			return;
@@ -167,7 +211,7 @@ public class HLProcessMgr
 			if(lPendingStart>0)
 			{
 				try {
-					Thread.sleep(200);
+					Thread.sleep(lSleepMs);
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
