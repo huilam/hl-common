@@ -23,9 +23,10 @@ public class HLProcessMgr
 			Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
 				@Override
 				public void run() {
+					System.out.println("[ShutdownHook] Executing HLProcessMgr.ShutdownHook ...");
 					terminateAllProcesses();
 					waitForAllProcessesToBeTerminated(null);
-					
+					System.out.println("[ShutdownHook] End of HLProcessMgr.ShutdownHook.");
 				}
 			}));
 			
@@ -59,6 +60,7 @@ public class HLProcessMgr
 		long lStart = System.currentTimeMillis();
 		long lShutdownElapsed 		= 0;
 		long lShutdown_timeout_ms 	= 0;
+		long lLast_notification_ms 	= 0;
 		Vector<HLProcess> vProcesses = new Vector<HLProcess>();
 		
 		for(HLProcess proc : getAllProcesses())
@@ -79,7 +81,6 @@ public class HLProcessMgr
 		if(aCurrentProcess!=null)
 		{
 			lShutdown_timeout_ms 	= aCurrentProcess.getShutdownTimeoutMs();
-			logger.log(Level.INFO, "Waiting for all processes to be terminated ...");
 		}
 		
 		int iActiveProcess = 1;
@@ -94,15 +95,22 @@ public class HLProcessMgr
 				}
 			}
 			
-			if(lShutdown_timeout_ms>0)
+			lShutdownElapsed = System.currentTimeMillis() - lStart;
+			
+			if(iActiveProcess>0 && (lShutdownElapsed-lLast_notification_ms>=1000))
 			{
-				lShutdownElapsed = System.currentTimeMillis() - lStart;
+				lLast_notification_ms = System.currentTimeMillis();
+				System.out.println("[Termination] Waiting "+iActiveProcess+" processes ... "+HLProcess.milisec2Words(lShutdownElapsed));
+			}
+			
+			if(lShutdown_timeout_ms>0)
+			{	
 				if(lShutdownElapsed >= lShutdown_timeout_ms)
 				{
 					//kill all 
 					StringBuffer sb = new StringBuffer();
 					
-					sb.append("Shutdown timeout - ").append(lShutdown_timeout_ms).append("ms, processes pending termination:");
+					sb.append("[Termination] Shutdown timeout - ").append(lShutdown_timeout_ms).append("ms, processes pending termination:");
 					
 					int i = 1;
 					for(HLProcess proc : getAllProcesses())
@@ -113,7 +121,8 @@ public class HLProcessMgr
 						}
 					}
 	
-					logger.log(Level.WARNING, sb.toString());
+					//logger.log(Level.WARNING, sb.toString());
+					System.out.println(sb.toString());
 					System.exit(1);
 				}
 			}
@@ -125,7 +134,8 @@ public class HLProcessMgr
 				e.printStackTrace();
 			}
 		}
-		logger.log(Level.INFO, "All processes terminated");
+		//logger.log(Level.INFO, "All processes terminated");
+		System.out.println("[Termination] All processes terminated");
 	}
 	
 	

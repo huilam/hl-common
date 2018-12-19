@@ -72,7 +72,7 @@ public class HLProcess implements Runnable
 	
 	public static String getVersion()
 	{
-		return "HLProcess alpha v0.47";
+		return "HLProcess alpha v0.48";
 	}
 
 	public void setCommandBlockStart(String aBlockSeparator)
@@ -563,11 +563,6 @@ public class HLProcess implements Runnable
 					{
 						sLine = rdr.readLine();
 					}
-					
-					if(!this.is_running)
-					{
-						executeTerminateCmd();
-					}
 				}
 			} catch (Throwable e) {
 				this.exit_value = -1;
@@ -674,9 +669,10 @@ public class HLProcess implements Runnable
 	public void terminateProcess()
 	{
 		this.is_running = false;
+		executeTerminateCmd();
 	}
 	
-	private String milisec2Words(long aElapsed)
+	public static String milisec2Words(long aElapsed)
 	{
 		StringBuffer sb = new StringBuffer();
 		long lTmp = aElapsed;
