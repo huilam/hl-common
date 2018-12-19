@@ -67,7 +67,7 @@ public class HLProcessMgr
 		{
 			if(aCurrentProcess!=null)
 			{
-				if(!proc.getProcessId().equals(aCurrentProcess.getProcessId()) && proc.isRunning())
+				if(!proc.getProcessId().equals(aCurrentProcess.getProcessId()) && proc.isProcessAlive())
 				{
 					vProcesses.add(proc);
 				}
@@ -89,7 +89,7 @@ public class HLProcessMgr
 			iActiveProcess = 0;
 			for(HLProcess proc : vProcesses)
 			{
-				if(proc.isRunning())
+				if(proc.isProcessAlive())
 				{
 					iActiveProcess++;
 				}
@@ -97,10 +97,17 @@ public class HLProcessMgr
 			
 			lShutdownElapsed = System.currentTimeMillis() - lStart;
 			
-			if(iActiveProcess>0 && (lShutdownElapsed-lLast_notification_ms>=1000))
+			if(iActiveProcess>0 && (System.currentTimeMillis()-lLast_notification_ms>=1000))
 			{
 				lLast_notification_ms = System.currentTimeMillis();
 				System.out.println("[Termination] Waiting "+iActiveProcess+" processes ... "+HLProcess.milisec2Words(lShutdownElapsed));
+				for(HLProcess proc : vProcesses)
+				{
+					if(proc.isProcessAlive())
+					{
+						System.out.println("   - "+proc.getProcessId());
+					}
+				}
 			}
 			
 			if(lShutdown_timeout_ms>0)
@@ -115,7 +122,7 @@ public class HLProcessMgr
 					int i = 1;
 					for(HLProcess proc : getAllProcesses())
 					{
-						if(proc.isRunning())
+						if(proc.isProcessAlive())
 						{
 							sb.append("\n ").append(i++).append(". [").append(proc.getProcessId()).append("]:").append(proc.getProcessCommand());
 						}
@@ -169,12 +176,11 @@ public class HLProcessMgr
 	public synchronized void terminateAllProcesses()
 	{		
 		Vector<HLProcess> procPendingShutdown = new Vector<HLProcess>();
-		
 		for(HLProcess p : procConfig.getProcesses())
 		{
-			if(!p.isRemoteRef() && p.isRunning())
+			if(!p.isRemoteRef() && p.isProcessAlive())
 			{
-				if(!p.isRemoteRef() && p.isRunning())
+				if(!p.isStoping())
 				{
 					p.terminateProcess();
 				}

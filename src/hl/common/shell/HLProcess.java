@@ -72,7 +72,7 @@ public class HLProcess implements Runnable
 	
 	public static String getVersion()
 	{
-		return "HLProcess alpha v0.48";
+		return "HLProcess alpha v0.49";
 	}
 
 	public void setCommandBlockStart(String aBlockSeparator)
@@ -309,7 +309,12 @@ public class HLProcess implements Runnable
 		return this.is_terminated && this.run_start_timestamp>0;
 	}
 	
-	public boolean isRunning()
+	public boolean isStoping()
+	{
+		return !this.is_running;
+	}
+
+	public boolean isProcessAlive()
 	{
 		return (proc!=null && proc.isAlive());
 	}
@@ -610,7 +615,7 @@ public class HLProcess implements Runnable
 	
 	private void executeTerminateCmd()
 	{
-		String sPrefix = (id==null?"":"["+id+"] ");
+		String sPrefix = (id==null?"":id);
 		if(!this.is_exec_terminate_cmd)
 		{
 			this.is_exec_terminate_cmd = true;
@@ -618,7 +623,7 @@ public class HLProcess implements Runnable
 			if(sEndCmd!=null && sEndCmd.trim().length()>0)
 			{
 				try {
-					logger.log(Level.INFO, sPrefix+"execute terminated command  - "+sEndCmd);
+					System.out.println("[Termination] "+sPrefix+" : execute terminated command - "+sEndCmd);
 					ProcessBuilder pb = new ProcessBuilder(sEndCmd.split(" "));
 					File fileDir = new File(sEndCmd);
 					if(fileDir.isFile())
@@ -708,7 +713,8 @@ public class HLProcess implements Runnable
 		String sPrefix = "["+getProcessId()+"]";
 		StringBuffer sb = new StringBuffer();
 		sb.append("\n").append(sPrefix).append("is.disabled=").append(isDisabled());
-		sb.append("\n").append(sPrefix).append("is.running=").append(isRunning());
+		sb.append("\n").append(sPrefix).append("is.stoping=").append(isStoping());
+		sb.append("\n").append(sPrefix).append("is.process.alive=").append(isProcessAlive());
 		sb.append("\n").append(sPrefix).append("is.init.success=").append(isInitSuccess());
 		sb.append("\n").append(sPrefix).append("is.remote=").append(isRemoteRef());
 		
