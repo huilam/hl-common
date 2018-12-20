@@ -82,6 +82,15 @@ public class HLProcessMgr
 		{
 			lShutdown_timeout_ms 	= aCurrentProcess.getShutdownTimeoutMs();
 		}
+		else if(getAllProcesses().length==1)
+		{
+			HLProcess onlyProcess 	= getAllProcesses()[0];
+			lShutdown_timeout_ms 	= onlyProcess.getShutdownTimeoutMs();
+			if(!onlyProcess.isStoping())
+			{
+				onlyProcess.terminateProcess();
+			}
+		}
 		
 		int iActiveProcess = 1;
 		while(iActiveProcess>0)
@@ -130,6 +139,7 @@ public class HLProcessMgr
 	
 					//logger.log(Level.WARNING, sb.toString());
 					System.out.println(sb.toString());
+					System.out.println("[Termination] execute 'System.exit(1)'");
 					System.exit(1);
 				}
 			}
@@ -174,17 +184,12 @@ public class HLProcessMgr
 	}
 	
 	public synchronized void terminateAllProcesses()
-	{		
-		Vector<HLProcess> procPendingShutdown = new Vector<HLProcess>();
+	{
 		for(HLProcess p : procConfig.getProcesses())
 		{
-			if(!p.isRemoteRef() && p.isProcessAlive())
+			if(!p.isRemoteRef())
 			{
-				if(!p.isStoping())
-				{
-					p.terminateProcess();
-				}
-				procPendingShutdown.add(p);
+				p.terminateProcess();
 			}
 		}
 	}

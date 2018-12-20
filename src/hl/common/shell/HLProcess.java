@@ -72,7 +72,7 @@ public class HLProcess implements Runnable
 	
 	public static String getVersion()
 	{
-		return "HLProcess alpha v0.49";
+		return "HLProcess alpha v0.50";
 	}
 
 	public void setCommandBlockStart(String aBlockSeparator)
@@ -411,6 +411,29 @@ public class HLProcess implements Runnable
 				
 	}
 	
+	protected static ProcessBuilder initProcessBuilder(final String aCommands[], boolean isDefToScriptDir)
+	{
+		ProcessBuilder pb = null;
+		if(aCommands!=null)
+		{
+			String sCommandLine = String.join(" ",aCommands);
+			if(sCommandLine.trim().length()>0)
+			{
+				pb = new ProcessBuilder(aCommands);
+				if(isDefToScriptDir)
+				{
+					File fileDir = getCommandScriptDir(sCommandLine);
+					if(fileDir!=null)
+					{
+						pb.directory(fileDir);
+					}
+				}
+				pb.redirectErrorStream(true);
+			}
+		}
+		return pb;
+	}
+	
 	public void run() {
 		
 		this.run_start_timestamp = System.currentTimeMillis();
@@ -422,18 +445,8 @@ public class HLProcess implements Runnable
 		try {			
 			checkDependenciesB4Start();
 			
-			ProcessBuilder pb = new ProcessBuilder(this.commands);
+			ProcessBuilder pb = initProcessBuilder(this.commands, this.is_def_script_dir);
 			try {
-				
-				if(this.is_def_script_dir)
-				{
-					File fileDir = getCommandScriptDir(getProcessCommand());
-					if(fileDir!=null)
-					{
-						pb.directory(fileDir);
-					}
-				}
-				pb.redirectErrorStream(true);
 				proc = pb.start();
 			} catch (IOException e1) {
 				this.is_running = false;
@@ -447,154 +460,156 @@ public class HLProcess implements Runnable
 			
 			SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss.SSS ");
 			
-			try {
-				rdr = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-				
-				if(this.output_filename!=null)
-				{
-					if(this.output_filename.trim().length()>0)
+			if(proc!=null)
+			{
+				try {
+					rdr = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+					
+					if(this.output_filename!=null)
 					{
-						File fileOutput = new File(this.output_filename);
-						if(!fileOutput.exists())
+						if(this.output_filename.trim().length()>0)
 						{
-							if(fileOutput.getParentFile()!=null)
+							File fileOutput = new File(this.output_filename);
+							if(!fileOutput.exists())
 							{
-								fileOutput.getParentFile().mkdirs();
+								if(fileOutput.getParentFile()!=null)
+								{
+									fileOutput.getParentFile().mkdirs();
+								}
+							}
+							
+							wrt = new BufferedWriter(new FileWriter(fileOutput, true));
+						}
+					}
+					
+					String sLine = null;
+					
+					if(rdr.ready())
+						sLine = rdr.readLine();
+					
+					String sDebugLine = null;
+					this.is_running = true;
+					
+					while(proc.isAlive() || sLine!=null)
+					{
+	
+						if(sLine!=null)
+						{
+							sDebugLine = sPrefix + df.format(System.currentTimeMillis()) + sLine;
+	
+							if(wrt!=null)
+							{
+								wrt.write(sDebugLine);
+								wrt.newLine();
+								wrt.flush();
+							}
+							
+							if(this.is_output_console)
+							{
+								System.out.println(sLine);
+							}
+							
+							logDebug(sDebugLine);
+							
+							if(sLine.length()>0)
+							{
+								if(!this.is_init_failed && this.patt_init_failed!=null)
+								{
+									Matcher m = this.patt_init_failed.matcher(sLine);
+									this.is_init_failed =  m.find();
+									if(this.is_init_failed)
+									{
+										String sErr = sPrefix + "init_error - Elapsed: "+milisec2Words(System.currentTimeMillis()-this.run_start_timestamp);
+										logger.log(Level.SEVERE, sErr);
+										this.is_running = false;
+										onProcessError(this, new Exception(sErr));
+										break;
+									}
+								}
+							
+								if(!this.is_init_success)
+								{
+									if(this.patt_init_success!=null)
+									{
+										Matcher m = this.patt_init_success.matcher(sLine);
+										this.is_init_success = m.find();
+										if(this.is_init_success)
+										{
+											logger.log(Level.INFO, 
+													sPrefix + "init_success - Elapsed: "+milisec2Words(System.currentTimeMillis()-this.run_start_timestamp));
+										}
+									}
+								}
+							}
+						}
+						else
+						{
+							
+							try {
+								//let the process rest awhile when no output
+								Thread.sleep(100);
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+								onProcessError(this,e);
+								break;
 							}
 						}
 						
-						wrt = new BufferedWriter(new FileWriter(fileOutput, true));
-					}
-				}
-				
-				String sLine = null;
-				
-				if(rdr.ready())
-					sLine = rdr.readLine();
-				
-				String sDebugLine = null;
-				this.is_running = true;
-				
-				while(proc.isAlive() || sLine!=null)
-				{
-
-					if(sLine!=null)
-					{
-						sDebugLine = sPrefix + df.format(System.currentTimeMillis()) + sLine;
-
-						if(wrt!=null)
+						if(!this.is_init_success)
 						{
-							wrt.write(sDebugLine);
-							wrt.newLine();
-							wrt.flush();
-						}
-						
-						if(this.is_output_console)
-						{
-							System.out.println(sLine);
-						}
-						
-						logDebug(sDebugLine);
-						
-						if(sLine.length()>0)
-						{
-							if(!this.is_init_failed && this.patt_init_failed!=null)
+							if(this.init_timeout_ms>0)
 							{
-								Matcher m = this.patt_init_failed.matcher(sLine);
-								this.is_init_failed =  m.find();
-								if(this.is_init_failed)
+								long lElapsed = System.currentTimeMillis() - lStart;
+								if(lElapsed>=this.init_timeout_ms)
 								{
-									String sErr = sPrefix + "init_error - Elapsed: "+milisec2Words(System.currentTimeMillis()-this.run_start_timestamp);
+									String sErr = sPrefix+"Init timeout ! "+milisec2Words(lElapsed)+" - "+getProcessCommand();
+									this.is_init_success = false;
 									logger.log(Level.SEVERE, sErr);
 									this.is_running = false;
 									onProcessError(this, new Exception(sErr));
 									break;
 								}
 							}
-						
-							if(!this.is_init_success)
+							
+							if(this.patt_init_success==null)
 							{
-								if(this.patt_init_success!=null)
-								{
-									Matcher m = this.patt_init_success.matcher(sLine);
-									this.is_init_success = m.find();
-									if(this.is_init_success)
-									{
-										logger.log(Level.INFO, 
-												sPrefix + "init_success - Elapsed: "+milisec2Words(System.currentTimeMillis()-this.run_start_timestamp));
-									}
-								}
+								this.is_init_success = true;
 							}
 						}
-					}
-					else
-					{
 						
+						sLine = null;
+						if(rdr.ready())
+						{
+							sLine = rdr.readLine();
+						}
+					}
+				} catch (Throwable e) {
+					this.exit_value = -1;
+					logger.log(Level.SEVERE, e.getMessage(), e);
+					onProcessError(this, e);
+				}
+				finally
+				{
+					this.is_running = false;
+					if(wrt!=null)
+					{
 						try {
-							//let the process rest awhile when no output
-							Thread.sleep(100);
-						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-							onProcessError(this,e);
-							break;
+							wrt.flush();
+							wrt.close();
+						} catch (IOException e) {
 						}
 					}
-					
-					if(!this.is_init_success)
+					//
+					if(rdr!=null)
 					{
-						if(this.init_timeout_ms>0)
-						{
-							long lElapsed = System.currentTimeMillis() - lStart;
-							if(lElapsed>=this.init_timeout_ms)
-							{
-								String sErr = sPrefix+"Init timeout ! "+milisec2Words(lElapsed)+" - "+getProcessCommand();
-								this.is_init_success = false;
-								logger.log(Level.SEVERE, sErr);
-								this.is_running = false;
-								onProcessError(this, new Exception(sErr));
-								break;
-							}
-						}
-						
-						if(this.patt_init_success==null)
-						{
-							this.is_init_success = true;
+						try {
+							rdr.close();
+						} catch (IOException e) {
 						}
 					}
-					
-					sLine = null;
-					if(rdr.ready())
-					{
-						sLine = rdr.readLine();
-					}
 				}
-			} catch (Throwable e) {
-				this.exit_value = -1;
-				logger.log(Level.SEVERE, e.getMessage(), e);
-				onProcessError(this, e);
-			}
-			finally
-			{
-				this.is_running = false;
-				if(wrt!=null)
-				{
-					try {
-						wrt.flush();
-						wrt.close();
-					} catch (IOException e) {
-					}
-				}
-				//
-				if(rdr!=null)
-				{
-					try {
-						rdr.close();
-					} catch (IOException e) {
-					}
-				}
-			}
-			
+			}			
 		}
 		finally
 		{
@@ -624,18 +639,25 @@ public class HLProcess implements Runnable
 			{
 				try {
 					System.out.println("[Termination] "+sPrefix+" : execute terminated command - "+sEndCmd);
-					ProcessBuilder pb = new ProcessBuilder(sEndCmd.split(" "));
-					File fileDir = new File(sEndCmd);
-					if(fileDir.isFile())
-					{
-						if(fileDir.getParentFile()!=null)
-							pb.directory(fileDir.getParentFile());
-					}
-					pb.redirectErrorStream(true);
+					
+					String sSplitEndCmd[] = HLProcessConfig.splitCommands(this, sEndCmd);					
+					ProcessBuilder pb = initProcessBuilder(sSplitEndCmd, this.is_def_script_dir);
 					pb.inheritIO();
 					pb.start();
 	
 				} catch (IOException e) {
+					
+					if(e.getMessage()!=null)
+					{
+						if(e.getMessage().indexOf("Cannot run program ")>-1)
+						{
+							if(sEndCmd.startsWith("."))
+							{
+								System.out.println("[Termination] Current working directory : "+new File(".").getAbsolutePath());
+							}
+						}
+					}
+					
 					e.printStackTrace();
 				}
 			}

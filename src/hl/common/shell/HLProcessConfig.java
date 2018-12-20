@@ -104,11 +104,11 @@ public class HLProcessConfig {
 		init(props);
 	}
 	
-	private String[] splitCommands(HLProcess aHLProcess, String aCmdString)
+	protected static String[] splitCommands(HLProcess aHLProcess, String aCmdString)
 	{
 		String sGrpStart = aHLProcess.getCommandBlockStart();
 		String sGrpEnd = aHLProcess.getCommandBlockEnd();
-		String sCmdSpace = String.valueOf(this.commandSpace);
+		String sCmdSpace = String.valueOf(commandSpace);
 		
 		if(sGrpStart==null)
 			sGrpStart = "";
@@ -469,9 +469,9 @@ public class HLProcessConfig {
 # process.@.shell.command.mac=
 # process.@.shell.output.filename=
 # process.@.shell.output.console=false
-# process.@.shell.terminated.command.win=
-# process.@.shell.terminated.command.linux=
-# process.@.shell.terminated.command.mac=
+# process.@.shell.terminate.command.win=
+# process.@.shell.terminate.command.linux=
+# process.@.shell.terminate.command.mac=
 
 # process.@.init.timeout.ms=
 # process.@.init.success.regex=
