@@ -73,7 +73,7 @@ public class HLProcess implements Runnable
 	
 	public static String getVersion()
 	{
-		return "HLProcess alpha v0.50";
+		return "HLProcess alpha v0.51";
 	}
 
 	public void setCommandBlockStart(String aBlockSeparator)
@@ -327,7 +327,7 @@ public class HLProcess implements Runnable
 
 	public boolean isProcessAlive()
 	{
-		return (proc!=null && proc.isAlive());
+		return (proc!=null && proc.isAlive()) || (thread!=null && thread.isAlive());
 	}
 	
 	public boolean isStarted()

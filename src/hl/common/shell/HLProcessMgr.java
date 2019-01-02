@@ -15,6 +15,7 @@ public class HLProcessMgr
 	
 	private HLProcessEvent event 	= null;
 	private boolean is_terminating 	= false;
+	private HLProcess terminatingProcess = null;
 		
 	public HLProcessMgr(String aPropFileName)
 	{
@@ -23,10 +24,23 @@ public class HLProcessMgr
 			Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
 				@Override
 				public void run() {
-					System.out.println("[ShutdownHook] Executing HLProcessMgr.ShutdownHook ...");
-					terminateAllProcesses();
-					waitForAllProcessesToBeTerminated(null);
-					System.out.println("[ShutdownHook] End of HLProcessMgr.ShutdownHook.");
+					
+					if(terminatingProcess==null)
+					{
+						System.out.println("[ShutdownHook] Executing HLProcessMgr.ShutdownHook ...");
+						//random pick an active process as terminating process
+						HLProcess p = null;
+						for(HLProcess proc : getAllProcesses())
+						{
+							if(proc.isProcessAlive())
+							{
+								p = proc;
+								break;
+							}
+						}
+						event.onProcessTerminate(p);
+						System.out.println("[ShutdownHook] End of HLProcessMgr.ShutdownHook.");
+					}
 				}
 			}));
 			
@@ -42,10 +56,14 @@ public class HLProcessMgr
 
 						public void onProcessTerminate(HLProcess p) 
 						{
-							if(p.isShutdownAllOnTermination())
+							if(p!=null)
 							{
-								terminateAllProcesses();
-								waitForAllProcessesToBeTerminated(p);
+								if(p.isShutdownAllOnTermination() && terminatingProcess==null)
+								{
+									terminatingProcess = p;
+									terminateAllProcesses();
+									waitForAllProcessesToBeTerminated(terminatingProcess);
+								}
 							}
 						}
 					};
@@ -223,7 +241,7 @@ public class HLProcessMgr
 					long lElapsed = System.currentTimeMillis()-lStart;
 					if(lElapsed >= p.getProcessStartDelayMs())
 					{
-						p.startProcess();
+						p.startProcess(); 
 						lPendingStart--;
 					}
 				}
