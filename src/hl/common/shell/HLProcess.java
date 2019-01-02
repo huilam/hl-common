@@ -73,7 +73,7 @@ public class HLProcess implements Runnable
 	
 	public static String getVersion()
 	{
-		return "HLProcess alpha v0.51";
+		return "HLProcess alpha v0.52";
 	}
 
 	public void setCommandBlockStart(String aBlockSeparator)
@@ -641,10 +641,10 @@ public class HLProcess implements Runnable
 	
 	private void executeTerminateCmd()
 	{
-		String sPrefix = (id==null?"":id);
-		if(!this.is_exec_terminate_cmd)
+		if(!this.is_exec_terminate_cmd && isStarted())
 		{
 			this.is_exec_terminate_cmd = true;
+			String sPrefix = (id==null?"":id);
 			String sEndCmd = getTerminatedCommand();
 			if(sEndCmd!=null && sEndCmd.trim().length()>0)
 			{
