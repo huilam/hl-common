@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -22,6 +23,7 @@ import hl.common.ZipUtil;
 
 public class RestApiUtil {
 
+	public final static String UTF_8 					= "UTF-8";
 	public final static String HEADER_CONTENT_TYPE 		= "Content-Type";
 	public final static String HEADER_CONTENT_ENCODING 	= "Content-Encoding";	
 
@@ -42,6 +44,17 @@ public class RestApiUtil {
 		StringBuffer sb = new StringBuffer();
 		BufferedReader rdr = null;
 		try {
+			
+	    	if(req.getCharacterEncoding()==null || req.getCharacterEncoding().trim().length()==0)
+	    	{
+	    		try {
+					req.setCharacterEncoding(UTF_8);
+				} catch (UnsupportedEncodingException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+	    	}
+			
 			rdr = req.getReader();
 			String sLine = null;
 			while((sLine=rdr.readLine())!=null)
@@ -86,7 +99,7 @@ public class RestApiUtil {
 		
 		if(aOutputContent!=null && aOutputContent.length()>0)
 		{
-			byte[] byteContent 	= aOutputContent.getBytes("UTF-8");
+			byte[] byteContent 	= aOutputContent.getBytes(UTF_8);
 			long lContentLen 	= byteContent.length;
 			
 			if(aGzipBytesThreshold>0 && lContentLen >= aGzipBytesThreshold)
@@ -95,6 +108,12 @@ public class RestApiUtil {
 				lContentLen = byteContent.length;
 				res.addHeader(HEADER_CONTENT_ENCODING, TYPE_ENCODING_GZIP);
 			}
+			
+			if(res.getContentType()==null || res.getContentType().trim().length()==0)
+			{
+				res.setContentType(TYPE_APP_JSON);
+			}
+			
 			res.setContentLengthLong(lContentLen);
 			res.getOutputStream().write(byteContent);
 		}
@@ -142,7 +161,7 @@ public class RestApiUtil {
 			BufferedWriter writer 	= null;
 			
 			try {
-				writer = new BufferedWriter(new OutputStreamWriter(out));
+				writer = new BufferedWriter(new OutputStreamWriter(out, UTF_8));
 				writer.write(aContentData);
 				
 				out.flush();
@@ -163,7 +182,7 @@ public class RestApiUtil {
 					in = conn.getInputStream();
 					if(in!=null)
 					{
-						reader = new BufferedReader(new InputStreamReader(in));
+						reader = new BufferedReader(new InputStreamReader(in, UTF_8));
 						String sLine = null;
 						while((sLine = reader.readLine())!=null)
 						{
@@ -252,7 +271,7 @@ public class RestApiUtil {
 						}
 						else
 						{
-							sb.append(baos.toString());
+							sb.append(baos.toString(UTF_8));
 						}
 					}
 					catch(IOException ex)
