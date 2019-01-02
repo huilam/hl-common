@@ -32,6 +32,7 @@ public class HLProcessConfig {
 	public static String _PROP_KEY_SHELL_START_DELAY	= _PROP_KEY_SHELL+"start.delay.ms";
 	public static String _PROP_KEY_SHELL_OUTPUT_FILENAME= _PROP_KEY_SHELL+"output.filename";
 	public static String _PROP_KEY_SHELL_OUTPUT_CONSOLE = _PROP_KEY_SHELL+"output.console";
+	public static String _PROP_KEY_SHELL_RUNAS_DAEMON 	= _PROP_KEY_SHELL+"runas.daemon";
 	public static String _PROP_KEY_SHELL_DEF2_SCRIPT_DIR = _PROP_KEY_SHELL+"default.to.script.dir";
 	
 	public static String _PROP_KEY_SHELL_TERMINATE_CMD	= _PROP_KEY_SHELL+"terminate.command.{os.name}";
@@ -260,6 +261,9 @@ public class HLProcessConfig {
 			}
 			
 			// SHELL
+			
+			
+			
 			sConfigVal = mapProcessConfig.get(_PROP_KEY_SHELL_CMD_BLOCK);
 			if(sConfigVal!=null)
 			{
@@ -275,6 +279,12 @@ public class HLProcessConfig {
 					p.setCommandBlockStart(String.valueOf(sConfigVal.charAt(0)));
 					p.setCommandBlockEnd(String.valueOf(sConfigVal.charAt(1)));
 				}
+			}
+			// 
+			sConfigVal = mapProcessConfig.get(_PROP_KEY_SHELL_RUNAS_DAEMON);
+			if(sConfigVal!=null)
+			{
+				p.setRunAsDaemon("true".equalsIgnoreCase(sConfigVal));
 			}
 			// 
 			sConfigVal = mapProcessConfig.get(_PROP_KEY_SHELL_COMMAND);

@@ -44,6 +44,7 @@ public class HLProcess implements Runnable
 	
 	private String[] commands			= null;
 	private String terminated_command  	= null;
+	private boolean runas_daemon		= false;
 	private boolean disabled			= false;
 	
 	private boolean remote_ref			= false;
@@ -175,6 +176,16 @@ public class HLProcess implements Runnable
 	public boolean isOutputConsole()
 	{
 		return this.is_output_console;
+	}
+	
+	public void setRunAsDaemon(boolean isRunAsDaemon)
+	{
+		this.runas_daemon = isRunAsDaemon;
+	}
+	
+	public boolean isRunAsDaemon()
+	{
+		return this.runas_daemon;
 	}
 	
 	public void setProcessOutputFilename(String aProcessOutputFilename)
@@ -689,6 +700,7 @@ public class HLProcess implements Runnable
 	{
 		is_terminated = false;
 		thread = new Thread(this);
+		thread.setDaemon(isRunAsDaemon());
 		thread.start();
 		return thread;
 	}
@@ -741,6 +753,7 @@ public class HLProcess implements Runnable
 		sb.append("\n").append(sPrefix).append("is.remote=").append(isRemoteRef());
 		
 		sb.append("\n").append(sPrefix).append("process.command.").append(HLProcessConfig.osname).append("=").append(getProcessCommand());
+		sb.append("\n").append(sPrefix).append("process.runas.darmon=").append(isRunAsDaemon());
 		sb.append("\n").append(sPrefix).append("process.command.block.start=").append(getCommandBlockStart());
 		sb.append("\n").append(sPrefix).append("process.command.block.end=").append(getCommandBlockEnd());
 		sb.append("\n").append(sPrefix).append("process.start.delay.ms=").append(getProcessStartDelayMs());
