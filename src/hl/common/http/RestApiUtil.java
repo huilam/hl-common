@@ -244,6 +244,7 @@ public class RestApiUtil {
 			}
 			
 			conn.setConnectTimeout(aTimeOutMs);
+			conn.connect();
 			
 			try {
 				
@@ -256,22 +257,38 @@ public class RestApiUtil {
 					ByteArrayOutputStream baos = null;
 					try {
 						baos = new ByteArrayOutputStream();
-						in = conn.getInputStream();
-						stream = new BufferedInputStream(in);
 						
-						int iBytes;
-						while((iBytes = stream.read()) != -1)
+						if(conn.getResponseCode()>=400)
 						{
-							baos.write(iBytes);
-						}
-						
-						if(isGzipEncoded)
-						{
-							sb.append(ZipUtil.decompress(baos.toByteArray()));
+							in = conn.getErrorStream();
 						}
 						else
 						{
-							sb.append(baos.toString(UTF_8));
+							in = conn.getInputStream();
+						}
+						stream = new BufferedInputStream(in);
+
+						if(stream.available()>0)
+						{
+							byte[] byteRead = new byte[4096];
+							int iBytes;
+							while((iBytes = stream.read(byteRead)) != -1)
+							{
+								baos.write(byteRead, 0, iBytes);
+							}
+							
+							if(isGzipEncoded)
+							{
+								sb.append(ZipUtil.decompress(baos.toByteArray()));
+							}
+							else
+							{
+								sb.append(baos.toString(UTF_8));
+							}
+						}
+						else
+						{
+							sb.append(conn.getResponseMessage());
 						}
 					}
 					catch(IOException ex)
@@ -368,8 +385,8 @@ public class RestApiUtil {
     
     public static void main(String args[]) throws Exception
     {
-    	HttpResp res = RestApiUtil.httpGet("http://203.127.252.67/scc/webapi/v2/resourcetypes");
-    	System.out.print(res.getContent_data());
+    	HttpResp res = RestApiUtil.httpGet("http://127.0.0.1:8080/scc/jsoncrudrest/v1/testproxy/123/test");
+    	System.out.print(res);
     	
     }
 }
