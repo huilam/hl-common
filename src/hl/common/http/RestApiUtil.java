@@ -179,7 +179,16 @@ public class RestApiUtil {
 			try {
 				BufferedReader reader = null;
 				try {
-					in = conn.getInputStream();
+
+					if(conn.getResponseCode()>=400)
+					{
+						in = conn.getErrorStream();
+					}
+					else
+					{
+						in = conn.getInputStream();
+					}
+					
 					if(in!=null)
 					{
 						reader = new BufferedReader(new InputStreamReader(in, UTF_8));
