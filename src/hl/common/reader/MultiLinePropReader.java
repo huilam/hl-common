@@ -148,7 +148,7 @@ public class MultiLinePropReader {
 				
 				StringBuffer sb = new StringBuffer();
 				
-				boolean isConfigSetStart = false; 
+				boolean isConfigSetStart = true; 
 				while((sLine = rdr.readLine())!=null)
 				{
 					lLineNo++;
@@ -230,6 +230,10 @@ public class MultiLinePropReader {
 									lSetLineCount = 1;
 								}
 							}
+							else
+							{
+								isConfigSetStart = false;
+							}
 						}
 						else
 						{
@@ -250,12 +254,13 @@ public class MultiLinePropReader {
 						sVal = sTmp.substring(iPos+1);
 						mapConfig.put(sKey, sVal);
 					}
-					if(mapConfig.size()>0)
-					{
-						onNewConfigSet(lStartReadLineNo, lSetLineCount, mapConfig);
-					}
 				}
-
+				
+				if(mapConfig.size()>0)
+				{
+					onNewConfigSet(lStartReadLineNo, lSetLineCount, mapConfig);
+				}
+				
 				if(this.event!=null)
 				{
 					this.event.onReadEnd(lLineNo);
