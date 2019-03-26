@@ -106,27 +106,29 @@ public class MultiLinePropReader {
 		return null;
 	}
 	
+	private String removePartialComment(String aLineData)
+	{
+		int iPos = aLineData.indexOf(this.comment_prefix);
+		if(iPos>-1)
+		{
+			if(!this.isPreserveComment)
+			{
+				if(iPos>0)
+				{
+					//remove 'partial' comment
+					aLineData = aLineData.substring(0, iPos);
+				}
+			}
+		}
+		return aLineData;
+	}
+	
 	public void start(EventListener aEvent) throws IOException
 	{
 		BufferedReader rdr = null;
 		Matcher m = null;
 		try
 		{
-			/**
-			if(this.block_characters!=null)
-			{
-				StringTokenizer tk = new StringTokenizer(block_characters, ",");
-				while(tk.hasMoreTokens())
-				{
-					String sBlockSet = tk.nextToken();
-					if(sBlockSet.length()!=2)
-						throw new RuntimeException("[block_characters] must be in pair, example : [],{},()");
-					this.mapBlockChar.put(sBlockSet.substring(0,1), sBlockSet.substring(1,2));
-					
-				}
-			}
-			**/
-			
 			this.event = aEvent;
 			
 			rdr = new BufferedReader(new FileReader(this.prop_file));
@@ -153,24 +155,11 @@ public class MultiLinePropReader {
 				{
 					lLineNo++;
 					////
-					int iPos = sLine.indexOf(this.comment_prefix);
-					if(iPos>-1)
-					{
-						if(!this.isPreserveComment)
-						{
-							if(iPos==0)
-							{
-								continue;
-							}
-							else
-							{
-								//remove comment
-								sLine = sLine.substring(0, iPos);
-							}
-						}
-					}
-					/////
-					String sTrimLine = sLine.trim();
+					String sTrimLine = removePartialComment(sLine.trim());
+					
+					if(sTrimLine.length()==0)
+						continue;
+					
 					if(sWithinBlock==null && sTrimLine.length()>0)
 					{
 						sWithinBlock = checkBlockStart(sTrimLine);
@@ -178,7 +167,7 @@ public class MultiLinePropReader {
 					
 					if(sWithinBlock==null)
 					{
-						iPos = sLine.indexOf(this.keyvalue_separator);
+						int iPos = sLine.indexOf(this.keyvalue_separator);
 						if(iPos>-1)
 						{
 							if(sb.length()>0)
@@ -191,6 +180,15 @@ public class MultiLinePropReader {
 								{
 									sKey = sTmp.substring(0, iPos);
 									sVal = sTmp.substring(iPos+1);
+									if(sKey.startsWith(this.comment_prefix))
+									{
+										if(!this.isPreserveComment)
+										{
+											continue;
+										}
+									}
+									
+									sVal = removePartialComment(sVal);
 									mapConfig.put(sKey, sVal);
 								}
 							}
@@ -250,9 +248,20 @@ public class MultiLinePropReader {
 					int iPos = sTmp.indexOf(this.keyvalue_separator);
 					if(iPos>0)
 					{
+						boolean isSkip = false;
 						sKey = sTmp.substring(0, iPos);
 						sVal = sTmp.substring(iPos+1);
-						mapConfig.put(sKey, sVal);
+						
+						if(sKey.startsWith(this.comment_prefix))
+						{
+							isSkip = !this.isPreserveComment;
+						}
+						
+						if(!isSkip)
+						{
+							sVal = removePartialComment(sVal);
+							mapConfig.put(sKey, sVal);
+						}
 					}
 				}
 				
