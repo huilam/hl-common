@@ -29,8 +29,14 @@ public class RestApiUtil {
     public static void processHttpResp(HttpServletResponse res, 
     		int aHttpStatus, String aContentType, String aOutputContent) throws IOException
     {
-    	apiClient.processHttpResp(res, aHttpStatus, aContentType, aOutputContent, 
+    	processHttpResp(res, aHttpStatus, aContentType, aOutputContent, 
     			RestApiClient.DEFAULT_GZIP_THRESHOLD_BYTES);
+    }
+    
+    public static void processHttpResp(HttpServletResponse res, 
+    		int aHttpStatus, String aContentType, String aOutputContent, long aGzipThresholdBytes) throws IOException
+    {
+    	apiClient.processHttpResp(res, aHttpStatus, aContentType, aOutputContent, aGzipThresholdBytes);
     }
     	
     public static HttpResp httpDelete(String aEndpointURL, 
