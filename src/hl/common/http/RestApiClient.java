@@ -381,21 +381,22 @@ public class RestApiClient {
 			conn.setConnectTimeout(this.conn_timeout);
 			conn = appendBasicAuth(conn);
 			
-			if(this.isAllowAnyHostSSL)
+			if(url.getProtocol().equalsIgnoreCase(_PROTOCOL_HTTPS))
 			{
-				if(url.getProtocol().equalsIgnoreCase(_PROTOCOL_HTTPS))
-				{
-					HttpsURLConnection httpsconn = (HttpsURLConnection)conn;
-					
-					try {
+				HttpsURLConnection httpsconn = (HttpsURLConnection)conn;
+				try {
+					if(this.isAllowAnyHostSSL)
+					{
 						httpsconn.setSSLSocketFactory(getTrustAnyHostSSLSocketFactory());
-					} catch (KeyManagementException e) {
-						e.printStackTrace();
-					} catch (NoSuchAlgorithmException e) {
-						e.printStackTrace();
 					}
-					httpsconn.connect();
+					else if (this.keystoreCustom!=null)
+					{
+						httpsconn.setSSLSocketFactory(getTrustCustomKeystoreSSLSocketFactory());
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
+				httpsconn.connect();
 			}
 			
 			try {
