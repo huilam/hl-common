@@ -1,9 +1,11 @@
 package hl.common.http;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
@@ -59,13 +61,15 @@ public class HTMLMultiPart {
 		
 		URL url 					= null;
 		HttpURLConnection urlConn 	= null;
-		OutputStream outConn 		= null;
+		OutputStream outstreamConn 	= null;
 		BufferedWriter wrt	 		= null;
 		FileInputStream inputFile	= null;
 		
 		try {
 			url = new URL(this.url);
-			urlConn = (HttpURLConnection) url.openConnection();			
+			urlConn = (HttpURLConnection) url.openConnection();	
+			urlConn.setUseCaches(false);
+			urlConn.setDoInput(true);
 			urlConn.setDoOutput(true);
 			if(this.basic_auth_uid!=null && this.basic_auth_pwd!=null)
 			{
@@ -73,12 +77,14 @@ public class HTMLMultiPart {
 			}
 			urlConn.setRequestMethod("POST");
 			urlConn.addRequestProperty("Content-Type", "multipart/form-data; boundary=" + BOUNDARY_STR);
-			
 System.out.println("Finish preparing header ...");
+			
+System.out.println("Getting outputstream ...");			
+			outstreamConn = urlConn.getOutputStream();
+			wrt = new BufferedWriter(new OutputStreamWriter(outstreamConn));
+			
 			StringBuffer sb = new StringBuffer();
-			
 			sb.append("\n");
-			
 			for(String sAttrName : mapAttrs.keySet())
 			{
 				sb.append("\n--").append(BOUNDARY_STR).append("\n");
@@ -86,10 +92,6 @@ System.out.println("Finish preparing header ...");
 				sb.append("name=\"").append(sAttrName).append("\"\n\n");
 				sb.append(mapAttrs.get(sAttrName));
 			}
-			
-System.out.println("getting outputstream ...");			
-			outConn = urlConn.getOutputStream();
-			wrt = new BufferedWriter(new OutputStreamWriter(outConn));
 			
 System.out.println("Writing attributes ...");
 			wrt.write(sb.toString());
@@ -113,18 +115,25 @@ System.out.println("Writing ["+f.getName()+"] ...");
 				wrt.write(sb.toString());
 				//
 				dataBuffer = new byte[4096];
-				inputFile = new FileInputStream(f);			 
-				while((bytesRead = inputFile.read(dataBuffer)) != -1) {
-					outConn.write(dataBuffer, 0, bytesRead);
+				try {
+					inputFile = new FileInputStream(f);			 
+					while((bytesRead = inputFile.read(dataBuffer)) != -1) {
+						outstreamConn.write(dataBuffer, 0, bytesRead);
+					}
+					outstreamConn.flush();
+				}finally
+				{
+					if(inputFile!=null)
+						inputFile.close();
 				}
-				outConn.flush();
+				
 			}			
 			//
 			wrt.write("\n--" + BOUNDARY_STR + "--\n");
 			wrt.flush();
 			wrt.close();
-			outConn.flush();
-			outConn.close();
+			outstreamConn.flush();
+			outstreamConn.close();
 			//
 System.out.println("Completed sending data.");
 
@@ -134,10 +143,28 @@ System.out.println("Completed sending data.");
 			resp.setHttp_status(iRespCode);
 			resp.setHttp_status_message(sRespMsg);
 			
-			if(urlConn.getContent()!=null)
+			if(resp.isSuccess())
 			{
-				resp.setContent_type(urlConn.getContentType());
-				resp.setContent_data(String.valueOf(urlConn.getContent()));
+				sb.setLength(0);
+				BufferedReader reader = null;
+				
+				try{
+					reader = new BufferedReader(new InputStreamReader(urlConn.getInputStream()));
+		            String line = null;
+		            while ((line = reader.readLine()) != null) {
+		            	if(sb.length()>0)
+		            	{
+		            		sb.append("\n");
+		            	}
+		            	sb.append(line);
+		            }
+				}finally
+				{
+					if(reader!=null)
+						reader.close();
+				}
+	            resp.setContent_type(urlConn.getContentType());
+	            resp.setContent_data(sb.toString());
 			}
 		}
 		catch(Exception ex)
@@ -169,11 +196,11 @@ System.out.println("Completed sending data.");
 				}
 			}
 			
-			if(outConn!=null)
+			if(outstreamConn!=null)
 			{
 				try {
-					outConn.flush();
-					outConn.close();
+					outstreamConn.flush();
+					outstreamConn.close();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -186,6 +213,11 @@ System.out.println("Completed sending data.");
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
+			}
+			
+			if(urlConn!=null)
+			{
+				urlConn.disconnect();
 			}
 		}
 		
