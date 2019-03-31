@@ -158,6 +158,22 @@ public class RestApiClient {
 		res.flushBuffer();
     }
 
+    public static HttpURLConnection setBasicAuthHeader(HttpURLConnection aConn, String aUid, String aPwd)
+    {
+    	return setBasicAuthHeader(aConn, aUid+":"+aPwd);
+    }
+    
+    private static HttpURLConnection setBasicAuthHeader(HttpURLConnection aConn, String aUserInfo)
+    {
+    	if(aConn==null)
+    		return aConn;
+    	
+   		String sEncodedBasicAuth = "Basic " + new String(Base64.getEncoder().encode(aUserInfo.getBytes()));
+		aConn.setRequestProperty (HEADER_AUTHORIZATION, sEncodedBasicAuth);
+    	
+		return aConn;    	
+    }
+    
     private HttpURLConnection appendBasicAuth(HttpURLConnection aConn)
     {
     	if(aConn==null)
@@ -174,13 +190,8 @@ public class RestApiClient {
     	{
     		sBasicAuth = this.basic_auth_uid+":"+this.basic_auth_pwd;
     	}
-    	
-    	if(sBasicAuth!=null)
-    	{
-			String sEncodedBasicAuth = "Basic " + new String(Base64.getEncoder().encode(sBasicAuth.getBytes()));
-			aConn.setRequestProperty (HEADER_AUTHORIZATION, sEncodedBasicAuth);
-    	}
-    	
+    	aConn = setBasicAuthHeader(aConn, sBasicAuth);
+   	
 		return aConn;
     }
     
