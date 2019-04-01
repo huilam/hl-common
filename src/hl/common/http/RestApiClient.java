@@ -226,7 +226,7 @@ public class RestApiClient {
 					}
 					else if (this.keystoreCustom!=null)
 					{
-						httpsconn.setSSLSocketFactory(getTrustCustomKeystoreSSLSocketFactory());
+						httpsconn.setSSLSocketFactory(getTrustCustomKeystoreSSLSocketFactory(this.keystoreCustom));
 					}
 				} catch (KeyManagementException e) {
 					e.printStackTrace();
@@ -351,10 +351,10 @@ public class RestApiClient {
 		return sc.getSocketFactory();
     }
     
-    private SSLSocketFactory getTrustCustomKeystoreSSLSocketFactory() throws NoSuchAlgorithmException, KeyManagementException, KeyStoreException
+    public static SSLSocketFactory getTrustCustomKeystoreSSLSocketFactory(KeyStore aKeyStore) throws NoSuchAlgorithmException, KeyManagementException, KeyStoreException
     {
     	TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-    	tmf.init(this.keystoreCustom);
+    	tmf.init(aKeyStore);
 		SSLContext sc = SSLContext.getInstance(_PROTOCOL_SSL);
 		sc.init(null, tmf.getTrustManagers(), new SecureRandom());
 		return sc.getSocketFactory();
@@ -402,7 +402,7 @@ public class RestApiClient {
 					}
 					else if (this.keystoreCustom!=null)
 					{
-						httpsconn.setSSLSocketFactory(getTrustCustomKeystoreSSLSocketFactory());
+						httpsconn.setSSLSocketFactory(getTrustCustomKeystoreSSLSocketFactory(this.keystoreCustom));
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
