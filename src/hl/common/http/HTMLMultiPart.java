@@ -111,9 +111,7 @@ public class HTMLMultiPart {
 			}
 			urlConn.setRequestMethod("POST");
 			urlConn.addRequestProperty("Content-Type", "multipart/form-data; boundary=" + BOUNDARY_STR);
-System.out.println("Finish preparing header ...");
-			
-System.out.println("Getting outputstream ...");			
+		
 			outstreamConn = urlConn.getOutputStream();
 			wrt = new BufferedWriter(new OutputStreamWriter(outstreamConn));
 			
@@ -127,7 +125,6 @@ System.out.println("Getting outputstream ...");
 				sb.append(mapAttrs.get(sAttrName));
 			}
 			
-System.out.println("Writing attributes ...");
 			wrt.write(sb.toString());
 			
 			int bytesRead;
@@ -139,20 +136,21 @@ System.out.println("Writing attributes ...");
 				//
 				sb.setLength(0);
 				sb.append(LINE_FEED).append("--").append(BOUNDARY_STR).append(LINE_FEED);
-				sb.append("Content-Disposition: form-data;");
+				sb.append("Content-Disposition: form-data; ");
 				sb.append("name=\"").append(sAttrName).append("\"; ");
 				sb.append("filename=\"").append(f.getName()).append("\"");
 				sb.append(LINE_FEED).append("Content-Type: text/plain").append(LINE_FEED).append(LINE_FEED);
 				
-System.out.println("Writing '"+sAttrName+"' ["+f.getName()+"] ...");
-
 				wrt.write(sb.toString());
+				wrt.flush();
 				//
+				long lTotalRead = 0;
 				dataBuffer = new byte[4096];
 				try {
 					inputFile = new FileInputStream(f);			 
 					while((bytesRead = inputFile.read(dataBuffer)) != -1) {
 						outstreamConn.write(dataBuffer, 0, bytesRead);
+						lTotalRead += bytesRead;
 					}
 					outstreamConn.flush();
 				}finally
@@ -160,7 +158,6 @@ System.out.println("Writing '"+sAttrName+"' ["+f.getName()+"] ...");
 					if(inputFile!=null)
 						inputFile.close();
 				}
-				
 			}			
 			//
 			wrt.write(LINE_FEED+"--" + BOUNDARY_STR + "--"+LINE_FEED);
@@ -168,8 +165,6 @@ System.out.println("Writing '"+sAttrName+"' ["+f.getName()+"] ...");
 			wrt.close();
 			outstreamConn.flush();
 			outstreamConn.close();
-			//
-System.out.println("Completed sending data.");
 
 			int iRespCode 	= urlConn.getResponseCode();
 			String sRespMsg = urlConn.getResponseMessage();
@@ -291,4 +286,10 @@ System.out.println("Completed sending data.");
 
 		return aHttpResp;
 	}
+	
+
+	public static void main(String[] args) throws IOException
+	{	
+	}
+	
 }
