@@ -19,7 +19,9 @@ import org.json.JSONObject;
 
 public class HTMLMultiPart {
 	
-	private static final String BOUNDARY_STR = "[ ¯\\_(ツ)_/¯ ]";
+	private final static String LINE_FEED 		= "\r\n";
+	private final static String BOUNDARY_STR 	= "[ \\_(. .)_// ]";
+	public final static String TYPE_APP_JSON 	= "application/json";
 	
 	private String url	= null;
 	private Map<String, String> mapAttrs 	= new HashMap<String, String>();
@@ -33,9 +35,9 @@ public class HTMLMultiPart {
 		url = aUrl;
 	}
 	
-	public void addFile(String aFileName, File aFile)
+	public void addFile(String aAttrName, File aFile)
 	{
-		mapFiles.put(aFileName, aFile);
+		mapFiles.put(aAttrName, aFile);
 	}
 	
 	public void addAttribute(String aAttrName, String aAttrValue)
@@ -84,12 +86,12 @@ System.out.println("Getting outputstream ...");
 			wrt = new BufferedWriter(new OutputStreamWriter(outstreamConn));
 			
 			StringBuffer sb = new StringBuffer();
-			sb.append("\n");
+			sb.append(LINE_FEED);
 			for(String sAttrName : mapAttrs.keySet())
 			{
-				sb.append("\n--").append(BOUNDARY_STR).append("\n");
+				sb.append(LINE_FEED).append("--").append(BOUNDARY_STR).append(LINE_FEED);
 				sb.append("Content-Disposition: form-data; ");
-				sb.append("name=\"").append(sAttrName).append("\"\n\n");
+				sb.append("name=\"").append(sAttrName).append("\"").append(LINE_FEED).append(LINE_FEED);
 				sb.append(mapAttrs.get(sAttrName));
 			}
 			
@@ -99,18 +101,18 @@ System.out.println("Writing attributes ...");
 			int bytesRead;
 			byte[] dataBuffer = new byte[4096];
 			
-			for(String sFileName : mapFiles.keySet())
+			for(String sAttrName : mapFiles.keySet())
 			{
-				File f = mapFiles.get(sFileName);
+				File f = mapFiles.get(sAttrName);
 				//
 				sb.setLength(0);
-				sb.append("\n--").append(BOUNDARY_STR).append("\n");
-				sb.append("Content-Disposition: form-data; ");
-				sb.append("name=\"").append("file").append("\"; ");
+				sb.append(LINE_FEED).append("--").append(BOUNDARY_STR).append(LINE_FEED);
+				sb.append("Content-Disposition: form-data;");
+				sb.append("name=\"").append(sAttrName).append("\"; ");
 				sb.append("filename=\"").append(f.getName()).append("\"");
-				sb.append("\nContent-Type: text/plain\n\n");
+				sb.append(LINE_FEED).append("Content-Type: text/plain").append(LINE_FEED).append(LINE_FEED);
 				
-System.out.println("Writing ["+f.getName()+"] ...");
+System.out.println("Writing '"+sAttrName+"' ["+f.getName()+"] ...");
 
 				wrt.write(sb.toString());
 				//
@@ -129,7 +131,7 @@ System.out.println("Writing ["+f.getName()+"] ...");
 				
 			}			
 			//
-			wrt.write("\n--" + BOUNDARY_STR + "--\n");
+			wrt.write(LINE_FEED+"--" + BOUNDARY_STR + "--"+LINE_FEED);
 			wrt.flush();
 			wrt.close();
 			outstreamConn.flush();
@@ -141,30 +143,15 @@ System.out.println("Completed sending data.");
 			String sRespMsg = urlConn.getResponseMessage();
 			
 			resp.setHttp_status(iRespCode);
-			resp.setHttp_status_message(sRespMsg);
+			
+			if(sRespMsg!=null)
+			{
+				resp.setHttp_status_message(sRespMsg);
+			}
 			
 			if(resp.isSuccess())
 			{
-				sb.setLength(0);
-				BufferedReader reader = null;
-				
-				try{
-					reader = new BufferedReader(new InputStreamReader(urlConn.getInputStream()));
-		            String line = null;
-		            while ((line = reader.readLine()) != null) {
-		            	if(sb.length()>0)
-		            	{
-		            		sb.append("\n");
-		            	}
-		            	sb.append(line);
-		            }
-				}finally
-				{
-					if(reader!=null)
-						reader.close();
-				}
-	            resp.setContent_type(urlConn.getContentType());
-	            resp.setContent_data(sb.toString());
+				resp = getUrlConnResp(resp, urlConn);
 			}
 		}
 		catch(Exception ex)
@@ -181,9 +168,20 @@ System.out.println("Completed sending data.");
 			JSONArray jArr = new JSONArray();
 			jArr.put(jsonError);
 			//
-			resp.setHttp_status(400);
-			resp.setContent_type("application/json");
-			resp.setContent_data(jArr.toString());
+			try {
+				resp = getUrlConnResp(resp, urlConn);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			//
+			
+			if(resp.getHttp_status()==500)
+			{
+				resp.setHttp_status(400);
+				resp.setContent_type(TYPE_APP_JSON);
+				resp.setContent_data(jArr.toString());			
+			}
+
 		}
 		finally
 		{
@@ -224,6 +222,44 @@ System.out.println("Completed sending data.");
 		return resp;
 	}
 	
+	
+	public HttpResp getUrlConnResp(HttpResp aHttpResp, HttpURLConnection aURLConn) throws IOException
+	{
+		if(aURLConn==null)
+			return null;
+		
+		BufferedReader reader = null;
+		StringBuffer sb = new StringBuffer();
+		try{
+			reader = new BufferedReader(new InputStreamReader(aURLConn.getInputStream()));
+			
+            String line 	= null;
+            while ((line = reader.readLine()) != null) {
+            	if(sb.length()>0)
+            	{
+            		sb.append("\n");
+            	}
+            	sb.append(line);
+            }
+		}finally
+		{
+			if(reader!=null)
+				try {
+					reader.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+		}
+		
+		if(aHttpResp==null)
+			aHttpResp = new HttpResp();
+			
+		aHttpResp.setContent_type(aURLConn.getContentType());
+		aHttpResp.setContent_data(sb.toString());
+
+		return aHttpResp;
+	}
+	
 	//===
     public static HttpURLConnection setBasicAuthHeader(HttpURLConnection aConn, String aUid, String aPwd)
     {
@@ -244,18 +280,6 @@ System.out.println("Completed sending data.");
     
 	public static void main(String[] args) throws IOException
 	{
-        String url = "https://203.127.252.43:21439/persons/7/pictures";
-        
-        //String img_path = "C:\\Xinlai\\Installation\\TestFiles\\NeoCenter POI Thumbnail\\Christopher LAM.jpg";
-        String img_path = new File(".").getCanonicalPath()+"\nls-chris-lam.jpg";
-        File img_file = new File(img_path);
-
-        HTMLMultiPart multipart = new HTMLMultiPart(url);
-        multipart.setBasicAuth("rootuser", "rootuser");
-		multipart.addFile("image", img_file);
-		HttpResp resp = multipart.post();
-		
-		System.out.println(resp);		
 	}
     
 }
