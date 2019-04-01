@@ -3,6 +3,7 @@ package hl.common.http;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -20,7 +21,9 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
 
@@ -537,6 +540,31 @@ public class RestApiClient {
 			return true;
     }
     
+	public static Certificate getSSLCert(String aCertUrl) throws CertificateException, IOException
+	{
+    	Certificate cert 	= null;
+		HttpResp res 		= null;
+    	InputStream in 		= null;
+    	
+		RestApiClient apiClient = new RestApiClient();
+		apiClient.setAllowAnyHostSSL(true);
+		res = apiClient.httpGet(aCertUrl);
+		
+    	try {
+    		in = new ByteArrayInputStream(res.getContent_data().getBytes());
+    		CertificateFactory X509CertFactory = CertificateFactory.getInstance("X509");
+    		if(in!=null && X509CertFactory!=null)
+    		{
+    			cert = X509CertFactory.generateCertificate(in);
+    		}
+    	}
+    	finally
+    	{
+    		if(in!=null)
+    			in.close();
+    	}
+    	return cert;
+	}
 	
     public static void main(String args[]) throws Exception
     {
