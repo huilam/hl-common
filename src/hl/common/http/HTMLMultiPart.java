@@ -10,10 +10,14 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Base64;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.net.ssl.HttpsURLConnection;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -21,14 +25,18 @@ public class HTMLMultiPart {
 	
 	private final static String LINE_FEED 		= "\r\n";
 	private final static String BOUNDARY_STR 	= "[ \\_(. .)_// ]";
+	
+	public final static String _PROTOCOL_HTTPS 	= "https";
+	public final static String _PROTOCOL_SSL 	= "SSL";
 	public final static String TYPE_APP_JSON 	= "application/json";
 	
 	private String url	= null;
 	private Map<String, String> mapAttrs 	= new HashMap<String, String>();
 	private Map<String, File> mapFiles 		= new HashMap<String, File>();
 	
-	private String basic_auth_uid 	= null;
-	private String basic_auth_pwd 	= null;
+	private KeyStore keystore_sslcert 		= null;
+	private String basic_auth_uid 			= null;
+	private String basic_auth_pwd 			= null;
 	
 	public HTMLMultiPart(String aUrl)
 	{
@@ -73,9 +81,25 @@ public class HTMLMultiPart {
 			urlConn.setUseCaches(false);
 			urlConn.setDoInput(true);
 			urlConn.setDoOutput(true);
+			
+			if(url.getProtocol().equalsIgnoreCase(_PROTOCOL_HTTPS))
+			{
+				HttpsURLConnection httpsconn = (HttpsURLConnection)urlConn;
+				try {
+					httpsconn.setSSLSocketFactory(
+							RestApiClient.getTrustCustomKeystoreSSLSocketFactory(this.keystore_sslcert));
+				} catch (KeyManagementException e) {
+					e.printStackTrace();
+				} catch (NoSuchAlgorithmException e) {
+					e.printStackTrace();
+				} catch (KeyStoreException e) {
+					e.printStackTrace();
+				}
+			}
+			
 			if(this.basic_auth_uid!=null && this.basic_auth_pwd!=null)
 			{
-				urlConn = setBasicAuthHeader(urlConn, this.basic_auth_uid, this.basic_auth_pwd);
+				urlConn = RestApiClient.setBasicAuthHeader(urlConn, this.basic_auth_uid, this.basic_auth_pwd);
 			}
 			urlConn.setRequestMethod("POST");
 			urlConn.addRequestProperty("Content-Type", "multipart/form-data; boundary=" + BOUNDARY_STR);
@@ -259,27 +283,4 @@ System.out.println("Completed sending data.");
 
 		return aHttpResp;
 	}
-	
-	//===
-    public static HttpURLConnection setBasicAuthHeader(HttpURLConnection aConn, String aUid, String aPwd)
-    {
-    	return setBasicAuthHeader(aConn, aUid+":"+aPwd);
-    }
-    
-    private static HttpURLConnection setBasicAuthHeader(HttpURLConnection aConn, String aUserInfo)
-    {
-    	if(aConn==null)
-    		return aConn;
-    	
-   		String sEncodedBasicAuth = "Basic " + new String(Base64.getEncoder().encode(aUserInfo.getBytes()));
-		aConn.setRequestProperty ("Authorization", sEncodedBasicAuth);
-    	
-		return aConn;    	
-    }
-	//===
-    
-	public static void main(String[] args) throws IOException
-	{
-	}
-    
 }
