@@ -168,7 +168,7 @@ public class RestApiClient {
     
     private static HttpURLConnection setBasicAuthHeader(HttpURLConnection aConn, String aUserInfo)
     {
-    	if(aConn==null)
+    	if(aConn==null || aUserInfo==null)
     		return aConn;
     	
    		String sEncodedBasicAuth = "Basic " + new String(Base64.getEncoder().encode(aUserInfo.getBytes()));
