@@ -59,6 +59,11 @@ public class HTMLMultiPart {
 		this.basic_auth_pwd = aPwd;
 	}
 	
+	public void setSSLKeystore(KeyStore aKeyStore)
+	{
+		this.keystore_sslcert = aKeyStore;
+	}
+	
 	public void clear()
 	{
 		mapFiles.clear();
@@ -82,18 +87,21 @@ public class HTMLMultiPart {
 			urlConn.setDoInput(true);
 			urlConn.setDoOutput(true);
 			
-			if(url.getProtocol().equalsIgnoreCase(_PROTOCOL_HTTPS))
+			if(this.keystore_sslcert!=null)
 			{
-				HttpsURLConnection httpsconn = (HttpsURLConnection)urlConn;
-				try {
-					httpsconn.setSSLSocketFactory(
-							RestApiClient.getTrustCustomKeystoreSSLSocketFactory(this.keystore_sslcert));
-				} catch (KeyManagementException e) {
-					e.printStackTrace();
-				} catch (NoSuchAlgorithmException e) {
-					e.printStackTrace();
-				} catch (KeyStoreException e) {
-					e.printStackTrace();
+				if(url.getProtocol().equalsIgnoreCase(_PROTOCOL_HTTPS))
+				{
+					HttpsURLConnection httpsconn = (HttpsURLConnection)urlConn;
+					try {
+						httpsconn.setSSLSocketFactory(
+								RestApiClient.getTrustCustomKeystoreSSLSocketFactory(this.keystore_sslcert));
+					} catch (KeyManagementException e) {
+						e.printStackTrace();
+					} catch (NoSuchAlgorithmException e) {
+						e.printStackTrace();
+					} catch (KeyStoreException e) {
+						e.printStackTrace();
+					}
 				}
 			}
 			
