@@ -1,4 +1,4 @@
-package hl.common;
+package hl.common.db;
 
 import java.io.File;
 import java.io.FileInputStream;

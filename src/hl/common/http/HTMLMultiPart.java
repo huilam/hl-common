@@ -33,6 +33,7 @@ public class HTMLMultiPart {
 	private String url	= null;
 	private Map<String, String> mapAttrs 	= new HashMap<String, String>();
 	private Map<String, File> mapFiles 		= new HashMap<String, File>();
+	private Map<String, String> mapExtContentType = new HashMap<String, String>();
 	
 	private KeyStore keystore_sslcert 		= null;
 	private String basic_auth_uid 			= null;
@@ -40,7 +41,12 @@ public class HTMLMultiPart {
 	
 	public HTMLMultiPart(String aUrl)
 	{
-		url = aUrl;
+		this.url = aUrl;
+		
+		mapExtContentType.put("jpg", "image/jpeg");
+		mapExtContentType.put("jpeg", "image/jpeg");
+		mapExtContentType.put("bmp", "image/bmp");
+		mapExtContentType.put("png", "image/png");
 	}
 	
 	public void addFile(String aAttrName, File aFile)
@@ -102,6 +108,8 @@ public class HTMLMultiPart {
 					} catch (KeyStoreException e) {
 						e.printStackTrace();
 					}
+					
+					urlConn = httpsconn;
 				}
 			}
 			
@@ -111,7 +119,8 @@ public class HTMLMultiPart {
 			}
 			urlConn.setRequestMethod("POST");
 			urlConn.addRequestProperty("Content-Type", "multipart/form-data; boundary=" + BOUNDARY_STR);
-		
+			urlConn.connect();
+			
 			outstreamConn = urlConn.getOutputStream();
 			wrt = new BufferedWriter(new OutputStreamWriter(outstreamConn));
 			
@@ -126,6 +135,7 @@ public class HTMLMultiPart {
 			}
 			
 			wrt.write(sb.toString());
+			wrt.flush();
 			
 			int bytesRead;
 			byte[] dataBuffer = new byte[4096];
@@ -133,13 +143,26 @@ public class HTMLMultiPart {
 			for(String sAttrName : mapFiles.keySet())
 			{
 				File f = mapFiles.get(sAttrName);
+				String sContentType = "text/plain";
+				
+				int iPos = f.getName().lastIndexOf(".");
+				if(iPos>-1)
+				{
+					String sFileExt = f.getName().substring(iPos+1).toLowerCase();
+					String fileContentType = mapExtContentType.get(sFileExt);
+					if(fileContentType!=null)
+					{
+						sContentType = fileContentType;
+					}
+				}
+				
 				//
 				sb.setLength(0);
 				sb.append(LINE_FEED).append("--").append(BOUNDARY_STR).append(LINE_FEED);
 				sb.append("Content-Disposition: form-data; ");
 				sb.append("name=\"").append(sAttrName).append("\"; ");
 				sb.append("filename=\"").append(f.getName()).append("\"");
-				sb.append(LINE_FEED).append("Content-Type: text/plain").append(LINE_FEED).append(LINE_FEED);
+				sb.append(LINE_FEED).append("Content-Type:").append(sContentType).append(LINE_FEED).append(LINE_FEED);
 				
 				wrt.write(sb.toString());
 				wrt.flush();
@@ -162,9 +185,7 @@ public class HTMLMultiPart {
 			//
 			wrt.write(LINE_FEED+"--" + BOUNDARY_STR + "--"+LINE_FEED);
 			wrt.flush();
-			wrt.close();
 			outstreamConn.flush();
-			outstreamConn.close();
 
 			int iRespCode 	= urlConn.getResponseCode();
 			String sRespMsg = urlConn.getResponseMessage();
@@ -290,6 +311,15 @@ public class HTMLMultiPart {
 
 	public static void main(String[] args) throws IOException
 	{	
+		
+		String sUrl = "http://172.30.140.33:8080/multipart/";
+		
+		File f = new File("d:/psbu.jpg");
+		HTMLMultiPart mp = new HTMLMultiPart(sUrl);
+		mp.addFile("file", f);
+		mp.addAttribute("testfield", "testvalue");
+		HttpResp httpRes = mp.post();
+		System.out.println(httpRes);
 	}
 	
 }
