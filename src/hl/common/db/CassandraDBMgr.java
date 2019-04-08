@@ -1,4 +1,4 @@
-package hl.jsoncrud;
+package hl.common.db;
 
 import java.util.ArrayList;
 import java.util.List;
