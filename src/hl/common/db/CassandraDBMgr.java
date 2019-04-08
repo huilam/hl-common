@@ -87,18 +87,27 @@ public class CassandraDBMgr {
 	
 	public JSONObject queryVersion()
 	{
-		return executeCql("select release_version as cassandra_version, cql_version from system.local");
+		return executeCql("select release_version as server_version, cql_version from system.local");
 	}
 	
 	public JSONObject listKeyspaces()
 	{
+		StringBuffer sb = new StringBuffer();
+		sb.append(" SELECT ");
+		sb.append("   keyspace_name ");
+		sb.append(" FROM ");
+		sb.append("   system_schema.keyspaces");
+		
 		return executeCql("SELECT keyspace_name FROM system_schema.keyspaces");
 	}
 	
 	public JSONObject listTables(String aKeyspaceName)
 	{
 		StringBuffer sb = new StringBuffer();
-		sb.append(" SELECT table_name, keyspace_name FROM system_schema.tables ");
+		sb.append(" SELECT ");
+		sb.append("   table_name, keyspace_name ");
+		sb.append(" FROM ");
+		sb.append("   system_schema.tables ");
 		if(aKeyspaceName!=null && aKeyspaceName.trim().length()>0)
 		{
 			sb.append("WHERE keyspace_name = ").append(aKeyspaceName);
@@ -109,7 +118,10 @@ public class CassandraDBMgr {
 	public JSONObject listColumns(String aTableName)
 	{
 		StringBuffer sb = new StringBuffer();
-		sb.append(" SELECT column_name, type, table_name FROM system_schema.columns ");
+		sb.append(" SELECT ");
+		sb.append("   column_name, type, table_name ");
+		sb.append(" FROM ");
+		sb.append("   system_schema.columns ");
 		if(aTableName!=null && aTableName.trim().length()>0)
 		{
 			sb.append("WHERE table_name = ").append(aTableName);
