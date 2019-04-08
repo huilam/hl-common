@@ -18,7 +18,10 @@ import com.datastax.oss.driver.api.core.cql.*;
 
 public class CassandraDBMgr {
 
-	public final static String _SCHEMA_SYSTEM 	= "system_schema";
+	public final static String _SCHEMA_SYSTEM 		= "system_schema";
+	public final static String _CQL_WHERE 			= "WHERE";
+	public final static String _CQL_ALLOW_FILTERING = "ALLOW FILTERING";
+	
 	public final static String _DATATYPE_BIGINT = "bigint";
 	public final static String _DATATYPE_DOUBLE = "double";
 	public final static String _DATATYPE_TEXT 	= "text";
@@ -186,10 +189,10 @@ public class CassandraDBMgr {
 			String aUpperCql = aCqlString.toUpperCase();
 			
 			
-			if(aUpperCql.indexOf(" WHERE ")>-1 
-					&& aUpperCql.indexOf("ALLOW FILTERING")==-1)
+			if(aUpperCql.indexOf(_CQL_WHERE)>-1 
+					&& aUpperCql.indexOf(_CQL_ALLOW_FILTERING)==-1)
 			{
-				aCqlString += " ALLOW FILTERING";
+				aCqlString += " "+_CQL_ALLOW_FILTERING;
 			}
 			
 			PreparedStatement stmt = session.prepare(aCqlString);
