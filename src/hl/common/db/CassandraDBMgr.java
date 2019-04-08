@@ -182,7 +182,16 @@ public class CassandraDBMgr {
 		CqlSession session = null;
 		try {
 			session = getCqlSession();
-				
+		
+			String aUpperCql = aCqlString.toUpperCase();
+			
+			
+			if(aUpperCql.indexOf(" WHERE ")>-1 
+					&& aUpperCql.indexOf("ALLOW FILTERING")==-1)
+			{
+				aCqlString += " ALLOW FILTERING";
+			}
+			
 			PreparedStatement stmt = session.prepare(aCqlString);
 			BoundStatement bstmt = setParams(stmt, params);
 			
