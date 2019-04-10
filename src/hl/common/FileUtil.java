@@ -11,15 +11,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.HttpURLConnection;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
-
-import org.json.JSONObject;
 
 public class FileUtil {
 
@@ -44,14 +41,25 @@ public class FileUtil {
 		if(folder==null)
 		{
 			URL url = aClass.getResource(".");
-			try {
-				if(url!=null)
+			if(url!=null)
+			{
+				String sPath = url.getFile();
+				
+				String sPackageName = aClass.getPackage().getName();
+				if(sPackageName!=null)
 				{
-					folder = new File(url.toURI());
+					sPackageName = "/"+sPackageName.replaceAll("\\.", "/")+"/";
 				}
-			} catch (URISyntaxException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				
+				if(sPath.endsWith(sPackageName))
+				{
+					int iLen = sPath.length() - sPackageName.length(); 
+					folder = new File(sPath.substring(0, iLen));
+				}
+				else
+				{
+					folder = new File(sPath);
+				}
 			}
 		}
 		
@@ -270,12 +278,5 @@ public class FileUtil {
     
     public static void main(String args[]) throws IOException
     {
-    	System.out.println(FileUtil.getJavaClassPath(JSONObject.class));
-    	
-    	/*
-    	System.setProperty("https.proxyHost", "proxy.nec.com.sg");
-    	System.setProperty("https.proxyPort", "8080");
-    	FileUtil.downloadWebImage("https://scontent.xx.fbcdn.net/v/t1.0-0/p180x540/12670721_124148334651352_975683798861057932_n.jpg?oh=a1d7b5a0992976080c611b40a0684374&oe=58972E23");
-		*/
     }
 }
