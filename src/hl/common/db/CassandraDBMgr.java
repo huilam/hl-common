@@ -1,6 +1,8 @@
 package hl.common.db;
 
+import java.net.InetSocketAddress;
 import java.sql.Date;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,6 +20,9 @@ import com.datastax.oss.driver.api.core.cql.*;
 
 public class CassandraDBMgr {
 
+	public final static int _CQL_DEF_PORT			= 9042;
+	
+	
 	public final static String _SCHEMA_SYSTEM 		= "system_schema";
 	public final static String _CQL_WHERE 			= "WHERE";
 	public final static String _CQL_ALLOW_FILTERING = "ALLOW FILTERING";
@@ -56,7 +61,11 @@ public class CassandraDBMgr {
 	
 	public CassandraDBMgr()
 	{
+		String sIP = "127.0.0.1";//"172.30.92.6";
+		
 		this.cqlSessionbuilder = CqlSession.builder();
+		//this.cqlSessionbuilder.addContactPoint(new InetSocketAddress(sIP, _CQL_DEF_PORT));
+		
 		CqlSession ss = this.cqlSessionbuilder.build();
 		if(ss!=null && !ss.isClosed())
 		{
@@ -226,6 +235,14 @@ public class CassandraDBMgr {
 		return jsonArrs;
 	}
 	
+	public static BoundStatement setParams(PreparedStatement aStatement, List<Object> aParamList ) throws NumberFormatException, SQLException
+	{
+		if(aParamList!=null)
+			return setParams(aStatement, aParamList.toArray(new Object[aParamList.size()]));
+		else
+			return setParams(aStatement, new Object[]{});
+	}
+	
 	public static BoundStatement setParams(PreparedStatement aStatement, Object[] aParams ) 
 	{
 		BoundStatementBuilder bound = null;
@@ -282,28 +299,32 @@ public class CassandraDBMgr {
 		CassandraDBMgr m = new CassandraDBMgr();
 		System.out.println("version:"+m.queryVersion());
 		
-		JSONArray jsonArr1 = null;
-		JSONArray jsonArr2 = null;
+		JSONArray jsonArrKeyspaces = null;
 		
-		jsonArr1 = m.listKeyspaces();
-		System.out.println("keyspaces:"+jsonArr1);
+		jsonArrKeyspaces = m.listKeyspaces();
 		
-		for(int i=0; i<jsonArr1.length(); i++)
+		for(int i=1; i<=jsonArrKeyspaces.length(); i++)
 		{
-			JSONObject json = jsonArr1.getJSONObject(i);
-			String sKeySpaceName = json.getString("keyspace_name");
-			jsonArr2 = m.listTables(sKeySpaceName);
-			System.out.println("tables:"+jsonArr2);
+			String sKeySpaceName = jsonArrKeyspaces.getJSONObject(i-1).getString("keyspace_name");
+			System.out.println("  "+i+". [keyspace]"+sKeySpaceName+" ====================");
+			System.out.println();
+			JSONArray jsonArrTables = m.listTables(sKeySpaceName);
+			for(int i2=1; i2<=jsonArrTables.length(); i2++)
+			{
+				String sTableName = jsonArrTables.getJSONObject(i2-1).getString("table_name");
+				System.out.println("  "+i+"."+i2+" [table]"+sTableName);
+				
+				JSONArray jsonArrCols = m.listColumns(sTableName);
+				for(int i3=1; i3<=jsonArrCols.length(); i3++)
+				{
+					String sColName = jsonArrCols.getJSONObject(i3-1).getString("column_name");
+					System.out.println("  "+i+"."+i2+"."+i3+" "+sColName);
+				}
+				System.out.println();
+			}
 		}
 		
 		
-		for(int i=0; i<jsonArr2.length(); i++)
-		{
-			JSONObject json = jsonArr2.getJSONObject(i);
-			String sTableName = json.getString("table_name");
-			jsonArr1 = m.listColumns(sTableName);
-			System.out.println("columns:"+jsonArr1);
-		}
 		m.close();
 	}
     
