@@ -3,10 +3,13 @@ package hl.common;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -53,6 +56,79 @@ public class FileUtil {
 		}
 		
 		return folder;
+	}
+	
+	public static String loadContent(String aResourcePath)
+	{
+		String sData = null;
+		if(aResourcePath!=null)
+		{
+			File f = new File(aResourcePath);
+			if(f.exists())
+			{
+				try {
+					sData = getContent(new FileReader(f));
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+				}
+			}
+			
+			if(sData==null)
+			{
+				//resource bundle
+				InputStream in = null;
+				try {
+					in = FileUtil.class.getResourceAsStream(aResourcePath);
+					if(in!=null)
+					{
+						sData = getContent(new InputStreamReader(in));
+					}
+				}
+				finally
+				{
+					if(in!=null)
+						try {
+							in.close();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+				}
+			}
+		}
+		return sData;
+	}
+	
+	private static String getContent(Reader aReader) 
+	{
+		String sData = null;
+		if(aReader!=null)
+		{
+			StringBuffer sb = new StringBuffer();
+			BufferedReader rdr = null;
+			try {
+				rdr = new BufferedReader(aReader);
+				String sLine = null;
+				
+				while((sLine = rdr.readLine())!=null)
+				{
+					if(sLine.trim().length()>0)
+					{
+						sb.append("\n");
+					}
+					sb.append(sLine);
+				}
+				
+				if(sb.length()>0)
+				{
+					sData = sb.toString();
+				}
+			}catch(IOException ex)
+			{
+				ex.printStackTrace();
+			}
+		}
+		return sData;
 	}
 	
 	public static File downloadWebImage(String aImageURL) throws IOException
