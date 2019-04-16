@@ -240,19 +240,21 @@ public class RestApiClient {
 				}
 			}
 			
-			
-			OutputStream out = conn.getOutputStream();
-			
-			BufferedWriter writer 	= null;
-			try {
-				writer = new BufferedWriter(new OutputStreamWriter(out, UTF_8));
-				writer.write(aContentData);
-				out.flush();
-			}
-			finally
+			if(aContentData!=null && aContentData.trim().length()>0)
 			{
-				if(writer!=null)
-					writer.close();
+				OutputStream out = conn.getOutputStream();
+				
+				BufferedWriter writer 	= null;
+				try {
+					writer = new BufferedWriter(new OutputStreamWriter(out, UTF_8));
+					writer.write(aContentData);
+					out.flush();
+				}
+				finally
+				{
+					if(writer!=null)
+						writer.close();
+				}
 			}
 			httpResp.setHttp_status(conn.getResponseCode());
 			httpResp.setHttp_status_message(conn.getResponseMessage());
