@@ -10,16 +10,5 @@
 	<classpathentry kind="lib" path="lib/redis/jedis-jedis-2.9.0.jar"/>
 	<classpathentry kind="lib" path="lib/guava-22.0.jar"/>
 	<classpathentry kind="lib" path="lib/org.json.jar"/>
-	<classpathentry kind="lib" path="lib/cassandra/core/config-1.3.3.jar"/>
-	<classpathentry kind="lib" path="lib/cassandra/core/java-driver-core-4.0.0.jar"/>
-	<classpathentry kind="lib" path="lib/cassandra/core/java-driver-shaded-guava-25.1-jre.jar"/>
-	<classpathentry kind="lib" path="lib/cassandra/core/native-protocol-1.4.4.jar"/>
-	<classpathentry kind="lib" path="lib/cassandra/core/netty-buffer-4.1.34.Final.jar"/>
-	<classpathentry kind="lib" path="lib/cassandra/core/netty-codec-4.1.34.Final.jar"/>
-	<classpathentry kind="lib" path="lib/cassandra/core/netty-common-4.1.34.Final.jar"/>
-	<classpathentry kind="lib" path="lib/cassandra/core/netty-handler-4.1.34.Final.jar"/>
-	<classpathentry kind="lib" path="lib/cassandra/core/netty-resolver-4.1.34.Final.jar"/>
-	<classpathentry kind="lib" path="lib/cassandra/core/netty-transport-4.1.34.Final.jar"/>
-	<classpathentry kind="lib" path="lib/cassandra/core/slf4j-api-1.7.26.jar"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>
