@@ -91,6 +91,14 @@ public class RestApiClient {
 		this.basic_auth_pwd = aPwd;
 	}
 	
+	public String getBasic_auth_uid() {
+		return basic_auth_uid;
+	}
+
+	public String getBasic_auth_pwd() {
+		return basic_auth_pwd;
+	}
+
 	public String getReqContent(HttpServletRequest req)
 	{
 		StringBuffer sb = new StringBuffer();
