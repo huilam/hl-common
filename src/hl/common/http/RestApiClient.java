@@ -26,6 +26,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
+import java.util.Properties;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -85,6 +86,28 @@ public class RestApiClient {
 		this.isAllowAnyHostSSL = aAllowAnyHostSSL;
 	}
 
+	public void setHttpProxy(String aUrl, String aPort)
+	{
+		Properties p = System.getProperties();
+		p.setProperty("http.proxyHost", aUrl);
+		p.setProperty("http.proxyPort", aPort);
+		if(p.getProperty("https.proxyHost")==null)
+		{
+			setHttpsProxy(aUrl, aPort);
+		}
+	}
+	
+	public void setHttpsProxy(String aUrl, String aPort)
+	{
+		Properties p = System.getProperties();
+		p.setProperty("https.proxyHost", aUrl);
+		p.setProperty("https.proxyPort", aPort);
+		if(p.getProperty("http.proxyHost")==null)
+		{
+			setHttpProxy(aUrl, aPort);
+		}
+	}
+	
 	public void setBasicAuth(String aUid, String aPwd)
 	{
 		this.basic_auth_uid = aUid;
@@ -578,6 +601,5 @@ public class RestApiClient {
 	
     public static void main(String args[]) throws Exception
     {
-    	
     }
 }
