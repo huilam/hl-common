@@ -13,6 +13,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Base64;
+import java.util.Map;
+import java.util.Properties;
 
 import javax.imageio.ImageIO;
 
@@ -117,7 +119,7 @@ public class ImgUtil {
 		return imageToBase64(img, aImgFormat);
 	}
 	
-	public static String imageToBase64(final BufferedImage aBufferedImage, final String aImgFormat) throws IOException
+	public static String imageToBase64(BufferedImage aBufferedImage, final String aImgFormat) throws IOException
 	{
 		String sBase64 = null;
 		
@@ -127,7 +129,28 @@ public class ImgUtil {
 			
 			try{
 				outImg = new ByteArrayOutputStream();
+				if(!aImgFormat.equalsIgnoreCase("PNG"))
+				{
+					if(aBufferedImage.getType()!=BufferedImage.TYPE_INT_RGB)
+					{
+						BufferedImage newRGBImage = new BufferedImage(
+								aBufferedImage.getWidth(), 
+								aBufferedImage.getHeight(), 
+								BufferedImage.TYPE_INT_RGB);
+				        Graphics2D g = null;
+				        try {
+					        g = newRGBImage.createGraphics();
+					        g.drawImage(aBufferedImage, 0, 0, null);
+					        
+				        }finally {
+				        	if(g!=null)
+				        		g.dispose();
+				        }
+				        aBufferedImage = newRGBImage;
+					}
+				}
 				ImageIO.write(aBufferedImage, aImgFormat, outImg);
+				
 				sBase64 = Base64.getEncoder().encodeToString(outImg.toByteArray());
 			}finally
 			{
@@ -368,21 +391,6 @@ public class ImgUtil {
 	
 	public static void main(String args[]) throws Exception
 	{
-		
-		String sbase64 = ImgUtil.getBase64FromFile("C:/NLS/huifan.base64");
-		
-		BufferedImage img = ImgUtil.base64ToImage(sbase64);
-		ImgUtil.saveAsFile(img, "JPG", new File("C:/NLS/huifan.base64.jpg"));
-		
-		sbase64 = ImgUtil.resizeBase64ImgByWidth(sbase64, 180);
-		img = ImgUtil.base64ToImage(sbase64);
-        ImgUtil.saveAsFile(img, "JPG", new File("C:/NLS/huifan.base64.resized1-"+img.getWidth()+"x"+img.getHeight()+".jpg"));
-        
-        sbase64 = ImgUtil.resizeBase64ImgByHeight(sbase64, 180);
-		img = ImgUtil.base64ToImage(sbase64);
-        ImgUtil.saveAsFile(img, "JPG", new File("C:/NLS/huifan.base64.resized2-"+img.getWidth()+"x"+img.getHeight()+".jpg"));
-        
-        
 	}
 	
 }
