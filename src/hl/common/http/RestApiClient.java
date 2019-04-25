@@ -86,7 +86,7 @@ public class RestApiClient {
 		this.isAllowAnyHostSSL = aAllowAnyHostSSL;
 	}
 
-	public void setHttpProxy(String aUrl, String aPort)
+	public static void setHttpProxy(String aUrl, String aPort)
 	{
 		Properties p = System.getProperties();
 		p.setProperty("http.proxyHost", aUrl);
@@ -97,7 +97,7 @@ public class RestApiClient {
 		}
 	}
 	
-	public void setHttpsProxy(String aUrl, String aPort)
+	public static void setHttpsProxy(String aUrl, String aPort)
 	{
 		Properties p = System.getProperties();
 		p.setProperty("https.proxyHost", aUrl);
