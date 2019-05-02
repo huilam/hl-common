@@ -63,6 +63,11 @@ public class RestApiClient {
 	public final static String TYPE_TEXT_PLAIN 		= "text/plain";
 	public final static String TYPE_ENCODING_GZIP 	= "gzip";
 	
+	public final static String HTTP 		= "http";
+	public final static String HTTPwithSSL 	= "https";
+	public final static String PROXY_HOST = "proxyHost";
+	public final static String PROXY_PORT = "proxyPort";
+	
 	public String basic_auth_uid = null;
 	public String basic_auth_pwd = null;
 	
@@ -89,9 +94,9 @@ public class RestApiClient {
 	public static void setHttpProxy(String aUrl, String aPort)
 	{
 		Properties p = System.getProperties();
-		p.setProperty("http.proxyHost", aUrl);
-		p.setProperty("http.proxyPort", aPort);
-		if(p.getProperty("https.proxyHost")==null)
+		p.setProperty(HTTP+"."+PROXY_HOST, aUrl);
+		p.setProperty(HTTP+"."+PROXY_PORT, aPort);
+		if(p.getProperty(HTTPwithSSL+"."+PROXY_HOST)==null && aUrl!=null)
 		{
 			setHttpsProxy(aUrl, aPort);
 		}
@@ -100,9 +105,9 @@ public class RestApiClient {
 	public static void setHttpsProxy(String aUrl, String aPort)
 	{
 		Properties p = System.getProperties();
-		p.setProperty("https.proxyHost", aUrl);
-		p.setProperty("https.proxyPort", aPort);
-		if(p.getProperty("http.proxyHost")==null)
+		p.setProperty(HTTPwithSSL+"."+PROXY_HOST, aUrl);
+		p.setProperty(HTTPwithSSL+"."+PROXY_PORT, aPort);
+		if(p.getProperty(HTTP+"."+PROXY_HOST)==null && aUrl!=null)
 		{
 			setHttpProxy(aUrl, aPort);
 		}
