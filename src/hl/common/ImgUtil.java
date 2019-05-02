@@ -13,9 +13,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Base64;
-import java.util.Map;
-import java.util.Properties;
-
 import javax.imageio.ImageIO;
 
 import hl.common.http.RestApiUtil;
