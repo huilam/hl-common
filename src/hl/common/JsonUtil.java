@@ -10,15 +10,15 @@ import org.json.JSONObject;
 
 public class JsonUtil {
 	
-	public static JSONObject convert(JSONObject aJSONObject, Map<String, String> aRenameMap)
+	public static JSONObject convert(JSONObject aJSONObject, Map<String, String> aConvertMapping)
 	{
 		JSONObject jsonInput 	= new JSONObject(aJSONObject.toString());
 		JSONObject jsonOutput 	= new JSONObject();
 		
-		if(aRenameMap!=null)
+		if(aConvertMapping!=null)
 		{
 			Object objValue = null;
-			for(String sKey : aRenameMap.keySet())
+			for(String sKey : aConvertMapping.keySet())
 			{
 				//Navigate JSON value
 				if(sKey.trim().length()==0)
@@ -46,7 +46,7 @@ public class JsonUtil {
 				if(objValue!=null)
 				{
 					//Construct new structure
-					String sNewAttrName = aRenameMap.get(sKey);
+					String sNewAttrName = aConvertMapping.get(sKey);
 										
 //System.out.println("sNewAttrName==>"+sNewAttrName);
 					Stack<String> stacks = new Stack<String>();
