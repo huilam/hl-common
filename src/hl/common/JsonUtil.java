@@ -1,5 +1,6 @@
 package hl.common;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 import java.util.StringTokenizer;
@@ -102,7 +103,7 @@ public class JsonUtil {
 					{
 						//same so merge
 						JSONObject jsonM = merge((JSONObject)objTmp1, (JSONObject)objTmp2);
-						objTmp1 = jsonM;
+						json1.put(sKey, jsonM);
 					}
 				}
 				else if(objTmp1 instanceof JSONArray)
@@ -152,42 +153,66 @@ public class JsonUtil {
 		return aJSONObject.opt(sAttrName);		
 	}
 	
-	/**
+	
 	public static void main(String args[])
 	{
-		JSONObject jsonInner2 = new JSONObject();
-		jsonInner2.put("inner2","aaaa");
-		
-		JSONObject jsonInner1 = new JSONObject();
-		jsonInner1.put("test1","111");
-		jsonInner1.put("test2","222");
-		jsonInner1.put("innerjson",jsonInner2);
-		
-		JSONObject json = new JSONObject();
-		json.put("timestamp","1551677822971");
-		json.put("frameId",1);
-		json.put("sensorId",1);
-		json.put("feature","VjAyMDAwM");
-		json.put("picture","/9j/4AAQSk");
-		json.put("faceId",-1);
-		json.put("face_area_x",168);
-		json.put("face_area_y",26);
-		json.put("face_area_width",52);
-		json.put("face_area_height",-63);
-		json.put("json", jsonInner1);
-		
+		String sData = "{\r\n" + 
+				"        \"timestamp\": 1557109653046,\r\n" + 
+				"        \"frameId\": 1,\r\n" + 
+				"        \"sensorId\": 1,\r\n" + 
+				"        \"feature\": \"VjAyMDAwMCAKa8cjIP…\",\r\n" + 
+				"        \"picture\": \"/9j/4AAQSkZJRgA…\",\r\n" + 
+				"        \"faceId\": -1,\r\n" + 
+				"        \"face_area_x\": 158,\r\n" + 
+				"        \"face_area_y\": 290,\r\n" + 
+				"        \"face_area_width\": 278,\r\n" + 
+				"        \"face_area_height\": 278,\r\n" + 
+				"        \"head_area_x\": 108,\r\n" + 
+				"        \"head_area_y\": 161,\r\n" + 
+				"        \"head_area_width\": 375,\r\n" + 
+				"        \"head_area_height\": 461,\r\n" + 
+				"        \"left_eye_x\": 369,\r\n" + 
+				"        \"left_eye_y\": 351,\r\n" + 
+				"        \"right_eye_x\": 219,\r\n" + 
+				"        \"right_eye_y\": 356,\r\n" + 
+				"        \"pan\": -4.8475122451782226562,\r\n" + 
+				"        \"roll\": 1.9091522693634033203,\r\n" + 
+				"        \"tilt\": 1.3301063776016235352,\r\n" + 
+				"        \"frontal_score\": 0.60400390625,\r\n" + 
+				"        \"quality\": 0.7776355743408203125,\r\n" + 
+				"        \"reliability\": 0.99921792745590209961,\r\n" + 
+				"        \"has_feature\": true,\r\n" + 
+				"        \"error\": \"\"\r\n" + 
+				"    }\r\n" + 
+				"";
+		JSONObject jsonData = new JSONObject(sData);
+
 		Map<String, String> mapRename = new HashMap<String, String>();
-		mapRename.put("feature", "feature");
-		mapRename.put("picture", "thumbnail");
-		mapRename.put("face_area_x", "face.x");
-		mapRename.put("face_area_y", "face.y");
-		mapRename.put("face_area_width", "face.width");
-		mapRename.put("face_area_height", "face.height");
-		mapRename.put("json.innerjson.inner2", "test");
+		//mapRename.put("feature","feature");
+		mapRename.put("face_area_x","faceRegion.left");
+		mapRename.put("face_area_y","faceRegion.top");
+		mapRename.put("face_area_width","faceRegion.width");
+		mapRename.put("face_area_height","faceRegion.height");
 		
-		System.out.println("converted="+JsonUtil.convert(json, mapRename));
+		mapRename.put("head_area_x","headRegion.left");
+		mapRename.put("head_area_y","headRegion.top");
+		mapRename.put("head_area_width","headRegion.width");
+		mapRename.put("head_area_height","headRegion.height");
+		mapRename.put("left_eye_x","leftEye.left");
+		mapRename.put("left_eye_y","leftEye.top");
+		mapRename.put("right_eye_x","rightEye.left");
+		mapRename.put("right_eye_y","rightEye.top");
+		mapRename.put("pan","facePan");
+		mapRename.put("roll","faceRoll");
+		mapRename.put("tilt","faceTilt");
+		mapRename.put("frontal_score","frontalFaceScore");
+		mapRename.put("quality","faceQualityScore");
+		mapRename.put("reliability","faceScore");
 		
-		System.out.println("value="+JsonUtil.getJsonObj(json, "json.innerjson.inner2"));
+		JSONObject jsonConverted = JsonUtil.convert(jsonData, mapRename);
+		System.out.println("converted="+jsonConverted.toString());
+		
+		System.out.println("value="+JsonUtil.getJsonObj(jsonData, "face_area_width"));
 	}
-    **/
+    
 }
