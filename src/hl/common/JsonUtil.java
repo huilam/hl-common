@@ -1,6 +1,5 @@
 package hl.common;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 import java.util.StringTokenizer;
@@ -135,7 +134,7 @@ public class JsonUtil {
 		if(aJsonPath==null || aJsonPath.trim().length()==0)
 			return null;
 		
-		StringTokenizer tk 		= new StringTokenizer(aJsonPath, ".");
+		StringTokenizer tk 	= new StringTokenizer(aJsonPath, ".");
 		
 		if(tk.countTokens()>1)
 		{
