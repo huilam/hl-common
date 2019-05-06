@@ -21,25 +21,7 @@ public class JsonUtil {
 			for(String sKey : aConvertMapping.keySet())
 			{
 				//Navigate JSON value
-				if(sKey.trim().length()==0)
-					continue;
-				
-				StringTokenizer tk 		= new StringTokenizer(sKey, ".");
-				
-				if(tk.countTokens()>1)
-				{
-					for(int i=0; i<tk.countTokens(); i++)
-					{
-						JSONObject jsonTemp = jsonInput.optJSONObject(tk.nextToken());
-						if(jsonTemp!=null)
-						{
-							jsonInput = jsonTemp;
-						}
-					}
-				}
-				
-				String sAttrName = tk.nextToken();
-				objValue = jsonInput.opt(sAttrName);
+				objValue = getJsonObj(jsonInput, sKey);
 				
 //System.out.println();System.out.println(sKey+"="+objValue);
 				
@@ -50,7 +32,7 @@ public class JsonUtil {
 										
 //System.out.println("sNewAttrName==>"+sNewAttrName);
 					Stack<String> stacks = new Stack<String>();
-					tk = new StringTokenizer(sNewAttrName, ".");
+					StringTokenizer tk = new StringTokenizer(sNewAttrName, ".");
 					while(tk.hasMoreTokens())
 					{ 
 						String sNewSubKey = tk.nextToken();
@@ -146,7 +128,32 @@ public class JsonUtil {
 		
 		return json1;
 	}
-
+	
+	public static Object getJsonObj(JSONObject aJSONObject, String aJsonPath)
+	{
+		//Navigate JSON value
+		if(aJsonPath==null || aJsonPath.trim().length()==0)
+			return null;
+		
+		StringTokenizer tk 		= new StringTokenizer(aJsonPath, ".");
+		
+		if(tk.countTokens()>1)
+		{
+			for(int i=0; i<tk.countTokens(); i++)
+			{
+				JSONObject jsonTemp = aJSONObject.optJSONObject(tk.nextToken());
+				if(jsonTemp!=null)
+				{
+					aJSONObject = jsonTemp;
+				}
+			}
+		}
+		
+		String sAttrName = tk.nextToken();
+		return aJSONObject.opt(sAttrName);		
+	}
+	
+	/**
 	public static void main(String args[])
 	{
 		JSONObject jsonInner2 = new JSONObject();
@@ -170,7 +177,6 @@ public class JsonUtil {
 		json.put("face_area_height",-63);
 		json.put("json", jsonInner1);
 		
-		
 		Map<String, String> mapRename = new HashMap<String, String>();
 		mapRename.put("feature", "feature");
 		mapRename.put("picture", "thumbnail");
@@ -181,6 +187,8 @@ public class JsonUtil {
 		mapRename.put("json.innerjson.inner2", "test");
 		
 		System.out.println("converted="+JsonUtil.convert(json, mapRename));
+		
+		System.out.println("value="+JsonUtil.getJsonObj(json, "json.innerjson.inner2"));
 	}
-    
+    **/
 }
