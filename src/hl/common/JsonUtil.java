@@ -135,56 +135,62 @@ public class JsonUtil {
 		if(aJsonPath==null || aJsonPath.trim().length()==0)
 			return null;
 		
-		StringTokenizer tk 	= new StringTokenizer(aJsonPath, ".");
-		
+		StringTokenizer tk 	= new StringTokenizer(aJsonPath, ".");		
+		String sAttrName = null;
 		if(tk.countTokens()>1)
 		{
-			for(int i=0; i<tk.countTokens(); i++)
+			while(tk.hasMoreTokens())
 			{
-				JSONObject jsonTemp = aJSONObject.optJSONObject(tk.nextToken());
-				if(jsonTemp!=null)
+				sAttrName = tk.nextToken();
+				Object jsonObj = aJSONObject.opt(sAttrName);
+				if(jsonObj instanceof JSONObject)
 				{
-					aJSONObject = jsonTemp;
+					aJSONObject = (JSONObject) jsonObj;
+				}
+				else
+				{
+					break;
 				}
 			}
 		}
+		else
+		{
+			sAttrName = tk.nextToken();
+		}
 		
-		String sAttrName = tk.nextToken();
 		return aJSONObject.opt(sAttrName);		
 	}
 	
 	
 	public static void main(String args[])
 	{
-		String sData = "{\r\n" + 
-				"        \"timestamp\": 1557109653046,\r\n" + 
-				"        \"frameId\": 1,\r\n" + 
-				"        \"sensorId\": 1,\r\n" + 
-				"        \"feature\": \"VjAyMDAwMCAKa8cjIP…\",\r\n" + 
-				"        \"picture\": \"/9j/4AAQSkZJRgA…\",\r\n" + 
-				"        \"faceId\": -1,\r\n" + 
-				"        \"face_area_x\": 158,\r\n" + 
-				"        \"face_area_y\": 290,\r\n" + 
-				"        \"face_area_width\": 278,\r\n" + 
-				"        \"face_area_height\": 278,\r\n" + 
-				"        \"head_area_x\": 108,\r\n" + 
-				"        \"head_area_y\": 161,\r\n" + 
-				"        \"head_area_width\": 375,\r\n" + 
-				"        \"head_area_height\": 461,\r\n" + 
-				"        \"left_eye_x\": 369,\r\n" + 
-				"        \"left_eye_y\": 351,\r\n" + 
-				"        \"right_eye_x\": 219,\r\n" + 
-				"        \"right_eye_y\": 356,\r\n" + 
-				"        \"pan\": -4.8475122451782226562,\r\n" + 
-				"        \"roll\": 1.9091522693634033203,\r\n" + 
-				"        \"tilt\": 1.3301063776016235352,\r\n" + 
-				"        \"frontal_score\": 0.60400390625,\r\n" + 
-				"        \"quality\": 0.7776355743408203125,\r\n" + 
-				"        \"reliability\": 0.99921792745590209961,\r\n" + 
-				"        \"has_feature\": true,\r\n" + 
-				"        \"error\": \"\"\r\n" + 
-				"    }\r\n" + 
-				"";
+		String sData = "{\"timestamp\": 1557109653046," + 
+				"\"frameId\": 1," + 
+				"\"sensorId\": 1," + 
+				"\"feature\": \"VjAyMDAwMCAKa8cjIP…\"," + 
+				"\"picture\": \"/9j/4AAQSkZJRgA…\"," + 
+				"\"faceId\": -1," + 
+				"\"face_area_x\": 158," + 
+				"\"face_area_y\": 290," + 
+				"\"face_area_width\": 278," + 
+				"\"face_area_height\": 278," + 
+				"\"head_area_x\": 108," + 
+				"\"head_area_y\": 161," + 
+				"\"head_area_width\": 375," + 
+				"\"head_area_height\": 461," + 
+				"\"left_eye_x\": 369," + 
+				"\"left_eye_y\": 351," + 
+				"\"right_eye_x\": 219," + 
+				"\"right_eye_y\": 356," + 
+				"\"pan\": -4.8475122451782226562," + 
+				"\"roll\": 1.9091522693634033203," + 
+				"\"tilt\": 1.3301063776016235352," + 
+				"\"frontal_score\": 0.60400390625," + 
+				"\"quality\": 0.7776355743408203125," + 
+				"\"reliability\": 0.99921792745590209961," + 
+				"\"has_feature\": true," + 
+				"\"error\": \"\"" + 
+				"}";
 		JSONObject jsonData = new JSONObject(sData);
 
 		Map<String, String> mapRename = new HashMap<String, String>();
@@ -212,7 +218,7 @@ public class JsonUtil {
 		JSONObject jsonConverted = JsonUtil.convert(jsonData, mapRename);
 		System.out.println("converted="+jsonConverted.toString());
 		
-		System.out.println("value="+JsonUtil.getJsonObj(jsonData, "face_area_width"));
+		System.out.println("value="+JsonUtil.getJsonObj(jsonConverted, "headRegion.height"));
 	}
     
 }
