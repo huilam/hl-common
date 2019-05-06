@@ -1,6 +1,7 @@
 package hl.common;
 
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
@@ -14,6 +15,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Base64;
 import javax.imageio.ImageIO;
+
+import org.json.JSONObject;
 
 import hl.common.http.RestApiUtil;
 
@@ -255,8 +258,42 @@ public class ImgUtil {
 		}
     }
 
+    public static void saveAsFile(BufferedImage aBufferedImage, File aOutputFile) throws IOException
+	{
+    	String sImgFormat = "JPG";
+    	String sFileName = aOutputFile.getName();
+    	int iExtPos = sFileName.lastIndexOf(".");
+    	if(iExtPos>-1)
+    	{
+    		sImgFormat = sFileName.substring(iExtPos+1).toUpperCase();
+    	}
+    	
+    	saveAsFile(aBufferedImage, sImgFormat, aOutputFile);
+	}
+    
     public static void saveAsFile(BufferedImage aBufferedImage, String aOutputFileFormat, File aOutputFile) throws IOException
 	{
+    	if(aOutputFileFormat!=null)
+    	{
+    		if(!aOutputFileFormat.equalsIgnoreCase("PNG"))
+    		{
+    			//remove transparency 
+    			BufferedImage newImage = new BufferedImage(
+    					aBufferedImage.getWidth(), 
+    					aBufferedImage.getHeight(), 
+    					BufferedImage.TYPE_INT_RGB);
+    	        Graphics2D g = null;
+    	        try {
+    		        g = newImage.createGraphics();
+    		        g.drawImage(aBufferedImage, 0, 0, null);
+    	        }finally {
+    	        	if(g!=null)
+    	        		g.dispose();
+    	        }
+    	        aBufferedImage = newImage;
+    		}
+    	}
+    	
 		ImageIO.write(aBufferedImage, aOutputFileFormat, aOutputFile);
 	}
 	
@@ -386,8 +423,172 @@ public class ImgUtil {
 		}
 	}
 	
-	public static void main(String args[]) throws Exception
+	public static BufferedImage extractImage(BufferedImage aBufferedImage, Rectangle aRect) throws IOException
 	{
+		if(aBufferedImage==null)
+			return null;
+		
+		BufferedImage img = aBufferedImage.getSubimage(
+				(int)aRect.getX(),
+				(int)aRect.getY(),
+				(int)aRect.getWidth(),
+				(int)aRect.getHeight());
+		
+		return img;
+	}
+	
+	
+	public static BufferedImage extractStripes(BufferedImage aBufferedImage, int aStripeWidth, boolean isHorizontal) throws IOException
+	{
+		if(aBufferedImage==null)
+			return null;
+		
+		//with transparency 
+		BufferedImage newImage = new BufferedImage(
+				(int) aBufferedImage.getWidth(), 
+				(int) aBufferedImage.getHeight(),
+				BufferedImage.TYPE_INT_ARGB);
+		
+		BufferedImage imgTemp = null;
+		
+		int x = 0;
+		int y = 0;
+		int h = 0;
+		int w = 0;
+		
+		Graphics2D g = null;
+        try {
+	        g = newImage.createGraphics();
+	        //g.drawImage(aBufferedImage, 0, 0, null);
+			
+	        int iMaxH = aBufferedImage.getHeight();
+	        int iMaxW = aBufferedImage.getWidth();
+	        
+			if(isHorizontal)
+			{
+				w = iMaxW;
+				h = aStripeWidth;
+			}
+			else
+			{
+				w = aStripeWidth;
+				h = iMaxH;
+			}
+			
+			while(true)
+	        {
+				if(isHorizontal)
+				{
+					if(y==0)
+					{
+						y = aStripeWidth;
+					}
+					else
+					{
+						y += aStripeWidth*2;
+					}
+					if(y+h>=iMaxH)
+					{
+						break;
+					}
+				}
+				else
+				{
+					if(x==0)
+					{
+						x = aStripeWidth;
+					}
+					else
+					{
+						x += aStripeWidth*2;
+					}
+					if(x+w>=iMaxW)
+					{
+						break;
+					}
+				}
+
+				imgTemp = aBufferedImage.getSubimage(
+						x, y, w, h);	        
+		        
+		        g.drawImage(imgTemp, x, y, null);
+		        
+				if((x+w>iMaxW) || (y+h>iMaxH))
+				{
+					break;
+				}
+	        }
+        }finally {
+        	if(g!=null)
+        		g.dispose();
+        }
+		return newImage;
+	}
+
+	public static BufferedImage grayscale(BufferedImage aBufferedImage) throws IOException
+	{
+		if(aBufferedImage==null)
+			return null;
+		
+		//with transparency 
+		BufferedImage newImage = new BufferedImage(
+				(int) aBufferedImage.getWidth(), 
+				(int) aBufferedImage.getHeight(),
+				BufferedImage.TYPE_INT_ARGB);
+		
+	        int h = aBufferedImage.getHeight();
+	        int w = aBufferedImage.getWidth();
+	        for(int x=0; x<w; x++)
+	        {
+		        for(int y=0; y<h; y++)
+		        {
+		        	int p = aBufferedImage.getRGB(x, y);
+		        	int a = (p>>24)&0xff;
+		        	
+		        	int r = (p>>16)&0xff;
+		        	int g = (p>>8)&0xff;
+		        	int b = p&0xff;
+		        	
+		        	int rgb_sum = r+g+b;
+
+		        	//
+		        	r = rgb_sum/3;
+		        	g = r;
+		        	b = r;
+		        	//
+		        	p = (a<<24) | (r<<16) | (g<<8) | b;
+		        	newImage.setRGB(x, y, p);
+		        }
+	        }
+        
+		return newImage;
+	}
+	
+	public static BufferedImage overlayImage(BufferedImage aBufferedImage, BufferedImage aSubImage, int x, int y) throws IOException
+	{
+		if(aBufferedImage==null)
+			return null;
+		
+		if(aSubImage==null)
+			return aBufferedImage;
+	
+		//with transparency 
+		BufferedImage newImage = new BufferedImage(
+				(int) aBufferedImage.getWidth(), 
+				(int) aBufferedImage.getHeight(),
+				BufferedImage.TYPE_INT_ARGB);
+		
+		Graphics2D g = null;
+        try {
+	        g = newImage.createGraphics();
+	        g.drawImage(aBufferedImage, 0, 0, null);
+	        g.drawImage(aSubImage, x, y, null);
+        }finally {
+        	if(g!=null)
+        		g.dispose();
+        }
+        
+		return newImage;
 	}
 	
 }
