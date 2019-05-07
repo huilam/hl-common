@@ -1,5 +1,6 @@
 package hl.common;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
@@ -113,6 +114,20 @@ public class ImgUtil {
 			return null;
 	}
 	
+	public static String imageFileToBase64(final String aSourceURI) throws IOException
+	{
+		String sFormat = "JPG";
+		
+		int iPos = aSourceURI.indexOf(".");
+		if(iPos>-1)
+		{
+			sFormat = aSourceURI.substring(iPos).toUpperCase();
+		}
+		
+		BufferedImage img = loadImage(aSourceURI);
+		return imageToBase64(img, sFormat);
+	}
+	
 	public static String imageFileToBase64(final String aSourceURI, final String aImgFormat) throws IOException
 	{
 		BufferedImage img = loadImage(aSourceURI);
@@ -129,6 +144,7 @@ public class ImgUtil {
 			
 			try{
 				outImg = new ByteArrayOutputStream();
+				
 				if(!aImgFormat.equalsIgnoreCase("PNG"))
 				{
 					if(aBufferedImage.getType()!=BufferedImage.TYPE_INT_RGB)
@@ -309,10 +325,16 @@ public class ImgUtil {
 	
 	public static String resizeBase64Img(String aImageBase64, long aNewWidth, long aNewHeight, boolean isMaintainAspectRatio) throws IOException
 	{
-		BufferedImage img = null;
+		BufferedImage img = base64ToImage(aImageBase64);
+		img = resizeImg(img, aNewWidth, aNewHeight, isMaintainAspectRatio);
+		return imageToBase64(img, "JPG");
+	}
+	
+	public static BufferedImage resizeImg(BufferedImage aBufferedImage, long aNewWidth, long aNewHeight, boolean isMaintainAspectRatio) throws IOException
+	{
+		BufferedImage img = aBufferedImage;
 		
 		try {
-			img = ImgUtil.base64ToImage(aImageBase64);
 			AffineTransform at = new AffineTransform();
 			double iWidth = img.getWidth();
 			double iHeight = img.getHeight();
@@ -349,7 +371,7 @@ public class ImgUtil {
 			}
 			
 			at.setToScale(dWidthScale, dHeightScale);
-	        return ImgUtil.imageToBase64(tranformImage(img, at), "JPG");
+	        return tranformImage(img, at);
 		}
 		finally
 		{
@@ -437,94 +459,50 @@ public class ImgUtil {
 		return img;
 	}
 	
-	
-	public static BufferedImage extractStripes(BufferedImage aBufferedImage, int aStripeWidth, boolean isHorizontal) throws IOException
+	//mozaic 
+	public static BufferedImage getImageAltPixel(BufferedImage aImage, int aPixelSize) throws IOException
 	{
-		if(aBufferedImage==null)
+		if(aImage==null)
 			return null;
 		
-		//with transparency 
-		BufferedImage newImage = new BufferedImage(
-				(int) aBufferedImage.getWidth(), 
-				(int) aBufferedImage.getHeight(),
-				BufferedImage.TYPE_INT_ARGB);
+		int maxw = aImage.getWidth();
+		int maxh = aImage.getHeight();
 		
-		BufferedImage imgTemp = null;
+		int cols = maxw / aPixelSize;
+		int rows = maxh / aPixelSize;
 		
-		int x = 0;
-		int y = 0;
-		int h = 0;
-		int w = 0;
+		BufferedImage newImage = new BufferedImage(maxw, maxh, BufferedImage.TYPE_INT_ARGB);
 		
-		Graphics2D g = null;
+		int px = 0;
+		int py = 0;
+		
+		BufferedImage tmpImg = null;
+		Graphics2D gfx = null;
         try {
-	        g = newImage.createGraphics();
-	        //g.drawImage(aBufferedImage, 0, 0, null);
-			
-	        int iMaxH = aBufferedImage.getHeight();
-	        int iMaxW = aBufferedImage.getWidth();
-	        
-			if(isHorizontal)
-			{
-				w = iMaxW;
-				h = aStripeWidth;
-			}
-			else
-			{
-				w = aStripeWidth;
-				h = iMaxH;
-			}
-			
-			while(true)
+	        gfx = newImage.createGraphics();
+	        int x = 0;
+	        int y = 0;
+	        for(; y<rows; y++)
 	        {
-				if(isHorizontal)
-				{
-					if(y==0)
-					{
-						y = aStripeWidth;
-					}
-					else
-					{
-						y += aStripeWidth*2;
-					}
-					if(y+h>=iMaxH)
-					{
-						break;
-					}
-				}
-				else
-				{
-					if(x==0)
-					{
-						x = aStripeWidth;
-					}
-					else
-					{
-						x += aStripeWidth*2;
-					}
-					if(x+w>=iMaxW)
-					{
-						break;
-					}
-				}
-
-				imgTemp = aBufferedImage.getSubimage(
-						x, y, w, h);	        
-		        
-		        g.drawImage(imgTemp, x, y, null);
-		        
-				if((x+w>iMaxW) || (y+h>iMaxH))
-				{
-					break;
-				}
+	        	x=y%2;
+	        	py = y*aPixelSize;
+		        for(;x<cols;)
+		        {
+		        	px = x*aPixelSize;
+		        	tmpImg = aImage.getSubimage(px, py, aPixelSize, aPixelSize);
+		        	gfx.drawImage(tmpImg, px, py, null);
+		        	
+		        	x+=2;
+		        }
 	        }
-        }finally {
-        	if(g!=null)
-        		g.dispose();
-        }
+	    }finally {
+	    	if(gfx!=null)
+	    		gfx.dispose();
+	    }
+        
 		return newImage;
 	}
-
+	
 	public static BufferedImage grayscale(BufferedImage aBufferedImage) throws IOException
 	{
 		if(aBufferedImage==null)
