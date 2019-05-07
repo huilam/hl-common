@@ -13,9 +13,12 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
+import java.util.Random;
 import javax.imageio.ImageIO;
-
+import org.json.JSONObject;
 import hl.common.http.RestApiUtil;
 
 
@@ -463,7 +466,7 @@ public class ImgUtil {
 	}
 	
 	//mozaic 
-	public static BufferedImage getImageAltPixel(BufferedImage aImage, int aPixelSize, boolean aIsOdd) throws IOException
+	public static BufferedImage mozaic(BufferedImage aImage, int aTileSize, boolean aIsOdd) throws IOException
 	{
 		if(aImage==null)
 			return null;
@@ -471,8 +474,68 @@ public class ImgUtil {
 		int maxw = aImage.getWidth();
 		int maxh = aImage.getHeight();
 		
-		int cols = maxw / aPixelSize;
-		int rows = maxh / aPixelSize;
+		int cols = maxw / aTileSize;
+		int rows = maxh / aTileSize;
+		
+		BufferedImage newImage = new BufferedImage(maxw, maxh, BufferedImage.TYPE_INT_ARGB);
+		
+		int px = 0;
+		int py = 0;
+		
+		Graphics2D gfx = null;
+		BufferedImage tmpImg = null;
+		List<BufferedImage> listImg = new ArrayList<BufferedImage>();
+        try {
+            int x = aIsOdd?0:1;
+            int y = 0;
+
+	        gfx = newImage.createGraphics();
+	        for(; y<rows; y++)
+	        {
+	        	x = y%2;
+	        	py = y*aTileSize;
+		        for(;x<cols;)
+		        {
+		        	px = x*aTileSize;
+		        	tmpImg = aImage.getSubimage(px, py, aTileSize, aTileSize);
+		        	listImg.add(tmpImg);
+		        	x+=2;
+		        }
+	        }
+	        
+	        Random rand = new Random();
+	        x = aIsOdd?0:1;
+            y = 0;
+	        for(; y<rows; y++)
+	        {
+	        	x = y%2;
+	        	py = y*aTileSize;
+		        for(;x<cols;)
+		        {
+		        	px = x*aTileSize;
+		        	gfx.drawImage(listImg.remove(rand.nextInt(listImg.size())), px, py, null);
+		        	x+=2;
+		        }
+	        }
+
+	    }finally {
+	    	if(gfx!=null)
+	    		gfx.dispose();
+	    }
+        
+		return newImage;
+	}
+	
+	public static BufferedImage getImageAltTiles(BufferedImage aImage, int aTileSize, boolean aIsOdd) throws IOException
+	{
+		if(aImage==null)
+			return null;
+		
+		int maxw = aImage.getWidth();
+		int maxh = aImage.getHeight();
+		
+		int cols = maxw / aTileSize;
+		int rows = maxh / aTileSize;
 		
 		BufferedImage newImage = new BufferedImage(maxw, maxh, BufferedImage.TYPE_INT_ARGB);
 		
@@ -489,11 +552,11 @@ public class ImgUtil {
 	        {
 	        	x=y%2;
 	        	
-	        	py = y*aPixelSize;
+	        	py = y*aTileSize;
 		        for(;x<cols;)
 		        {
-		        	px = x*aPixelSize;
-		        	tmpImg = aImage.getSubimage(px, py, aPixelSize, aPixelSize);
+		        	px = x*aTileSize;
+		        	tmpImg = aImage.getSubimage(px, py, aTileSize, aTileSize);
 		        	gfx.drawImage(tmpImg, px, py, null);
 		        	
 		        	x+=2;
@@ -571,6 +634,82 @@ public class ImgUtil {
         }
         
 		return newImage;
+	}
+	
+	public static void main(String args[]) throws Exception
+	{
+		String sData = "{\"priorityName\":\"HIGH\",\"markDuplicatedAs\":null,\"alertTypeId\":1,\"resourceId\":9,\"thumbnailType\":\"url\",\"subjectType\":\"PERSON\",\"subjectId\":\"17\",\"alertCategoryId\":4,\"priorityId\":1,\"videoUri\":null,\"alertStatusId\":1,\"originalImageUri\":\"/scc/data/DEFAULT/MATRIX_VMS/20190506/1223/CAMERA_08/1557116623418.jpg\",\"credibility\":0.83564126,\"alertTimestamp\":1557116623418,\"alertId\":7978,\"alertStatusName\":\"OPEN\",\"lastUpdatedBy\":null,\"alertLng\":\"103.80217552185059\",\"lastUpdatedTimestamp\":1557116624598,\"sourceSystemId\":1,\"videoType\":null,\"createdTimestamp\":1557116624598,\"vmsDeviceId\":\"38c3e712-1641-42fe-b0bf-395e480d5e70\",\"resourceName\":\"CAMERA_08\",\"alertLat\":\"1.2979064848506108\",\"videoEndTimestamp\":null,\"alertCategoryName\":\"TAG_N_TRACK.DEFAULT\",\"analyticEventId\":\"e4d35067-7577-4166-b7de-0ce0479cce48\",\"alertTypeName\":\"PERSON_DETECTION\",\"thumbnailData\":\"/scc/data/DEFAULT/MATRIX_VMS/20190506/1223/CAMERA_08/1557116623418_231_1330_184_212_THUMBNAIL.jpg\",\"createdBy\":null,\"videoStartTimestamp\":null,\"sourceSystemName\":\"MATRIX_VMS\",\"detail\":{\"processingResolution\":{\"top\":0,\"left\":0,\"width\":1920,\"height\":1080},\"originalResolution\":{\"width\":1920,\"height\":1080},\"poi\":{\"elected\":{\"personFaceId\":\"17\",\"personExtReference\":\"NEC_KUANYI\",\"score\":0.83564126,\"minThreshold\":0.6,\"personId\":\"17\",\"category\":\"DEFAULT\",\"repository\":\"TAG_N_TRACK\"},\"faceRegion\":{\"top\":300,\"left\":1371,\"width\":99,\"height\":100},\"headRegion\":{\"top\":231,\"left\":1330,\"width\":184,\"height\":212},\"idmPersonMeta\":{\"idmPersonId\":\"10eb55a3-5565-42dc-b5e5-28320f6dee7b\"},\"frontalFaceScore\":0.5859375,\"faceQualityScore\":0.84173197}},\"incidentId\":3,\"thumbnailRegion\":{\"top\":231,\"left\":1330,\"width\":184,\"height\":212}}";
+		JSONObject json = new JSONObject(sData);
+		
+		System.out.println(json);
+		String sPrefix = "detail.poi.faceRegion.";
+		
+		int fx = (int)JsonUtil.getJsonObj(json, sPrefix+"left");
+		int fy = (int)JsonUtil.getJsonObj(json, sPrefix+"top");
+		int fw = (int)JsonUtil.getJsonObj(json, sPrefix+"width");
+		int fh = (int)JsonUtil.getJsonObj(json, sPrefix+"height");
+		
+		sPrefix = "detail.poi.headRegion.";
+		int hx = (int)JsonUtil.getJsonObj(json, sPrefix+"left");
+		int hy = (int)JsonUtil.getJsonObj(json, sPrefix+"top");
+		int hw = (int)JsonUtil.getJsonObj(json, sPrefix+"width");
+		int hh = (int)JsonUtil.getJsonObj(json, sPrefix+"height");
+				
+		Rectangle rectFace = new Rectangle(fx,fy,fw,fh);
+		Rectangle rectHead = new Rectangle(hx,hy,hw,hh);
+		
+		File fileImg = new File("c:/temp/oh18-alert-7978.jpg");
+
+		BufferedImage img =  ImgUtil.loadImage(fileImg.getAbsolutePath());;
+		//BufferedImage imgGrayScale = ImgUtil.grayscale(img);
+		//ImgUtil.saveAsFile(imgGrayScale, new File(fileImg.getCanonicalPath()+"_gray.jpg"));
+		
+		
+		//
+		Rectangle[] aRects = new Rectangle[] {rectHead};
+		try {
+	        
+			int iPixel = 15;
+			for(Rectangle rect: aRects)
+			{
+				String sFileName = rect.getX()+"x"+rect.getY()+"_"+rect.getWidth()+"x"+rect.getHeight();
+				BufferedImage imgFace = extractImage(img, rect);
+				
+				BufferedImage imgMask = getImageAltTiles(imgFace, iPixel, true);
+				ImgUtil.saveAsFile(imgMask, new File("C:/temp/"+sFileName+"_FACE.png"));
+				
+				imgMask = mozaic(imgFace, iPixel, true);
+				ImgUtil.saveAsFile(imgMask, new File("C:/temp/"+sFileName+"_mozaic.png"));
+				
+				BufferedImage imgMasked = overlayImage(img, imgMask, rect.x, rect.y);
+				ImgUtil.saveAsFile(imgMasked, new File("C:/temp/"+sFileName+"_MASKED.png"));
+				
+				/**
+				BufferedImage imgSprite2 = extractStripes(imgRect, 5, false);
+				ImgUtil.saveAsFile(imgSprite2, new File("C:/temp/vlined_"+sFileName+".png"));
+
+				imgSprite1 = extractStripes(imgSprite1, 5, false);
+				ImgUtil.saveAsFile(imgSprite1, new File("C:/temp/dot_"+sFileName+".png"));
+				
+				imgMask = fillColor(imgMask, Color.BLACK);
+				ImgUtil.saveAsFile(imgMask, new File("C:/temp/"+sFileName+"_BLACK.png"));
+				
+				BufferedImage imgMasked = overlayImage(img, imgMask, rect.x, rect.y);
+				ImgUtil.saveAsFile(imgMasked, new File("C:/temp/"+sFileName+"_MASKED.png"));
+				
+				**/
+				
+				
+			}
+			
+		}
+		finally
+		{
+	    	if(img!=null)
+	    		img.flush();
+		}
+		//
+		
 	}
 	
 }
