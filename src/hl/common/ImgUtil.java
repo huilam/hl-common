@@ -1,6 +1,5 @@
 package hl.common;
 
-import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
@@ -16,8 +15,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Base64;
 import javax.imageio.ImageIO;
-
-import org.json.JSONObject;
 
 import hl.common.http.RestApiUtil;
 
@@ -421,10 +418,16 @@ public class ImgUtil {
 	
 	public static String flipBase64Img(String aImageBase64, boolean isFlipHorizontal) throws IOException
 	{
-		BufferedImage img = null;
+		BufferedImage img = base64ToImage(aImageBase64);
+		img = flipImg(img, isFlipHorizontal);
+		return ImgUtil.imageToBase64(img, "JPG");
+	}
+	
+	public static BufferedImage flipImg(BufferedImage aImage, boolean isFlipHorizontal) throws IOException
+	{
+		BufferedImage img = aImage;
 		
 		try {
-			img = ImgUtil.base64ToImage(aImageBase64);
 	        AffineTransform at = new AffineTransform();
 	        if(isFlipHorizontal)
 	        {
@@ -436,7 +439,7 @@ public class ImgUtil {
 		        at.concatenate(AffineTransform.getScaleInstance(1, -1));
 		        at.concatenate(AffineTransform.getTranslateInstance(0, -img.getHeight()));
 	        }
-	        return ImgUtil.imageToBase64(tranformImage(img, at), "JPG");
+	        return tranformImage(img, at);
 		}
 		finally
 		{
@@ -460,7 +463,7 @@ public class ImgUtil {
 	}
 	
 	//mozaic 
-	public static BufferedImage getImageAltPixel(BufferedImage aImage, int aPixelSize) throws IOException
+	public static BufferedImage getImageAltPixel(BufferedImage aImage, int aPixelSize, boolean aIsOdd) throws IOException
 	{
 		if(aImage==null)
 			return null;
@@ -480,11 +483,12 @@ public class ImgUtil {
 		Graphics2D gfx = null;
         try {
 	        gfx = newImage.createGraphics();
-	        int x = 0;
+	        int x = aIsOdd?0:1;
 	        int y = 0;
 	        for(; y<rows; y++)
 	        {
 	        	x=y%2;
+	        	
 	        	py = y*aPixelSize;
 		        for(;x<cols;)
 		        {
