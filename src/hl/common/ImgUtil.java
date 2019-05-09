@@ -1,5 +1,6 @@
 package hl.common;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
@@ -23,6 +24,8 @@ import hl.common.http.RestApiUtil;
 
 
 public class ImgUtil {
+	
+	public enum MOZAIC_STYLE { RANDOM_COLOR, RANDOM_TILES, TRANSPARENT }; 
 	
 	private static final String HTMLIMG_HEADER = ";base64,";
 	
@@ -466,7 +469,8 @@ public class ImgUtil {
 	}
 	
 	//mozaic 
-	public static BufferedImage mozaic(BufferedImage aImage, int aTileSize, boolean aIsOdd) throws IOException
+	public static BufferedImage mozaic(BufferedImage aImage, int aTileSize, 
+			MOZAIC_STYLE aMozaicStyle, boolean aIsOdd) throws IOException
 	{
 		if(aImage==null)
 			return null;
@@ -482,40 +486,75 @@ public class ImgUtil {
 		int px = 0;
 		int py = 0;
 		
-		Graphics2D gfx = null;
-		BufferedImage tmpImg = null;
+		Graphics2D gfx 				= null;
+		BufferedImage tmpImg 		= null;
 		List<BufferedImage> listImg = new ArrayList<BufferedImage>();
-        try {
-            int x = aIsOdd?0:1;
-            int y = 0;
 
-	        gfx = newImage.createGraphics();
-	        for(; y<rows; y++)
-	        {
-	        	x = y%2;
-	        	py = y*aTileSize;
-		        for(;x<cols;)
-		        {
-		        	px = x*aTileSize;
-		        	tmpImg = aImage.getSubimage(px, py, aTileSize, aTileSize);
-		        	listImg.add(tmpImg);
-		        	x+=2;
-		        }
-	        }
+		int adj = (aIsOdd?1:0);
+		int x = adj;
+        int y = 0;
+
+		boolean isOddRow = aIsOdd;
+        //Prepare Data
+        switch(aMozaicStyle)
+    	{
+        	case RANDOM_TILES : 
+    	        for(; y<rows; y++)
+    	        {
+    	        	py = y*aTileSize;
+    		        for(;x<cols;)
+    		        {
+    		        	px = x*aTileSize;
+    		        	tmpImg = aImage.getSubimage(px, py, aTileSize, aTileSize);
+    		        	listImg.add(tmpImg);
+    		        	x+=2;
+    		        }
+    		        isOddRow = !isOddRow;
+    		        x = isOddRow?1:0;
+    	        };
+    	        break;
+        	case TRANSPARENT :
+        		return getImageAltTiles(aImage, aTileSize, !aIsOdd);
+        		
+        	default:;
+    	}
+        	
+
+		try {
 	        
+	        gfx = newImage.createGraphics();
 	        Random rand = new Random();
-	        x = aIsOdd?0:1;
+	        
+	        isOddRow = aIsOdd;
+	        x = adj; 
             y = 0;
+            
 	        for(; y<rows; y++)
 	        {
-	        	x = y%2;
-	        	py = y*aTileSize;
+	        	py 	= y*aTileSize;
 		        for(;x<cols;)
 		        {
 		        	px = x*aTileSize;
-		        	gfx.drawImage(listImg.remove(rand.nextInt(listImg.size())), px, py, null);
+		        	
+		        	switch(aMozaicStyle)
+		        	{
+		        		case RANDOM_TILES :
+		        		{
+				        	gfx.drawImage(listImg.remove(rand.nextInt(listImg.size())), px, py, null);
+		        			break;
+		        		}
+		        		case RANDOM_COLOR :
+		        		{
+		        			gfx.setColor(new Color(rand.nextFloat(), rand.nextFloat(), rand.nextFloat()));
+		        			gfx.fillRect(px, py, aTileSize , aTileSize);
+		        			break;
+		        		}
+		        		default:;
+		        	}
 		        	x+=2;
 		        }
+		        isOddRow = !isOddRow;
+		        x = isOddRow?1:0;
 	        }
 
 	    }finally {
@@ -544,23 +583,26 @@ public class ImgUtil {
 		
 		BufferedImage tmpImg = null;
 		Graphics2D gfx = null;
+		
         try {
 	        gfx = newImage.createGraphics();
-	        int x = aIsOdd?0:1;
+	        
+	        int x = aIsOdd?1:0;
 	        int y = 0;
+			boolean isOddRow = aIsOdd;
+			
 	        for(; y<rows; y++)
 	        {
-	        	x=y%2;
-	        	
 	        	py = y*aTileSize;
 		        for(;x<cols;)
 		        {
 		        	px = x*aTileSize;
 		        	tmpImg = aImage.getSubimage(px, py, aTileSize, aTileSize);
 		        	gfx.drawImage(tmpImg, px, py, null);
-		        	
 		        	x+=2;
 		        }
+		        isOddRow = !isOddRow;
+		        x = isOddRow?1:0;
 	        }
 	    }finally {
 	    	if(gfx!=null)
@@ -643,22 +685,16 @@ public class ImgUtil {
 		
 		System.out.println(json);
 		String sPrefix = "detail.poi.faceRegion.";
-		
-		int fx = (int)JsonUtil.getJsonObj(json, sPrefix+"left");
-		int fy = (int)JsonUtil.getJsonObj(json, sPrefix+"top");
-		int fw = (int)JsonUtil.getJsonObj(json, sPrefix+"width");
-		int fh = (int)JsonUtil.getJsonObj(json, sPrefix+"height");
-		
 		sPrefix = "detail.poi.headRegion.";
+		
 		int hx = (int)JsonUtil.getJsonObj(json, sPrefix+"left");
 		int hy = (int)JsonUtil.getJsonObj(json, sPrefix+"top");
 		int hw = (int)JsonUtil.getJsonObj(json, sPrefix+"width");
 		int hh = (int)JsonUtil.getJsonObj(json, sPrefix+"height");
-				
-		Rectangle rectFace = new Rectangle(fx,fy,fw,fh);
+	
 		Rectangle rectHead = new Rectangle(hx,hy,hw,hh);
 		
-		File fileImg = new File("c:/temp/oh18-alert-7978.jpg");
+		File fileImg = new File("c:/temp/alert-8368.jpg");
 
 		BufferedImage img =  ImgUtil.loadImage(fileImg.getAbsolutePath());;
 		//BufferedImage imgGrayScale = ImgUtil.grayscale(img);
@@ -674,12 +710,20 @@ public class ImgUtil {
 			{
 				String sFileName = rect.getX()+"x"+rect.getY()+"_"+rect.getWidth()+"x"+rect.getHeight();
 				BufferedImage imgFace = extractImage(img, rect);
+				ImgUtil.saveAsFile(imgFace, new File("C:/temp/"+sFileName+"_FACE.png"));
 				
-				BufferedImage imgMask = getImageAltTiles(imgFace, iPixel, true);
-				ImgUtil.saveAsFile(imgMask, new File("C:/temp/"+sFileName+"_FACE.png"));
-				
-				imgMask = mozaic(imgFace, iPixel, true);
-				ImgUtil.saveAsFile(imgMask, new File("C:/temp/"+sFileName+"_mozaic.png"));
+				BufferedImage imgMask = null;
+				imgMask = mozaic(imgFace, iPixel, MOZAIC_STYLE.RANDOM_COLOR, true);
+				ImgUtil.saveAsFile(imgMask, new File("C:/temp/"+sFileName+"_mozaic_rcolor.png"));
+
+				imgMask = mozaic(imgFace, iPixel, MOZAIC_STYLE.RANDOM_TILES, true);
+				ImgUtil.saveAsFile(imgMask, new File("C:/temp/"+sFileName+"_mozaic_rtiles.png"));
+
+				imgMask = mozaic(imgFace, iPixel, MOZAIC_STYLE.TRANSPARENT, true);
+				ImgUtil.saveAsFile(imgMask, new File("C:/temp/"+sFileName+"_mozaic_Transparent1.png"));
+
+				imgMask = mozaic(imgFace, iPixel, MOZAIC_STYLE.TRANSPARENT, false);
+				ImgUtil.saveAsFile(imgMask, new File("C:/temp/"+sFileName+"_mozaic_Transparent2.png"));
 				
 				BufferedImage imgMasked = overlayImage(img, imgMask, rect.x, rect.y);
 				ImgUtil.saveAsFile(imgMasked, new File("C:/temp/"+sFileName+"_MASKED.png"));
