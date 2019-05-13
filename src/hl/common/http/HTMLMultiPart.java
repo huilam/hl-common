@@ -49,8 +49,12 @@ public class HTMLMultiPart {
 		mapExtContentType.put("png", "image/png");
 	}
 	
-	public void addFile(String aAttrName, File aFile)
+	public void addFile(String aAttrName, File aFile) throws IOException
 	{
+		if(!aFile.isFile())
+		{
+			throw new IOException("Invalid File - "+aFile.getCanonicalPath());
+		}
 		mapFiles.put(aAttrName, aFile);
 	}
 	
@@ -311,10 +315,8 @@ public class HTMLMultiPart {
 
 	public static void main(String[] args) throws IOException
 	{	
-		
-		String sUrl = "http://172.30.140.33:8080/multipart/";
-		
-		File f = new File("d:/psbu.jpg");
+		String sUrl = "http://127.0.0.1:8080/multipart/";
+		File f = new File("c:\\New folder\\t e s t.jpg");
 		HTMLMultiPart mp = new HTMLMultiPart(sUrl);
 		mp.addFile("file", f);
 		mp.addAttribute("testfield", "testvalue");
