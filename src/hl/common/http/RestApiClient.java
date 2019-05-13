@@ -26,6 +26,9 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -71,8 +74,9 @@ public class RestApiClient {
 	public String basic_auth_uid = null;
 	public String basic_auth_pwd = null;
 	
-	public boolean isAllowAnyHostSSL = false;
-	public KeyStore keystoreCustom = null;
+	public boolean isAllowAnyHostSSL 		= false;
+	public KeyStore keystoreCustom 			= null;
+	private Map<String, String> mapHeaders 	= new HashMap<String, String>();
 	
 	private int conn_timeout	 = 5000;	
 	
@@ -89,6 +93,17 @@ public class RestApiClient {
 	public void setAllowAnyHostSSL(boolean aAllowAnyHostSSL)
 	{
 		this.isAllowAnyHostSSL = aAllowAnyHostSSL;
+	}
+	
+	public void addHeaders(HttpServletRequest req)
+	{
+		Enumeration<String> headers = req.getHeaderNames();
+		while(headers.hasMoreElements())
+		{
+			String sHeader = headers.nextElement();
+			String sValue = req.getHeader(sHeader);
+			mapHeaders.put(sHeader, sValue);
+		}
 	}
 
 	public static void setHttpProxy(String aUrl, String aPort)
@@ -185,6 +200,15 @@ public class RestApiClient {
 				res.addHeader(HEADER_CONTENT_ENCODING, TYPE_ENCODING_GZIP);
 			}
 			
+			if(mapHeaders!=null && mapHeaders.size()>0)
+			{
+				for(String sHeaderKey : mapHeaders.keySet())
+				{
+					String sHeaderVal = mapHeaders.get(sHeaderKey);
+					res.addHeader(sHeaderKey, sHeaderVal);
+				}
+			}
+			
 			if(res.getContentType()==null || res.getContentType().trim().length()==0)
 			{
 				res.setContentType(TYPE_APP_JSON);
@@ -251,6 +275,15 @@ public class RestApiClient {
 			conn.setConnectTimeout(conn_timeout);
 			conn.setRequestProperty(HEADER_CONTENT_TYPE, aContentType);
 			conn.setRequestMethod(aHttpMethod);
+			
+			if(mapHeaders!=null && mapHeaders.size()>0)
+			{
+				for(String sHeaderKey : mapHeaders.keySet())
+				{
+					String sHeaderVal = mapHeaders.get(sHeaderKey);
+					conn.setRequestProperty(sHeaderKey, sHeaderVal);
+				}
+			}
 			
 			conn = appendBasicAuth(conn);
 			
