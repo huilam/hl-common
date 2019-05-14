@@ -57,7 +57,11 @@ public class JsonUtil {
 							if(jsonAttr==null)
 							{
 								jsonAttr = jsonOutput.optJSONObject(sNewAttrName);
-								if(jsonAttr==null)
+								if(jsonAttr!=null)
+								{
+									jsonAttr = jsonOutput;
+								}
+								else
 								{
 									jsonAttr = new JSONObject();
 								}
@@ -96,13 +100,14 @@ public class JsonUtil {
 		JSONObject json1 = new JSONObject(aJson1.toString());
 		JSONObject json2 = new JSONObject(aJson2.toString());
 		
+		/**
 		if(json1.length()>json2.length())
 		{
 			JSONObject jsontmp = json1;
 			json1 = json2;
 			json2 = jsontmp;
 		}
-		
+		**/
 		for(String sKey : json2.keySet())
 		{
 			Object objTmp1 = json1.opt(sKey);
