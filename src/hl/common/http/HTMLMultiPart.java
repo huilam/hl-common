@@ -24,7 +24,7 @@ import org.json.JSONObject;
 public class HTMLMultiPart {
 	
 	private final static String LINE_FEED 		= "\r\n";
-	private final static String BOUNDARY_STR 	= "[ \\_(. .)_// ]";
+	private final static String BOUNDARY_STR 	= "|__(. .)__|";
 	
 	public final static String _PROTOCOL_HTTPS 	= "https";
 	public final static String _PROTOCOL_SSL 	= "SSL";
