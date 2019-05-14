@@ -85,13 +85,16 @@ public class JsonUtil {
 		return jsonOutput;
 	}
 	
-	public static JSONObject merge(JSONObject json1, JSONObject json2)
+	public static JSONObject merge(JSONObject aJson1, JSONObject aJson2)
 	{
-		if(json1==null)
-			json1 = new JSONObject();
+		if(aJson1==null)
+			aJson1 = new JSONObject();
 		
-		if(json2==null)
-			json2 = new JSONObject();
+		if(aJson2==null)
+			aJson2 = new JSONObject();
+		
+		JSONObject json1 = new JSONObject(aJson1.toString());
+		JSONObject json2 = new JSONObject(aJson2.toString());
 		
 		if(json1.length()>json2.length())
 		{
