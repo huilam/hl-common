@@ -2,8 +2,8 @@ package hl.common.http;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -18,8 +18,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
+
+import org.apache.mina.util.byteaccess.ByteArray;
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
+
+import hl.common.FileUtil;
+import hl.common.ImgUtil;
 
 public class HTMLMultiPart {
 	
@@ -31,9 +38,10 @@ public class HTMLMultiPart {
 	public final static String TYPE_APP_JSON 	= "application/json";
 	
 	private String url	= null;
-	private Map<String, String> mapAttrs 	= new HashMap<String, String>();
-	private Map<String, File> mapFiles 		= new HashMap<String, File>();
-	private Map<String, String> mapExtContentType = new HashMap<String, String>();
+	private Map<String, String> mapAttrs 			= new HashMap<String, String>();
+	private Map<String, String> mapFiles 			= new HashMap<String, String>();
+	private Map<String, byte[]> mapFileBytes 		= new HashMap<String, byte[]>();
+	private Map<String, String> mapExtContentType 	= new HashMap<String, String>();
 	
 	private KeyStore keystore_sslcert 		= null;
 	private String basic_auth_uid 			= null;
@@ -49,13 +57,25 @@ public class HTMLMultiPart {
 		mapExtContentType.put("png", "image/png");
 	}
 	
-	public void addFile(String aAttrName, File aFile) throws IOException
+	private void addFile(String aAttrName, File aFile) throws IOException
 	{
 		if(!aFile.isFile())
 		{
 			throw new IOException("Invalid File - "+aFile.getCanonicalPath());
 		}
-		mapFiles.put(aAttrName, aFile);
+		
+		byte[] byteFile = FileUtil.getBytes(aFile);
+		addFileBytes(aAttrName, aFile.getName(), byteFile);
+	}
+	
+	public void addFileBytes(String aAttrName, String aFileName, byte[] aBytes) throws IOException
+	{
+		if(aBytes==null)
+		{
+			throw new IOException("File aBytes is null !");
+		}
+		mapFiles.put(aAttrName, aFileName);
+		mapFileBytes.put(aFileName, aBytes);
 	}
 	
 	public void addAttribute(String aAttrName, String aAttrValue)
@@ -76,7 +96,7 @@ public class HTMLMultiPart {
 	
 	public void clear()
 	{
-		mapFiles.clear();
+		mapFileBytes.clear();
 		mapAttrs.clear();
 	}
 	
@@ -88,7 +108,7 @@ public class HTMLMultiPart {
 		HttpURLConnection urlConn 	= null;
 		OutputStream outstreamConn 	= null;
 		BufferedWriter wrt	 		= null;
-		FileInputStream inputFile	= null;
+		ByteArrayInputStream inputBytes	= null;
 		
 		try {
 			url = new URL(this.url);
@@ -146,13 +166,17 @@ public class HTMLMultiPart {
 			
 			for(String sAttrName : mapFiles.keySet())
 			{
-				File f = mapFiles.get(sAttrName);
+				String sFileName 	= mapFiles.get(sAttrName);
+				byte[] byteFile 	= mapFileBytes.get(sFileName);
 				String sContentType = "text/plain";
 				
-				int iPos = f.getName().lastIndexOf(".");
+				if(sFileName==null)
+					sFileName = sAttrName+"_"+byteFile.length;
+				
+				int iPos = sFileName.lastIndexOf(".");
 				if(iPos>-1)
 				{
-					String sFileExt = f.getName().substring(iPos+1).toLowerCase();
+					String sFileExt = sFileName.substring(iPos+1).toLowerCase();
 					String fileContentType = mapExtContentType.get(sFileExt);
 					if(fileContentType!=null)
 					{
@@ -165,7 +189,7 @@ public class HTMLMultiPart {
 				sb.append(LINE_FEED).append("--").append(BOUNDARY_STR).append(LINE_FEED);
 				sb.append("Content-Disposition: form-data; ");
 				sb.append("name=\"").append(sAttrName).append("\"; ");
-				sb.append("filename=\"").append(f.getName()).append("\"");
+				sb.append("filename=\"").append(sFileName).append("\"");
 				sb.append(LINE_FEED).append("Content-Type:").append(sContentType).append(LINE_FEED).append(LINE_FEED);
 				
 				wrt.write(sb.toString());
@@ -174,16 +198,16 @@ public class HTMLMultiPart {
 				long lTotalRead = 0;
 				dataBuffer = new byte[4096];
 				try {
-					inputFile = new FileInputStream(f);			 
-					while((bytesRead = inputFile.read(dataBuffer)) != -1) {
+					inputBytes = new ByteArrayInputStream(byteFile);			 
+					while((bytesRead = inputBytes.read(dataBuffer)) != -1) {
 						outstreamConn.write(dataBuffer, 0, bytesRead);
 						lTotalRead += bytesRead;
 					}
 					outstreamConn.flush();
 				}finally
 				{
-					if(inputFile!=null)
-						inputFile.close();
+					if(inputBytes!=null)
+						inputBytes.close();
 				}
 			}			
 			//
@@ -237,10 +261,10 @@ public class HTMLMultiPart {
 		}
 		finally
 		{
-			if(inputFile!=null)
+			if(inputBytes!=null)
 			{
 				try {
-					inputFile.close();
+					inputBytes.close();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -317,8 +341,10 @@ public class HTMLMultiPart {
 	{	
 		String sUrl = "http://127.0.0.1:8080/multipart/";
 		File f = new File("c:\\New folder\\t e s t.jpg");
+		String sFileBase64 = FileUtil.getBase64(f);
+		
 		HTMLMultiPart mp = new HTMLMultiPart(sUrl);
-		mp.addFile("file", f);
+		mp.addFileBytes("picture", f.getName(), FileUtil.getBytesFromBase64(sFileBase64));
 		mp.addAttribute("testfield", "testvalue");
 		HttpResp httpRes = mp.post();
 		System.out.println(httpRes);

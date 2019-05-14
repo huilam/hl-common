@@ -1,8 +1,12 @@
 package hl.common;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -15,6 +19,7 @@ import java.net.URL;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Vector;
 
@@ -276,6 +281,82 @@ public class FileUtil {
 		return list;
 	}
     
+	public static String getBase64(File aFile) throws IOException
+	{
+		byte[] bytes = getBytes(aFile);
+		return Base64.getEncoder().encodeToString(bytes);
+	}
+	
+	public static byte[] getBytes(File aFile) throws IOException
+	{
+		ByteArrayOutputStream byteOut	= null;
+		BufferedOutputStream out 		= null;
+		BufferedInputStream in 			= null;
+		
+		try {
+			byteOut		= new ByteArrayOutputStream();
+			out 		= new BufferedOutputStream(byteOut);
+			in 			= new BufferedInputStream(new FileInputStream(aFile));
+			
+			byte[] buff = new byte[64*1024];
+			int n = 0;
+		    while ((n = in.read(buff)) >= 0) {
+		        out.write(buff, 0, n);
+		    }
+		    return byteOut.toByteArray();
+		}
+		finally
+		{
+			if(in!=null)
+			{
+				in.close();
+			}
+			if(out!=null)
+			{
+				out.close();
+			}
+			if(byteOut!=null)
+			{
+				byteOut.close();
+			}
+		}
+	}
+	
+	public static byte[] getBytesFromBase64(String aBase64) throws IOException
+	{
+		ByteArrayOutputStream byteOut	= null;
+		BufferedOutputStream out 		= null;
+		ByteArrayInputStream in 		= null;
+		
+		try {
+			byteOut		= new ByteArrayOutputStream();
+			out 		= new BufferedOutputStream(byteOut);
+			in 			= new ByteArrayInputStream(Base64.getDecoder().decode(aBase64));
+			
+			byte[] buff = new byte[64*1024];
+			int n = 0;
+		    while ((n = in.read(buff)) >= 0) {
+		        out.write(buff, 0, n);
+		    }
+		    return byteOut.toByteArray();
+		}
+		finally
+		{
+			if(in!=null)
+			{
+				in.close();
+			}
+			if(out!=null)
+			{
+				out.close();
+			}
+			if(byteOut!=null)
+			{
+				byteOut.close();
+			}
+		}
+	}
+	
     public static void main(String args[]) throws IOException
     {
     }
