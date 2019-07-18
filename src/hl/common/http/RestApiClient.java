@@ -30,6 +30,8 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -621,23 +623,40 @@ public class RestApiClient {
 		apiClient.setAllowAnyHostSSL(true);
 		res = apiClient.httpGet(aCertUrl);
 		
-    	try {
-    		in = new ByteArrayInputStream(res.getContent_data().getBytes());
-    		CertificateFactory X509CertFactory = CertificateFactory.getInstance("X509");
-    		if(in!=null && X509CertFactory!=null)
-    		{
-    			cert = X509CertFactory.generateCertificate(in);
-    		}
-    	}
-    	finally
-    	{
-    		if(in!=null)
-    			in.close();
-    	}
+		if(res.isSuccess())
+		{
+	    	try {
+	    		in = new ByteArrayInputStream(res.getContent_data().getBytes());
+	    		CertificateFactory X509CertFactory = CertificateFactory.getInstance("X509");
+	    		if(in!=null && X509CertFactory!=null)
+	    		{
+	    			if(in.available()>100)
+	    			{
+		    			cert = X509CertFactory.generateCertificate(in);
+	    			}
+	    			else
+	    			{
+		    			System.err.println("Invalid certificate content: ["+res.getContent_data()+"]");
+	    			}
+	    		}
+	    	}
+	    	finally
+	    	{
+	    		if(in!=null)
+	    			in.close();
+	    	}
+		}
     	return cert;
 	}
 	
     public static void main(String args[]) throws Exception
     {
+    	RestApiClient apiClient = new RestApiClient();
+    	apiClient.setBasicAuth("rootuser", "rootuser");
+    	apiClient.setAllowAnyHostSSL(true);
+    	
+    	Certificate cert = apiClient.getSSLCert("https://rootuser:rootuser@203.127.252.43:3000/instances/226/certificate");
+    	
+    	System.out.println(cert.getPublicKey());
     }
 }
