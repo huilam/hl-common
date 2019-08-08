@@ -442,7 +442,7 @@ public class JdbcDBMgr {
 		}
 		catch(SQLException sqlEx)
 		{
-			throw new SQLException(sqlEx);
+			throw sqlEx;
 		}
 		finally
 		{
