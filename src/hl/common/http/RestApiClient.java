@@ -30,6 +30,9 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
@@ -44,6 +47,8 @@ import hl.common.ZipUtil;
 
 public class RestApiClient {
 
+	private static Logger logger = Logger.getLogger(RestApiClient.class.getName());
+	
 	public final static String _PROTOCOL_HTTP 			= "http";
 	public final static String _PROTOCOL_HTTPS 			= "https";
 	public final static String _PROTOCOL_SSL 			= "SSL";
@@ -619,7 +624,7 @@ public class RestApiClient {
 		RestApiClient apiClient = new RestApiClient();
 		apiClient.setAllowAnyHostSSL(true);
 		res = apiClient.httpGet(aCertUrl);
-		
+		apiClient = null;
 		if(res.isSuccess())
 		{
 			String sRespData = null;
@@ -637,7 +642,7 @@ public class RestApiClient {
 	    			}
 	    			else
 	    			{
-		    			System.err.println("Invalid certificate content: ["+res.getContent_data()+"]");
+	    				logger.log(Level.SEVERE, "Invalid certificate content: ["+res.getContent_data()+"]");
 	    			}
 	    		}
 	    	}
@@ -651,6 +656,10 @@ public class RestApiClient {
 	    		if(in!=null)
 	    			in.close();
 	    	}
+		}
+		else
+		{
+			logger.log(Level.FINE, "Fail to get cert - "+res.getHttp_status()+" content: ["+res.getContent_data()+"]");
 		}
     	return cert;
 	}
