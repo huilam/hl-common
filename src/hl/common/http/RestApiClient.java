@@ -30,9 +30,6 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
@@ -613,7 +610,7 @@ public class RestApiClient {
 			return true;
     }
     
-	public static Certificate getSSLCert(String aCertUrl) throws CertificateException, IOException
+	public Certificate getSSLCert(String aCertUrl) throws CertificateException, IOException
 	{
     	Certificate cert 	= null;
 		HttpResp res 		= null;
@@ -625,8 +622,12 @@ public class RestApiClient {
 		
 		if(res.isSuccess())
 		{
+			String sRespData = null;
 	    	try {
-	    		in = new ByteArrayInputStream(res.getContent_data().getBytes());
+	    		
+	    		sRespData = res.getContent_data();
+	    		
+	    		in = new ByteArrayInputStream(sRespData.getBytes());
 	    		CertificateFactory X509CertFactory = CertificateFactory.getInstance("X509");
 	    		if(in!=null && X509CertFactory!=null)
 	    		{
@@ -639,6 +640,11 @@ public class RestApiClient {
 		    			System.err.println("Invalid certificate content: ["+res.getContent_data()+"]");
 	    			}
 	    		}
+	    	}
+	    	catch(Exception ex)
+	    	{
+	    		System.out.println(sRespData+" - "+ex.getMessage());
+	    		throw ex;
 	    	}
 	    	finally
 	    	{
