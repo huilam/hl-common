@@ -10,5 +10,7 @@
 	<classpathentry kind="lib" path="lib/redis/jedis-jedis-2.9.0.jar"/>
 	<classpathentry kind="lib" path="lib/guava-22.0.jar"/>
 	<classpathentry kind="lib" path="lib/org.json.jar"/>
+	<classpathentry kind="lib" path="lib/javax.mail.jar"/>
+	<classpathentry kind="lib" path="lib/jetty-all-9.4.19.v20190610-uber.jar"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>
