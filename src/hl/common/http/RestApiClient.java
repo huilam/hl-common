@@ -89,6 +89,11 @@ public class RestApiClient {
 		this.conn_timeout = aTimeOutMs;
 	}
 	
+	public KeyStore getCustomKeyStore()
+	{
+		return this.keystoreCustom;
+	}
+	
 	public void setCustomKeyStore(KeyStore aCustomKeyStore)
 	{
 		this.keystoreCustom = aCustomKeyStore;
