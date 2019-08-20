@@ -81,6 +81,7 @@ public class RestApiClient {
 	public boolean isAllowAnyHostSSL 		= false;
 	public KeyStore keystoreCustom 			= null;
 	private Map<String, String> mapHeaders 	= new HashMap<String, String>();
+	private static Object objectSyn 		= new Object(); 
 	
 	private static Map<KeyStore, SSLContext> mapKeystoreSSLContext = new HashMap<KeyStore, SSLContext>();
 	private static SSLContext anyHostSSLContext = null;
@@ -400,10 +401,10 @@ public class RestApiClient {
     private static SSLSocketFactory getTrustAnyHostSSLSocketFactory() throws NoSuchAlgorithmException, KeyManagementException
     {
     	SSLContext sc = anyHostSSLContext;
-    	
     	if(sc==null)
     	{
-    		synchronized(sc)
+    		sc = anyHostSSLContext;
+    		synchronized(objectSyn)
     		{
     	    	if(sc==null)
     	    	{
@@ -453,8 +454,9 @@ public class RestApiClient {
     	SSLContext sc = mapKeystoreSSLContext.get(aKeyStore);
     	if(sc==null)
     	{
-    		synchronized(sc)
+    		synchronized(objectSyn)
     		{
+    			sc = mapKeystoreSSLContext.get(aKeyStore);
     	    	if(sc==null)
     	    	{
 			    	TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
