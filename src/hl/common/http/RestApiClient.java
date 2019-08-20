@@ -82,6 +82,9 @@ public class RestApiClient {
 	public KeyStore keystoreCustom 			= null;
 	private Map<String, String> mapHeaders 	= new HashMap<String, String>();
 	
+	private static Map<KeyStore, SSLContext> mapKeystoreSSLContext = new HashMap<KeyStore, SSLContext>();
+	private static SSLContext anyHostSSLContext = null;
+	
 	private int conn_timeout	 = 5000;	
 	
 	public void setConnTimeout(int aTimeOutMs)
@@ -396,50 +399,72 @@ public class RestApiClient {
     
     private static SSLSocketFactory getTrustAnyHostSSLSocketFactory() throws NoSuchAlgorithmException, KeyManagementException
     {
-    	TrustManager trustmgr = new X509ExtendedTrustManager() {
-
-			@Override
-			public X509Certificate[] getAcceptedIssuers() {
-				return null;
-			}
-
-			@Override
-			public void checkClientTrusted(X509Certificate[] chain, String authType)
-					throws CertificateException {}
-
-			@Override
-			public void checkServerTrusted(X509Certificate[] chain, String authType)
-					throws CertificateException {}
+    	SSLContext sc = anyHostSSLContext;
+    	
+    	if(sc==null)
+    	{
+    		synchronized(sc)
+    		{
+    	    	if(sc==null)
+    	    	{
+			    	TrustManager trustmgr = new X509ExtendedTrustManager() {
 			
-			@Override
-			public void checkClientTrusted(X509Certificate[] chain, String authType, Socket socket)
-					throws CertificateException {}
-
-			@Override
-			public void checkClientTrusted(X509Certificate[] chain, String authType, SSLEngine engine)
-					throws CertificateException {}
-
-			@Override
-			public void checkServerTrusted(X509Certificate[] chain, String authType, Socket socket)
-					throws CertificateException {}
-
-			@Override
-			public void checkServerTrusted(X509Certificate[] chain, String authType, SSLEngine engine)
-					throws CertificateException {}
-		};
-		
-		
-		SSLContext sc = SSLContext.getInstance(_PROTOCOL_SSL);
-		sc.init(null, new TrustManager[]{trustmgr}, new SecureRandom());
+						@Override
+						public X509Certificate[] getAcceptedIssuers() {
+							return null;
+						}
+			
+						@Override
+						public void checkClientTrusted(X509Certificate[] chain, String authType)
+								throws CertificateException {}
+			
+						@Override
+						public void checkServerTrusted(X509Certificate[] chain, String authType)
+								throws CertificateException {}
+						
+						@Override
+						public void checkClientTrusted(X509Certificate[] chain, String authType, Socket socket)
+								throws CertificateException {}
+			
+						@Override
+						public void checkClientTrusted(X509Certificate[] chain, String authType, SSLEngine engine)
+								throws CertificateException {}
+			
+						@Override
+						public void checkServerTrusted(X509Certificate[] chain, String authType, Socket socket)
+								throws CertificateException {}
+			
+						@Override
+						public void checkServerTrusted(X509Certificate[] chain, String authType, SSLEngine engine)
+								throws CertificateException {}
+					};
+					
+					sc = SSLContext.getInstance(_PROTOCOL_SSL);
+					sc.init(null, new TrustManager[]{trustmgr}, new SecureRandom());
+					anyHostSSLContext = sc;
+    	    	}
+    		}
+    	}
 		return sc.getSocketFactory();
     }
     
     public static SSLSocketFactory getTrustCustomKeystoreSSLSocketFactory(KeyStore aKeyStore) throws NoSuchAlgorithmException, KeyManagementException, KeyStoreException
     {
-    	TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-    	tmf.init(aKeyStore);
-		SSLContext sc = SSLContext.getInstance(_PROTOCOL_SSL);
-		sc.init(null, tmf.getTrustManagers(), new SecureRandom());
+    	SSLContext sc = mapKeystoreSSLContext.get(aKeyStore);
+    	if(sc==null)
+    	{
+    		synchronized(sc)
+    		{
+    	    	if(sc==null)
+    	    	{
+			    	TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+			    	tmf.init(aKeyStore);
+					sc = SSLContext.getInstance(_PROTOCOL_SSL);
+					sc.init(null, tmf.getTrustManagers(), new SecureRandom());
+					mapKeystoreSSLContext.put(aKeyStore, sc);
+    	    	}
+    		}
+    	}
 		return sc.getSocketFactory();
     }
     
