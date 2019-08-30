@@ -47,7 +47,9 @@ import hl.common.ZipUtil;
 
 public class RestApiClient {
 
-	private static Logger logger = Logger.getLogger(RestApiClient.class.getName());
+	private static Logger defaultlogger = Logger.getLogger(RestApiClient.class.getName());
+	
+	private Logger logger = null;
 	
 	public final static String _PROTOCOL_HTTP 			= "http";
 	public final static String _PROTOCOL_HTTPS 			= "https";
@@ -86,13 +88,23 @@ public class RestApiClient {
 	private static Map<KeyStore, SSLContext> mapKeystoreSSLContext = new HashMap<KeyStore, SSLContext>();
 	private static SSLContext anyHostSSLContext = null;
 	
-	private int conn_timeout	 = 5000;	
+	private int conn_timeout	 	= 5000;
 	
 	public void setConnTimeout(int aTimeOutMs)
 	{
 		this.conn_timeout = aTimeOutMs;
 	}
 	
+	public void setCustomLogger(Logger aLogger)
+	{
+		logger = aLogger;
+	}
+
+	public Logger getLogger()
+	{
+		return logger;
+	}
+
 	public KeyStore getCustomKeyStore()
 	{
 		return this.keystoreCustom;
@@ -277,6 +289,10 @@ public class RestApiClient {
     		String aContentType, 
     		String aContentData) throws IOException
     {
+    	long rid = System.nanoTime();
+    	
+    	log(Level.FINE, "[START] "+"rid:("+rid+") "+aHttpMethod+" "+ aEndpointURL+" content-type:"+aContentType+" content-data:"+aContentData);
+
     	HttpResp httpResp 	= new HttpResp();
     	
     	HttpURLConnection conn 	= null;
@@ -394,7 +410,9 @@ public class RestApiClient {
 		{
 			throw new IOException("Invalid URL : "+aEndpointURL);
 		}
- 	
+		
+    	log(Level.FINE, "[END] "+"rid:("+rid+") "+aHttpMethod+" "+ aEndpointURL+" : "+httpResp);
+
     	return httpResp;
     }
     
@@ -490,6 +508,9 @@ public class RestApiClient {
     
     public HttpResp httpGet(String aEndpointURL) throws IOException
     {
+    	long rid = System.nanoTime();
+    	log(Level.FINE, "[START] rid:("+rid+") GET "+ aEndpointURL);
+    	
     	HttpResp httpResp 		= new HttpResp();
     	
 		HttpURLConnection conn 	= null;
@@ -607,7 +628,7 @@ public class RestApiClient {
 		{
 			throw new IOException("Invalid URL : "+aEndpointURL);
 		}
-		
+    	log(Level.FINE, "[END] rid:("+rid+") GET "+ aEndpointURL+" : "+httpResp);
 		return httpResp;
     }  
     
@@ -674,7 +695,7 @@ public class RestApiClient {
 	    			}
 	    			else
 	    			{
-	    				logger.log(Level.SEVERE, "Invalid certificate content: ["+res.getContent_data()+"]");
+	    				log(Level.SEVERE, "Invalid certificate content: ["+res.getContent_data()+"]");
 	    			}
 	    		}
 	    	}
@@ -691,9 +712,19 @@ public class RestApiClient {
 		}
 		else
 		{
-			logger.log(Level.FINE, "Fail to get cert - "+res.getHttp_status()+" content: ["+res.getContent_data()+"]");
+			log(Level.SEVERE, "Fail to get cert - "+res.getHttp_status()+" content: ["+res.getContent_data()+"]");
 		}
     	return cert;
+	}
+	
+	private void log(Level aLogLevel, String aLogMessage)
+	{
+		if(logger==null)
+		{
+			logger = defaultlogger;
+		}
+		
+		logger.log(aLogLevel, aLogMessage);
 	}
 	
     public static void main(String args[]) throws Exception
