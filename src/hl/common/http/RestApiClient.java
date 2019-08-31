@@ -411,7 +411,7 @@ public class RestApiClient {
 			throw new IOException("Invalid URL : "+aEndpointURL);
 		}
 		
-    	log(Level.FINE, "[END] "+"rid:("+rid+") "+aHttpMethod+" "+ aEndpointURL+" : "+httpResp);
+    	log(Level.FINE, "[END] "+"rid:("+rid+") elapsed:"+nano2msInWords(rid)+" "+aHttpMethod+" "+ aEndpointURL+" : "+httpResp);
 
     	return httpResp;
     }
@@ -628,9 +628,14 @@ public class RestApiClient {
 		{
 			throw new IOException("Invalid URL : "+aEndpointURL);
 		}
-    	log(Level.FINE, "[END] rid:("+rid+") GET "+ aEndpointURL+" : "+httpResp);
+    	log(Level.FINE, "[END] rid:("+rid+") elapsed:"+nano2msInWords(rid)+" GET "+ aEndpointURL+" : "+httpResp);
 		return httpResp;
     }  
+    
+    private String nano2msInWords(long aNanoStartTime)
+    {
+    	return (System.nanoTime()-aNanoStartTime)/1000000+" ms";
+    }
     
     public boolean ping(String aEndpointURL, int aPingTimeOutMs) 
     {
@@ -729,12 +734,5 @@ public class RestApiClient {
 	
     public static void main(String args[]) throws Exception
     {
-    	RestApiClient apiClient = new RestApiClient();
-    	apiClient.setBasicAuth("rootuser", "rootuser");
-    	apiClient.setAllowAnyHostSSL(true);
-    	
-    	Certificate cert = apiClient.getSSLCert("https://rootuser:rootuser@203.127.252.43:3000/instances/226/certificate");
-    	
-    	System.out.println(cert.getPublicKey());
     }
 }
