@@ -411,7 +411,7 @@ public class RestApiClient {
 			throw new IOException("Invalid URL : "+aEndpointURL);
 		}
 		
-    	log(Level.FINE, "[END] "+"rid:("+rid+") elapsed:"+nano2msInWords(rid)+" "+aHttpMethod+" "+ aEndpointURL+" : "+httpResp);
+    	log(Level.FINE, "[END] "+"rid:("+rid+") elapsed:"+calcNanoElapsedInWords(rid)+" "+aHttpMethod+" "+ aEndpointURL+" : "+httpResp);
 
     	return httpResp;
     }
@@ -628,13 +628,49 @@ public class RestApiClient {
 		{
 			throw new IOException("Invalid URL : "+aEndpointURL);
 		}
-    	log(Level.FINE, "[END] rid:("+rid+") elapsed:"+nano2msInWords(rid)+" GET "+ aEndpointURL+" : "+httpResp);
+    	log(Level.FINE, "[END] rid:("+rid+") elapsed:"+calcNanoElapsedInWords(rid)+" GET "+ aEndpointURL+" : "+httpResp);
 		return httpResp;
     }  
     
-    private String nano2msInWords(long aNanoStartTime)
+    public static String calcNanoElapsedInWords(long aNanoStart)
     {
-    	return (System.nanoTime()-aNanoStartTime)/1000000+" ms";
+    	return time2Words(System.nanoTime()-aNanoStart);
+    }
+    
+    public static String time2Words(long aElapsed)
+    {
+    	if(aElapsed<=0)
+    		return "0ms";
+    	
+    	StringBuffer sb = new StringBuffer();
+    	
+    	long elapsedms = aElapsed;
+    	
+    	if(aElapsed>=1000000)
+    	{
+    		//convert nano to milisecs
+    		elapsedms = aElapsed/1000000;
+    	}
+    	
+    	if(elapsedms>=60000)
+    	{
+	    	long elapsedMins = elapsedms/60000;
+	    	sb.append(elapsedMins).append("m ");
+	    	
+	    	elapsedms = elapsedms % 60000;
+    	}
+
+    	if(elapsedms>=1000)
+    	{
+	    	long elapsedSecs = elapsedms/1000;
+	    	sb.append(elapsedSecs).append("s ");
+	    	
+	    	elapsedms = elapsedms % 1000;
+    	}
+    	    	
+    	sb.append(elapsedms).append("ms ");
+    	
+    	return sb.toString();
     }
     
     public boolean ping(String aEndpointURL, int aPingTimeOutMs) 
