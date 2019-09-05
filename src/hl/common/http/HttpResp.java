@@ -1,5 +1,8 @@
 package hl.common.http;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 public class HttpResp {
 	//
 	private int http_status 			= 0;
@@ -8,6 +11,9 @@ public class HttpResp {
 	private String content_data 		= null;
 	private String content_type 		= null;
 	//
+	private String request_url 			= null;
+	private String server_ip 			= null;
+	
 	
 	public boolean isSuccess()
 	{
@@ -40,10 +46,37 @@ public class HttpResp {
 		this.content_type = content_type;
 	}	
 	
+	public String getRequest_url() {
+		return request_url;
+	}
+
+	public void setRequest_url(String request_url) {
+		this.request_url = request_url;
+	}
+
+	public String getServer_ip() {
+		return server_ip;
+	}
+
+	public void setServer_ip(String server) {
+		
+		InetAddress address;
+		try {
+			address = InetAddress.getByName(server);
+			server 	= address.getHostAddress();
+		} catch (UnknownHostException e) {
+			//ignore
+		}
+		
+		this.server_ip = server;
+	}
+
 	public String toString()
 	{
 		StringBuffer sb = new StringBuffer();
-		sb.append("status:").append(getHttp_status()).append(" ").append(getHttp_status_message());
+		sb.append("\n").append("server-ip:").append(getServer_ip());
+		sb.append("\n").append("request-url:").append(getRequest_url());
+		sb.append("\nstatus:").append(getHttp_status()).append(" ").append(getHttp_status_message());
 		sb.append("\n").append("content-type:").append(getContent_type());
 		sb.append("\n").append("body:").append(getContent_data());
 		return sb.toString();

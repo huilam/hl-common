@@ -354,6 +354,9 @@ public class RestApiClient {
 						writer.close();
 				}
 			}
+			httpResp.setRequest_url(conn.getURL().toString());
+			httpResp.setServer_ip(conn.getURL().getHost());
+			
 			httpResp.setHttp_status(conn.getResponseCode());
 			httpResp.setHttp_status_message(conn.getResponseMessage());
 			
@@ -608,6 +611,8 @@ public class RestApiClient {
 					if(in!=null)
 						in.close();
 				}
+				httpResp.setRequest_url(conn.getURL().toString());
+				httpResp.setServer_ip(conn.getURL().getHost());
 				
 				httpResp.setHttp_status(conn.getResponseCode());
 				httpResp.setHttp_status_message(conn.getResponseMessage());
