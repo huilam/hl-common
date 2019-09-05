@@ -265,16 +265,22 @@ public class ImgUtil {
     	{
     		throw new IOException("File exists: "+aFile);
     	}
+    	else
+    	{
+    		createFoldersIfNotExist(aFile);
+    	}
     	
+		File tmpOutputFile = new File(aFile.getCanonicalPath()+".wip");
     	BufferedWriter wrt = null;
 		try {
-			wrt = new BufferedWriter(new FileWriter(aFile));
+			wrt = new BufferedWriter(new FileWriter(tmpOutputFile));
 			wrt.write(aBase64Content);
 		}finally
 		{
 			if(wrt!=null)
 				wrt.close();
 		}
+		tmpOutputFile.renameTo(aFile);
     }
 
     public static void saveAsFile(BufferedImage aBufferedImage, File aOutputFile) throws IOException
@@ -313,8 +319,25 @@ public class ImgUtil {
     		}
     	}
     	
-		ImageIO.write(aBufferedImage, aOutputFileFormat, aOutputFile);
+		createFoldersIfNotExist(aOutputFile);
+		File tmpOutputFile = new File(aOutputFile.getPath()+".wip");
+		ImageIO.write(aBufferedImage, aOutputFileFormat, tmpOutputFile);
+		
+		if(aOutputFile.exists())
+		{
+			aOutputFile.delete();
+		}
+		tmpOutputFile.renameTo(aOutputFile);
 	}
+    
+    private static boolean createFoldersIfNotExist(File aOutputFile)
+    {
+    	if(aOutputFile!=null && aOutputFile.getParentFile()!=null)
+    	{
+    		return aOutputFile.getParentFile().mkdirs();
+    	}
+    	return false;
+    }
 	
 	public static String resizeBase64ImgByHeight(String aImageBase64, long aNewHeight) throws IOException
 	{
@@ -708,7 +731,7 @@ public class ImgUtil {
 	public static void main(String args[]) throws Exception
 	{
 		
-		File fileImg = new File("");
+		File fileImg = new File("C:\\temp\\camera06_bg2.jpg");
 
 		BufferedImage img =  ImgUtil.loadImage(fileImg.getPath());
 		
@@ -721,6 +744,8 @@ public class ImgUtil {
 			System.err.println("img == null");
 		}
 		
+		File fileOutput = new File(fileImg.getParent()+"\\testing\\111\\"+fileImg.getName());
+		saveAsFile(img, fileOutput);
 		
 	}
 	
