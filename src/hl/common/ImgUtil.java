@@ -678,6 +678,18 @@ public class ImgUtil {
 		return newImage;
 	}
 	
+    public static BufferedImage cropImage(BufferedImage inputImg, int cropLeft, int cropTop, int cropWidth, int cropHeight) 
+    {
+        BufferedImage croppedImage = null;
+        if (inputImg != null && cropLeft >= 0 && cropTop >= 0 && cropWidth > 0 && cropHeight > 0) {
+             //Force ARBG to RBG only
+             BufferedImage img = new BufferedImage(inputImg.getWidth(), inputImg.getHeight(), BufferedImage.TYPE_INT_RGB);
+             img.createGraphics().drawImage(inputImg, 0, 0, Color.WHITE, null);
+             croppedImage = img.getSubimage(cropLeft, cropTop, cropWidth, cropHeight);
+        }
+        return croppedImage;
+    }
+
 	public static BufferedImage pixelize(BufferedImage aBufferedImage) throws IOException
 	{
 		if(aBufferedImage==null)
