@@ -14,12 +14,12 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Random;
 import javax.imageio.ImageIO;
-import org.json.JSONObject;
 import hl.common.http.RestApiUtil;
 
 
@@ -713,19 +713,31 @@ public class ImgUtil {
         return croppedImage;
     }
 
-	public static BufferedImage pixelize(BufferedImage aBufferedImage) throws IOException
+	public static BufferedImage pixelize(final BufferedImage aImgOrig) throws IOException
 	{
-		if(aBufferedImage==null)
+		if(aImgOrig==null)
 			return null;
 		
 		float fPixelPercent = 0.1f;
-		float iWidth 	= aBufferedImage.getWidth() * fPixelPercent;
-		float iHeight 	= aBufferedImage.getHeight() * fPixelPercent;
+		float iWidth 	= aImgOrig.getWidth() * fPixelPercent;
+		float iHeight 	= aImgOrig.getHeight() * fPixelPercent;
 		
-		BufferedImage newImage = resizeImg(aBufferedImage, (long)iWidth, (long)iHeight, true);
+		BufferedImage imgPixelized = resizeImg(aImgOrig, (long)iWidth, (long)iHeight, true);
 		
 		
-		return resizeImg(newImage, aBufferedImage.getWidth(), aBufferedImage.getHeight(), true);
+		return resizeImg(imgPixelized, aImgOrig.getWidth(), aImgOrig.getHeight(), true);
+	}
+	
+	private static byte[] getChecksum(final BufferedImage aBufferedImage) throws IOException, NoSuchAlgorithmException
+	{
+		if(aBufferedImage!=null)
+		{
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			ImageIO.write(aBufferedImage, "PNG", baos);
+			byte[] bytes = baos.toByteArray();
+			return CryptoUtil.getMD5Checksum(bytes);
+		}
+		return null;
 	}
 	
 	public static void main(String args[]) throws Exception
@@ -737,6 +749,10 @@ public class ImgUtil {
 		
 		if(img!=null)
 		{
+			getChecksum(img);
+			img = pixelize(img);
+			File fileOutput = new File(fileImg.getParent()+"\\testing\\111\\"+fileImg.getName());
+			saveAsFile(img, fileOutput);
 			
 		}
 		else
@@ -744,8 +760,6 @@ public class ImgUtil {
 			System.err.println("img == null");
 		}
 		
-		File fileOutput = new File(fileImg.getParent()+"\\testing\\111\\"+fileImg.getName());
-		saveAsFile(img, fileOutput);
 		
 	}
 	
