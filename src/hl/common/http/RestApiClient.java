@@ -419,7 +419,7 @@ public class RestApiClient {
     	return httpResp;
     }
     
-    private static SSLSocketFactory getTrustAnyHostSSLSocketFactory() throws NoSuchAlgorithmException, KeyManagementException
+    public static SSLSocketFactory getTrustAnyHostSSLSocketFactory() throws NoSuchAlgorithmException, KeyManagementException
     {
     	SSLContext sc = anyHostSSLContext;
     	if(sc==null)

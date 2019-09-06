@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSocketFactory;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -113,24 +114,17 @@ public class HTMLMultiPart {
 			urlConn.setDoInput(true);
 			urlConn.setDoOutput(true);
 			
-			if(this.keystore_sslcert!=null)
+			if(url.getProtocol().equalsIgnoreCase(_PROTOCOL_HTTPS))
 			{
-				if(url.getProtocol().equalsIgnoreCase(_PROTOCOL_HTTPS))
+				HttpsURLConnection httpsconn = (HttpsURLConnection)urlConn;
+				httpsconn = (HttpsURLConnection)urlConn;
+				SSLSocketFactory sslFactory = RestApiClient.getTrustAnyHostSSLSocketFactory();
+				if(this.keystore_sslcert!=null)
 				{
-					HttpsURLConnection httpsconn = (HttpsURLConnection)urlConn;
-					try {
-						httpsconn.setSSLSocketFactory(
-								RestApiClient.getTrustCustomKeystoreSSLSocketFactory(this.keystore_sslcert));
-					} catch (KeyManagementException e) {
-						e.printStackTrace();
-					} catch (NoSuchAlgorithmException e) {
-						e.printStackTrace();
-					} catch (KeyStoreException e) {
-						e.printStackTrace();
-					}
-					
-					urlConn = httpsconn;
+					sslFactory = RestApiClient.getTrustCustomKeystoreSSLSocketFactory(this.keystore_sslcert);
 				}
+				httpsconn.setSSLSocketFactory(sslFactory);
+				urlConn = httpsconn;
 			}
 			
 			if(this.basic_auth_uid!=null && this.basic_auth_pwd!=null)
