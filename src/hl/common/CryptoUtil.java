@@ -31,6 +31,14 @@ public class CryptoUtil{
 		return new String(Base64Decoder.decode(aString.getBytes()));
 	}
 	
+	public static byte[] getMD5Checksum(byte[] aBytes) throws NoSuchAlgorithmException
+	{
+		MessageDigest MD5;
+		MD5 = MessageDigest.getInstance("MD5");
+		MD5.update(aBytes);
+		return MD5.digest();
+	}
+	
 	public static String obfuscate(String aString)
 	{
 		//
@@ -40,11 +48,11 @@ public class CryptoUtil{
 		Random r = new Random(26);
 		StringBuffer sb = new StringBuffer();
 		//
-		MessageDigest MD5;
+		
 		try {
-			MD5 = MessageDigest.getInstance("MD5");
-			MD5.update(Base64Encoder.encode(aString.getBytes()));
-			String sMessy = toHexString(MD5.digest());
+			byte[] byteMD5 = getMD5Checksum(Base64Encoder.encode(aString.getBytes()));
+			
+			String sMessy = toHexString(byteMD5);
 			for(int i=0; i<aString.length(); i++)
 			{
 				if(i<sMessy.length())
