@@ -713,12 +713,12 @@ public class ImgUtil {
         return croppedImage;
     }
 
-	public static BufferedImage pixelize(final BufferedImage aImgOrig) throws IOException
+    public static BufferedImage pixelize(final BufferedImage aImgOrig, float aPixelizeThreshold) throws IOException
 	{
 		if(aImgOrig==null)
 			return null;
 		
-		float fPixelPercent = 0.1f;
+		float fPixelPercent = 1-aPixelizeThreshold;
 		float iWidth 	= aImgOrig.getWidth() * fPixelPercent;
 		float iHeight 	= aImgOrig.getHeight() * fPixelPercent;
 		
@@ -726,6 +726,11 @@ public class ImgUtil {
 		
 		
 		return resizeImg(imgPixelized, aImgOrig.getWidth(), aImgOrig.getHeight(), true);
+	}
+    
+	public static BufferedImage pixelize(final BufferedImage aImgOrig) throws IOException
+	{
+		return pixelize(aImgOrig, 0.95f);
 	}
 	
 	private static byte[] getChecksum(final BufferedImage aBufferedImage) throws IOException, NoSuchAlgorithmException
@@ -743,7 +748,7 @@ public class ImgUtil {
 	public static void main(String args[]) throws Exception
 	{
 		
-		File fileImg = new File(new File(".").getAbsoluteFile()+"//test//tv-channel-test.png");
+		File fileImg = new File(new File(".").getAbsoluteFile()+"//test//FHD-1920x1080.png");
 
 		BufferedImage img =  ImgUtil.loadImage(fileImg.getPath());
 		
@@ -760,8 +765,8 @@ public class ImgUtil {
 			System.out.println();
 			
 			img = pixelize(img);
-			//File fileOutput = new File(fileImg.getParent()+"\\testing\\111\\"+fileImg.getName());
-			//saveAsFile(img, fileOutput);
+			File fileOutput = new File(fileImg.getParent()+"//pixelized_"+fileImg.getName());
+			saveAsFile(img, fileOutput);
 			
 		}
 		else
