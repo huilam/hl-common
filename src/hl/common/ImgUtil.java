@@ -732,26 +732,6 @@ public class ImgUtil {
 		return resizeImg(imgPixelized, aImgOrig.getWidth(), aImgOrig.getHeight(), true);
 	}
     
-    public static BufferedImage applyWatermark(final BufferedImage aImgOrig, float aPixelizeThreshold) throws IOException
-	{
-		if(aImgOrig==null)
-			return null;
-		
-		float fPixelPercent = 1-aPixelizeThreshold;
-		float iWidth 	= aImgOrig.getWidth() * fPixelPercent;
-		float iHeight 	= aImgOrig.getHeight() * fPixelPercent;
-		
-		if(iWidth<1)
-			iWidth = 1;
-		if(iHeight<1)
-			iHeight = 1;
-		
-		BufferedImage imgPixelized = resizeImg(aImgOrig, (long)iWidth, (long)iHeight, true);
-		
-		return resizeImg(imgPixelized, aImgOrig.getWidth(), aImgOrig.getHeight(), true);
-	}
-    
-    
 	public static BufferedImage pixelize(final BufferedImage aImgOrig) throws IOException
 	{
 		return pixelize(aImgOrig, 0.95f);
