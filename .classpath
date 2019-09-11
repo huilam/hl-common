@@ -12,5 +12,7 @@
 	<classpathentry kind="lib" path="lib/org.json.jar"/>
 	<classpathentry kind="lib" path="lib/javax.mail.jar"/>
 	<classpathentry kind="lib" path="lib/jetty-all-9.4.19.v20190610-uber.jar"/>
+	<classpathentry kind="lib" path="lib/zxing/core-3.4.0.jar"/>
+	<classpathentry kind="lib" path="lib/zxing/javase-3.4.0.jar"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>
