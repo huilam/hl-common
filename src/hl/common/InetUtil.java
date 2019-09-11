@@ -8,12 +8,15 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
 public class InetUtil {
 	
+	private static Logger logger = Logger.getLogger(InetUtil.class.getName());
 	private static Pattern pattIPv4 = Pattern.compile("^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$");
 	
 	public static boolean isIPv4(String aIPAddress)
@@ -36,6 +39,7 @@ public class InetUtil {
 		
 		int iHighestMatch = 0;
 		String sMacthedIP = null;
+		logger.log(Level.FINE, "Finding closest match for "+aInetAddress.getHostAddress()+" ...");
 		for(InetAddress inetIP : aInetAddressList)
 		{
 			String[] sIPSegments = inetIP.getHostAddress().split("\\.");
@@ -47,6 +51,8 @@ public class InetUtil {
 					if(sTargetIPSegment[i].equals(sIPSegments[i]))
 						iMatchScore++;
 				}
+				
+				logger.log(Level.FINE, "   - "+inetIP.getHostAddress()+" score:"+iMatchScore);
 				if(iMatchScore > iHighestMatch)
 				{
 					iHighestMatch = iMatchScore;
@@ -85,7 +91,7 @@ public class InetUtil {
 	{
 		List<InetAddress> listIPAddr = getListOfLocalActiveIPAddress();
 		InetAddress inetEVAAddress = InetAddress.getByName("172.30.92.16");
-		
+		logger.setLevel(Level.FINE);
 		
 		String sMatchedIP = getClosestMatchIPAddress(inetEVAAddress, listIPAddr);
 		System.out.println("Matched IP :"+sMatchedIP);
