@@ -734,10 +734,10 @@ public class ImgUtil {
     
 	public static BufferedImage pixelize(final BufferedImage aImgOrig) throws IOException
 	{
-		return pixelize(aImgOrig, 0.95f);
+		return pixelize(aImgOrig, 0.93f);
 	}
 	
-	private static byte[] getChecksum(final BufferedImage aBufferedImage) throws IOException, NoSuchAlgorithmException
+	protected static byte[] getChecksum(final BufferedImage aBufferedImage) throws IOException, NoSuchAlgorithmException
 	{
 		if(aBufferedImage!=null)
 		{
@@ -751,34 +751,6 @@ public class ImgUtil {
 	
 	public static void main(String args[]) throws Exception
 	{
-		
-		File fileImg = new File(new File(".").getAbsoluteFile()+"//test//FHD-1920x1080.png");
-
-		BufferedImage img =  ImgUtil.loadImage(fileImg.getPath());
-		
-		if(img!=null)
-		{
-			byte[] byteChecksum = getChecksum(img);
-			
-			System.out.println();
-			for(byte b : byteChecksum)
-			{
-				int i = (b & 0xff);
-				System.out.print("["+i+"]");
-			}
-			System.out.println();
-			
-			img = pixelize(img);
-			File fileOutput = new File(fileImg.getParent()+"//pixelized_"+fileImg.getName());
-			saveAsFile(img, fileOutput);
-			
-		}
-		else
-		{
-			System.err.println("img == null");
-		}
-		
-		
 	}
 	
 }
