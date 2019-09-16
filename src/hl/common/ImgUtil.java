@@ -734,7 +734,23 @@ public class ImgUtil {
     
 	public static BufferedImage pixelize(final BufferedImage aImgOrig) throws IOException
 	{
-		return pixelize(aImgOrig, 0.93f);
+		return pixelize(aImgOrig, 1);
+	}
+	
+	public static BufferedImage pixelize(final BufferedImage aImgOrig, int aFilterLoop) throws IOException
+	{
+		float fPixelise = 0.90f;
+		
+		BufferedImage imgTmp = pixelize(aImgOrig, fPixelise);
+	
+		if(aFilterLoop>1)
+		{
+			for(int i=0; i<aFilterLoop-1; i++)
+			{
+				imgTmp = pixelize(imgTmp, fPixelise);
+			}
+		}
+		return imgTmp;
 	}
 	
 	protected static byte[] getChecksum(final BufferedImage aBufferedImage) throws IOException, NoSuchAlgorithmException
