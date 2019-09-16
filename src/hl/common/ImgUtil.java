@@ -765,6 +765,34 @@ public class ImgUtil {
 		return null;
 	}
 	
+	protected static BufferedImage applyWatermark(final BufferedImage aBufferedImage) throws IOException, NoSuchAlgorithmException
+	{
+		if(aBufferedImage!=null)
+		{
+			String sSignature = "matrix";
+			
+			sSignature.getBytes();
+			
+			
+			byte[] byteMD5Hex = getChecksum(aBufferedImage);
+			int[] iHex = new int[byteMD5Hex.length];
+			for(int i=0; i<byteMD5Hex.length; i++)
+			{
+				
+				iHex[i] = (byteMD5Hex[i] & 0xff);
+				
+				/**
+				System.out.println();
+				System.out.println("a:"+(byteMD5Hex[i]>>24 & 0xff));				
+				System.out.println("r:"+(byteMD5Hex[i]>>16 & 0xff));
+				System.out.println("g:"+(byteMD5Hex[i]>>8 & 0xff));
+				System.out.println("b:"+(byteMD5Hex[i] & 0xff));
+				**/
+			}
+		}
+		return null;
+	}
+	
 	public static void main(String args[]) throws Exception
 	{
 	}
