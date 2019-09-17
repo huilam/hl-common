@@ -31,6 +31,11 @@ public class CryptoUtil{
 		return new String(Base64Decoder.decode(aString.getBytes()));
 	}
 	
+	public static String getMD5ChecksumInHex(byte[] aBytes) throws NoSuchAlgorithmException
+	{
+		return toHexString(getMD5Checksum(aBytes));
+	}
+	
 	public static byte[] getMD5Checksum(byte[] aBytes) throws NoSuchAlgorithmException
 	{
 		MessageDigest MD5;
@@ -92,7 +97,7 @@ public class CryptoUtil{
 		return sb.toString();
 	}
 	
-	private static String toHexString(byte[] bytes) {
+	public static String toHexString(byte[] bytes) {
 	    StringBuilder hexString = new StringBuilder();
 
 	    for (int i = 0; i < bytes.length; i++) {
