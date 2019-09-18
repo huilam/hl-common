@@ -765,32 +765,118 @@ public class ImgUtil {
 		return null;
 	}
 	
-	protected static BufferedImage applyWatermark(final BufferedImage aBufferedImage) throws IOException, NoSuchAlgorithmException
+	private static int byte2int(byte aByte)
+	{
+		return aByte & 0xff;
+	}
+	
+	protected static String getEmbededData(
+			BufferedImage aBufferedImage,
+			String aSignature) throws IOException, NoSuchAlgorithmException
+	{
+		String sEncodedData = null;
+		
+		if(aBufferedImage!=null)
+		{
+			byte[] byteSignature = CryptoUtil.getMD5Checksum(aSignature.getBytes());
+			
+			
+			int y1 = 0;
+			int y2 = aBufferedImage.getHeight()-1;
+        	int yLoop = new Color(aBufferedImage.getRGB(0, 0)).getGreen();
+        	if(yLoop<=0)
+        		yLoop = 1;
+        	
+        	int colW = byteSignature.length;
+        	
+			byte[] byteData = new byte[colW*yLoop];
+
+			for(int i=0; i<colW; i+=2)
+			{
+				Color c = new Color(aBufferedImage.getRGB(i, y1));
+	        	int v1 = byte2int(byteSignature[i]);
+	        	int v2 = byte2int(byteSignature[i+1]);
+	        	
+	        	if(v1!=c.getRed() || v2!=c.getBlue())
+	        	{
+	        		System.out.println("break!");
+	        		System.out.println("v1="+v1+":"+c.getRed());
+	        		System.out.println("v2="+v2+":"+c.getBlue());
+	        		return null;
+	        	}
+	        	
+				////////////////////////////////////
+				for(int l=0; l<yLoop; l++)
+				{
+		        	c = new Color(aBufferedImage.getRGB(i, y2-l));
+		        	int idx = i+(l*(colW));
+					//System.out.println("getEncodedData.idx:"+idx);
+		        	
+		        	byteData[idx] = (byte) c.getRed();
+		        	byteData[idx+1] = (byte) c.getBlue();
+				}
+			}
+			
+			sEncodedData = new String(byteData);
+			
+		}
+		return sEncodedData; 
+	}
+	
+	protected static BufferedImage embedData(
+			BufferedImage aBufferedImage,
+			String aSignature,
+			String aData) throws IOException, NoSuchAlgorithmException
 	{
 		if(aBufferedImage!=null)
 		{
-			String sSignature = "matrix";
 			
-			sSignature.getBytes();
+			byte[] byteSignature = CryptoUtil.getMD5Checksum(aSignature.getBytes());
+			byte[] byteData = aData.getBytes();
 			
-			
-			byte[] byteMD5Hex = getChecksum(aBufferedImage);
-			int[] iHex = new int[byteMD5Hex.length];
-			for(int i=0; i<byteMD5Hex.length; i++)
+			if(byteData.length % byteSignature.length !=0)
 			{
+				throw new IOException("signature:"+byteSignature.length+" data:"+byteData.length);
+			}
+			
+			int y1 = 0;
+			int y2 = aBufferedImage.getHeight()-1;
+			
+			int colW = byteSignature.length;
+			int yLoop = byteData.length / colW;
+			
+			if(yLoop<=0)
+				yLoop = 1;
+			
+			for(int i=0; i<colW; i+=2)
+			{
+				Color c = new Color(aBufferedImage.getRGB(i, y1));
+	        	
+	        	int v1 = byte2int(byteSignature[i]);
+	        	int v2 = byte2int(byteSignature[i+1]);
+	        	int g  = i==0?(yLoop):c.getGreen();
+	        	
+	        	
+	        	Color c2 = new Color(v1, g, v2);
+				aBufferedImage.setRGB(i, y1, c2.getRGB());
 				
-				iHex[i] = (byteMD5Hex[i] & 0xff);
-				
-				/**
-				System.out.println();
-				System.out.println("a:"+(byteMD5Hex[i]>>24 & 0xff));				
-				System.out.println("r:"+(byteMD5Hex[i]>>16 & 0xff));
-				System.out.println("g:"+(byteMD5Hex[i]>>8 & 0xff));
-				System.out.println("b:"+(byteMD5Hex[i] & 0xff));
-				**/
+				////////////////////////////////////
+				for(int l=0; l<yLoop; l++)
+				{
+					int idx = i+(l*(colW));
+					//System.out.println("encode.idx:"+idx);
+					
+					c = new Color(aBufferedImage.getRGB(i, y2-l));
+		        	
+		        	v1 = byte2int(byteData[idx]);
+		        	v2 = byte2int(byteData[idx+1]);
+		        	//
+		        	c2 = new Color(v1, c.getGreen(), v2);
+		        	aBufferedImage.setRGB(i, y2-l, c2.getRGB());
+				}
 			}
 		}
-		return null;
+		return aBufferedImage;
 	}
 	
 	public static void main(String args[]) throws Exception
