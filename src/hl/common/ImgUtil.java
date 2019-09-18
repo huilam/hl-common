@@ -722,9 +722,9 @@ public class ImgUtil {
 		float iWidth 	= aImgOrig.getWidth() * fPixelPercent;
 		float iHeight 	= aImgOrig.getHeight() * fPixelPercent;
 		
-		if(iWidth<1)
+		if(iWidth<1 || iWidth>1)
 			iWidth = 1;
-		if(iHeight<1)
+		if(iHeight<1 || iHeight>1)
 			iHeight = 1;
 		
 		BufferedImage imgPixelized = resizeImg(aImgOrig, (long)iWidth, (long)iHeight, true);
