@@ -753,7 +753,7 @@ public class ImgUtil {
 		return imgTmp;
 	}
 	
-	protected static byte[] getChecksum(final BufferedImage aBufferedImage) throws IOException, NoSuchAlgorithmException
+	public static byte[] getChecksum(final BufferedImage aBufferedImage) throws IOException, NoSuchAlgorithmException
 	{
 		if(aBufferedImage!=null)
 		{
@@ -770,7 +770,7 @@ public class ImgUtil {
 		return aByte & 0xff;
 	}
 	
-	protected static String getEmbededData(
+	public static String getEmbededData(
 			BufferedImage aBufferedImage,
 			String aSignature) throws IOException, NoSuchAlgorithmException
 	{
@@ -823,7 +823,7 @@ public class ImgUtil {
 		return sEncodedData; 
 	}
 	
-	protected static BufferedImage embedData(
+	public static BufferedImage embedData(
 			BufferedImage aBufferedImage,
 			String aSignature,
 			String aData) throws IOException, NoSuchAlgorithmException
