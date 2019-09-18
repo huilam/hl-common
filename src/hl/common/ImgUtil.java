@@ -426,7 +426,13 @@ public class ImgUtil {
 			int lWidth = (int)(dImgWidth * dScaleX);
 			int lHeight = (int)(dImgHeight * dScaleY);
 			
-	        newImage = new BufferedImage(lWidth, lHeight, aBufferedImage.getType());
+			if(lWidth<=0)
+				lWidth = 1;
+			
+			if(lHeight<=0)
+				lHeight = 1;
+
+			newImage = new BufferedImage(lWidth, lHeight, aBufferedImage.getType());
 	        Graphics2D g = null;
 	        try {
 		        g = newImage.createGraphics();
@@ -722,9 +728,9 @@ public class ImgUtil {
 		float iWidth 	= aImgOrig.getWidth() * fPixelPercent;
 		float iHeight 	= aImgOrig.getHeight() * fPixelPercent;
 		
-		if(iWidth<1 || iWidth>1)
+		if(iWidth<1)
 			iWidth = 1;
-		if(iHeight<1 || iHeight>1)
+		if(iHeight<1)
 			iHeight = 1;
 		
 		BufferedImage imgPixelized = resizeImg(aImgOrig, (long)iWidth, (long)iHeight, true);
