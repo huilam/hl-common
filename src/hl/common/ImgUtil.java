@@ -27,7 +27,9 @@ public class ImgUtil {
 	
 	public enum MOZAIC_STYLE { RANDOM_COLOR, RANDOM_TILES, TRANSPARENT }; 
 	
-	private static final String HTMLIMG_HEADER = ";base64,";
+	private static final String HTMLIMG_HEADER 		= ";base64,";
+	private static final int DATA_EMBED_MIN_HEIGHT 	= 16;
+	private static final int DATA_EMBED_MIN_WIDTH 	= 16;
 	
 	public static String convertToBMP(String aJpgFileName) throws IOException
 	{
@@ -784,6 +786,14 @@ public class ImgUtil {
 		
 		if(aBufferedImage!=null)
 		{
+			long lImgH = aBufferedImage.getHeight();
+			long lImgW = aBufferedImage.getWidth();
+			
+			if((lImgH<DATA_EMBED_MIN_HEIGHT)||(lImgW<DATA_EMBED_MIN_WIDTH))
+			{
+				return null;
+			}
+			
 			byte[] byteSignature = CryptoUtil.getMD5Checksum(aSignature.getBytes());
 			
 			
@@ -836,6 +846,13 @@ public class ImgUtil {
 	{
 		if(aBufferedImage!=null)
 		{
+			long lImgH = aBufferedImage.getHeight();
+			long lImgW = aBufferedImage.getWidth();
+			
+			if((lImgH<DATA_EMBED_MIN_HEIGHT)||(lImgW<DATA_EMBED_MIN_WIDTH))
+			{
+				throw new IOException("Image width and heigh is smaller than minimum data embeding size !");
+			}
 			
 			byte[] byteSignature = CryptoUtil.getMD5Checksum(aSignature.getBytes());
 			byte[] byteData = aData.getBytes();
