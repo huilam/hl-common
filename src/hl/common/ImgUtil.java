@@ -643,6 +643,34 @@ public class ImgUtil {
 		return newImage;
 	}
 	
+	public static String img2Ascii(BufferedImage aBufferedImage, long aWidth, long aHeight) throws IOException
+	{
+		StringBuffer sb = new StringBuffer();
+		
+		String sChArt = ".,oaOB#@";
+		
+		if(aBufferedImage!=null)
+		{
+			BufferedImage imgTmp = resizeImg(aBufferedImage, aWidth, aHeight, true);
+			imgTmp = grayscale(imgTmp);
+			
+			long imgW = imgTmp.getWidth();
+			long imgH = imgTmp.getHeight();
+			
+			for(int y=0; y<imgH; y++)
+			{
+				for(int x=0; x<imgW; x++)
+				{
+					Color c = new Color(imgTmp.getRGB(x, y));
+					int iVal = (int)((c.getRed()*0.33f)+(c.getGreen()*0.33f)+(c.getBlue()*0.34f))/32;
+					sb.append(sChArt.charAt(iVal));
+				}
+				sb.append("\n");
+			}
+		}
+		return sb.toString();
+	}
+	
 	public static BufferedImage grayscale(BufferedImage aBufferedImage) throws IOException
 	{
 		if(aBufferedImage==null)
