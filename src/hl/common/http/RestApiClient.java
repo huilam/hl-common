@@ -185,20 +185,42 @@ public class RestApiClient {
     public void processHttpResp(HttpServletResponse res, 
     		int aHttpStatus, String aContentType, String aOutputContent, long aGzipBytesThreshold) throws IOException
     {
-		if(aHttpStatus>0)
-			res.setStatus(aHttpStatus);
+    	HttpResp httpResp = new HttpResp();
+    	httpResp.setHttp_status(aHttpStatus);
+    	httpResp.setContent_type(aContentType);
+    	httpResp.setContent_data(aOutputContent);
+    	processHttpResp(res, httpResp, aGzipBytesThreshold);
+    }
+    	
+	
+	
+	
+    public void processHttpResp(HttpServletResponse res, HttpResp aHttpResp, long aGzipBytesThreshold) throws IOException
+    {
+		if(aHttpResp.getHttp_status()>0)
+			res.setStatus(aHttpResp.getHttp_status());
 		
-		if(aContentType!=null)
-			res.setContentType(aContentType);
+		if(aHttpResp.getContent_type()!=null)
+			res.setContentType(aHttpResp.getContent_type());
 		
-		if(aOutputContent!=null && aOutputContent.length()>0)
+		if(aHttpResp.getContent_data()!=null)
 		{
-			byte[] byteContent 	= aOutputContent.getBytes(UTF_8);
+			byte[] byteContent 	= null;
+			
+			if(aHttpResp.isBytesContent())
+			{
+				byteContent = aHttpResp.getContentInBytes();
+			}
+			else
+			{
+				byteContent = aHttpResp.getContent_data().getBytes(UTF_8);
+			}
+			
 			long lContentLen 	= byteContent.length;
 			
 			if(aGzipBytesThreshold>0 && lContentLen >= aGzipBytesThreshold)
 			{
-				byteContent = ZipUtil.compress(aOutputContent);
+				byteContent = ZipUtil.compress(byteContent);
 				lContentLen = byteContent.length;
 				res.addHeader(HEADER_CONTENT_ENCODING, TYPE_ENCODING_GZIP);
 			}

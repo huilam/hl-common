@@ -67,6 +67,11 @@ public class RestApiUtil {
     	apiClient.processHttpResp(res, aHttpStatus, aContentType, aOutputContent, aGzipThresholdBytes);
     }
     	
+    public static void processHttpResp(HttpServletResponse res, HttpResp aHttpReq, long aGzipThresholdBytes) throws IOException
+    {
+    	apiClient.processHttpResp(res, aHttpReq, aGzipThresholdBytes);
+    }
+    
     public static HttpResp httpDelete(String aEndpointURL, 
     		String aContentType, String aContentData) throws IOException
     {

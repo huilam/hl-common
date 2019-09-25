@@ -6,7 +6,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
@@ -15,14 +14,20 @@ import java.util.zip.ZipInputStream;
 public class ZipUtil{
 	
 	public static byte[] compress(String data) throws IOException {
+		if(data==null)
+			return null;
+		return compress(data.getBytes());
+	}
+	
+	public static byte[] compress(byte[] data) throws IOException {
 		ByteArrayOutputStream bos 	= null;
 		GZIPOutputStream gzip 		= null;
 		byte[] compressed 			= null;
 		
 		try {
-			bos = new ByteArrayOutputStream(data.length());
+			bos = new ByteArrayOutputStream(data.length);
 			gzip = new GZIPOutputStream(bos);
-			gzip.write(data.getBytes());
+			gzip.write(data);
 			gzip.finish();
 			compressed = bos.toByteArray();
 		}finally
@@ -37,21 +42,24 @@ public class ZipUtil{
 		return compressed;
 	}
 	
-	public static String decompress(byte[] compressed) throws IOException {
+	public static byte[] decompress(byte[] compressed) throws IOException {
+		ByteArrayOutputStream bos = null;
+
 		ByteArrayInputStream bis = null;
 		GZIPInputStream gis = null;
 		BufferedReader br = null;
-		StringBuilder sb = new StringBuilder();
 		
 		try {
 			bis = new ByteArrayInputStream(compressed);
 			gis = new GZIPInputStream(bis);
-			br = new BufferedReader(new InputStreamReader(gis, "UTF-8"));
 			
-			String line;
-			while((line = br.readLine()) != null) {
-				sb.append(line);
-			}
+			bos = new ByteArrayOutputStream();
+			byte[] buffer = new byte[1024];
+            int len;
+            while((len = gis.read(buffer)) != -1){
+            	bos.write(buffer, 0, len);
+            }
+			
 		}finally {
 			if(br!=null)
 				br.close();
@@ -63,7 +71,7 @@ public class ZipUtil{
 				bis.close();
 		}
 
-		return sb.toString();
+		return bos.toByteArray();
 }
 	
 	public static void unZip(String aZipFile, String aDestFolder) throws IOException

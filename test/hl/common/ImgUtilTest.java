@@ -24,14 +24,23 @@ public class ImgUtilTest extends ImgUtil {
 			
 			System.out.println("img="+img);
 			
+			//DataBufferInt databuf = (DataBufferInt) img.getRaster().getDataBuffer();
+			
+
+			//int[] iImgData = databuf.getData();
+			
 			byte[] byteChecksum = ImgUtil.getChecksum(img);
 			String sMD5 = CryptoUtil.toHexString(byteChecksum);
 			BufferedImage img2 = ImgUtil.embedData(img, "nec-nls-matrix", sMD5);
+			
 			String sData = ImgUtil.getEmbededData(img2, "nec-nls-matrix");
 			
 			System.out.println("sMD5="+sMD5);
 			System.out.println("sData="+sData);
 
+			String sImgAscii = img2Ascii(img, 192, 108);
+			System.out.println(sImgAscii);
+			
 		}
 		
 		
