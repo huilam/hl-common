@@ -29,7 +29,6 @@ import java.util.Base64;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -74,8 +73,6 @@ public class RestApiClient {
 	
 	public final static String HTTP 		= "http";
 	public final static String HTTPwithSSL 	= "https";
-	public final static String PROXY_HOST = "proxyHost";
-	public final static String PROXY_PORT = "proxyPort";
 	
 	public String basic_auth_uid = null;
 	public String basic_auth_pwd = null;
@@ -89,6 +86,7 @@ public class RestApiClient {
 	private static SSLContext anyHostSSLContext = null;
 	
 	private int conn_timeout	 	= 5000;
+	private int read_timeout	 	= 30000;
 	
 	public void setConnTimeout(int aTimeOutMs)
 	{
@@ -131,27 +129,7 @@ public class RestApiClient {
 		}
 	}
 
-	public static void setHttpProxy(String aUrl, String aPort)
-	{
-		Properties p = System.getProperties();
-		p.setProperty(HTTP+"."+PROXY_HOST, aUrl);
-		p.setProperty(HTTP+"."+PROXY_PORT, aPort);
-		if(p.getProperty(HTTPwithSSL+"."+PROXY_HOST)==null && aUrl!=null)
-		{
-			setHttpsProxy(aUrl, aPort);
-		}
-	}
-	
-	public static void setHttpsProxy(String aUrl, String aPort)
-	{
-		Properties p = System.getProperties();
-		p.setProperty(HTTPwithSSL+"."+PROXY_HOST, aUrl);
-		p.setProperty(HTTPwithSSL+"."+PROXY_PORT, aPort);
-		if(p.getProperty(HTTP+"."+PROXY_HOST)==null && aUrl!=null)
-		{
-			setHttpProxy(aUrl, aPort);
-		}
-	}
+
 	
 	public void setBasicAuth(String aUid, String aPwd)
 	{
@@ -515,6 +493,7 @@ public class RestApiClient {
     	log(Level.FINE, "[START] rid:("+rid+") GET "+ aEndpointURL);
     	
     	HttpResp httpResp 		= new HttpResp();
+    	setAllowAnyHostSSL(true);
     	
 		HttpURLConnection conn 	= null;
 		InputStream in 			= null;
@@ -523,7 +502,11 @@ public class RestApiClient {
 	    	URL url = new URL(aEndpointURL);
 	    	
 			conn = (HttpURLConnection) url.openConnection();
+			conn.setInstanceFollowRedirects(true);
 			conn.setConnectTimeout(this.conn_timeout);
+			conn.setReadTimeout(this.read_timeout);
+			
+			
 			conn = appendBasicAuth(conn);
 			
 			if(url.getProtocol().equalsIgnoreCase(_PROTOCOL_HTTPS))
@@ -541,6 +524,11 @@ public class RestApiClient {
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
+				
+				if(conn.usingProxy())
+				{
+					System.out.println("Using Proxy");
+				}
 				httpsconn.connect();
 			}
 			
@@ -548,7 +536,7 @@ public class RestApiClient {
 				
 				boolean isGzipEncoded = TYPE_ENCODING_GZIP.equalsIgnoreCase(conn.getHeaderField(HEADER_CONTENT_ENCODING));
 				
-		    	StringBuffer sb = new StringBuffer();
+		    	//StringBuffer sb = new StringBuffer();
 				try {
 					
 					BufferedInputStream stream = null;
@@ -565,8 +553,10 @@ public class RestApiClient {
 							in = conn.getInputStream();
 						}
 						stream = new BufferedInputStream(in);
+						
+						boolean isUnknownSize = conn.getContentLength()==-1;
 
-						if(stream.available()>0)
+						if(in.available()>0 || isUnknownSize)
 						{
 							byte[] byteRead = new byte[4096];
 							int iBytes;
@@ -574,19 +564,44 @@ public class RestApiClient {
 							{
 								baos.write(byteRead, 0, iBytes);
 							}
+							baos.flush();
 							
-							if(isGzipEncoded)
+							if(baos.size()>0)
 							{
-								sb.append(ZipUtil.decompress(baos.toByteArray()));
+								if(isGzipEncoded)
+								{
+									byte[] byteDecompressed = ZipUtil.decompress(baos.toByteArray());
+									baos.reset();
+									baos.write(byteDecompressed, 0, byteDecompressed.length);
+									baos.flush();
+								}
+								
+								
+								String sContentType = conn.getHeaderField(HEADER_CONTENT_TYPE);
+								if(sContentType==null)
+									sContentType = "";
+								
+								byte[] byteContent = baos.toByteArray();
+								baos.reset();
+								
+								if(byteContent.length>0)
+								{
+									if(sContentType.indexOf("octet-stream")>-1
+										|| sContentType.indexOf("image")>-1)
+									{
+										httpResp.setContent_bytes(byteContent);
+									}
+									else
+									{
+										httpResp.setContent_data(new String(byteContent));
+									}
+								}
 							}
-							else
-							{
-								sb.append(baos.toString(UTF_8));
-							}
+							
 						}
 						else
 						{
-							sb.append(conn.getResponseMessage());
+							httpResp.setContent_data(conn.getResponseMessage());
 						}
 					}
 					catch(IOException ex)
@@ -617,11 +632,6 @@ public class RestApiClient {
 				httpResp.setHttp_status(conn.getResponseCode());
 				httpResp.setHttp_status_message(conn.getResponseMessage());
 				httpResp.setContent_type(conn.getHeaderField(HEADER_CONTENT_TYPE));
-				
-				if(sb.length()>0)
-				{
-					httpResp.setContent_data(sb.toString());
-				}
 			}
 			finally
 			{

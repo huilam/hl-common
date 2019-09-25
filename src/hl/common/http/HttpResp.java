@@ -8,7 +8,7 @@ public class HttpResp {
 	private int http_status 			= 0;
 	private String http_status_message 	= null;
 	//
-	private String content_data 		= null;
+	private Object content_data 		= null;
 	private String content_type 		= null;
 	//
 	private String request_url 			= null;
@@ -33,8 +33,44 @@ public class HttpResp {
 	public void setHttp_status_message(String http_status_message) {
 		this.http_status_message = http_status_message;
 	}
+	
+	public boolean isStringContent() {
+		return(this.content_data instanceof String);
+	}
+	
+	public boolean isBytesContent() {
+		return(this.content_data instanceof byte[]);
+	}
+
 	public String getContent_data() {
-		return content_data;
+		if(isStringContent())
+		{
+			return (String) this.content_data;
+		}
+		else if(isBytesContent())
+		{
+			return new String((byte[])this.content_data);
+		}
+		else
+			return null;
+	}
+	
+	public byte[] getContentInBytes() 
+	{
+		if(isBytesContent())
+		{
+			return (byte[]) this.content_data;
+		}
+		else if(isStringContent())
+		{
+			return ((String)this.content_data).getBytes();
+		}
+		else {
+			return null;
+		}
+	}
+	public void setContent_bytes(byte[] content_data) {
+		this.content_data = content_data;
 	}
 	public void setContent_data(String content_data) {
 		this.content_data = content_data;
@@ -78,7 +114,7 @@ public class HttpResp {
 		sb.append("\n").append("request-url:").append(getRequest_url());
 		sb.append("\nstatus:").append(getHttp_status()).append(" ").append(getHttp_status_message());
 		sb.append("\n").append("content-type:").append(getContent_type());
-		sb.append("\n").append("body:").append(getContent_data());
+		sb.append("\n").append("body:").append(this.content_data!=null?this.content_data.getClass().getSimpleName():"").append(this.content_data);
 		return sb.toString();
 		
 	}
