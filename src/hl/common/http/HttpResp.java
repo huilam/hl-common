@@ -110,6 +110,11 @@ public class HttpResp {
 		this.server_ip = server;
 	}
 
+	public boolean hasErrors()
+	{
+		return this.mapErrors.size()>0;
+	}
+	
 	public Map<String, String> getErrorMap()
 	{
 		return this.mapErrors;
@@ -133,6 +138,15 @@ public class HttpResp {
 		sb.append("\nstatus:").append(getHttp_status()).append(" ").append(getHttp_status_message());
 		sb.append("\n").append("content-type:").append(getContent_type());
 		sb.append("\n").append("body:").append(this.content_data!=null?this.content_data.getClass().getSimpleName():"").append(this.content_data);
+		sb.append("\n").append("hasError:").append(hasErrors());
+		if(hasErrors())
+		{
+			for(String sErrKey : getErrorMap().keySet())
+			{
+				sb.append("\n").append("   - ").append(sErrKey).append("=").append(getErrorMap().get(sErrKey));
+			}
+			
+		}
 		return sb.toString();
 		
 	}
