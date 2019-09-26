@@ -110,17 +110,17 @@ public class HttpResp {
 		this.server_ip = server;
 	}
 
-	public Map<String, String> getErrorMaps()
+	public Map<String, String> getErrorMap()
 	{
 		return this.mapErrors;
 	}
 	
-	public void clearErrorMaps()
+	public void clearErrorMap()
 	{
 		this.mapErrors.clear();
 	}
 
-	public void addToErrorMaps(String aErrorID, String aErrorMessage)
+	public void addToErrorMap(String aErrorID, String aErrorMessage)
 	{
 		this.mapErrors.put(aErrorID, aErrorMessage);
 	}
