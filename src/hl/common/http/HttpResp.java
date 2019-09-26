@@ -2,6 +2,8 @@ package hl.common.http;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class HttpResp {
 	//
@@ -13,7 +15,8 @@ public class HttpResp {
 	//
 	private String request_url 			= null;
 	private String server_ip 			= null;
-	
+	//
+	private Map<String, String> mapErrors = new HashMap<String, String>();
 	
 	public boolean isSuccess()
 	{
@@ -105,6 +108,21 @@ public class HttpResp {
 		}
 		
 		this.server_ip = server;
+	}
+
+	public Map<String, String> getErrorMaps()
+	{
+		return this.mapErrors;
+	}
+	
+	public void clearErrorMaps()
+	{
+		this.mapErrors.clear();
+	}
+
+	public void addToErrorMaps(String aErrorID, String aErrorMessage)
+	{
+		this.mapErrors.put(aErrorID, aErrorMessage);
 	}
 
 	public String toString()
