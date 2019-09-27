@@ -41,6 +41,20 @@ public class ImgUtil {
 		return convert(aBmpFileName, "jpg");
 	}
 	
+	public static byte[] toBytes(BufferedImage aBufferedImage, String aImageFormat) throws IOException
+	{
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		
+		if(aImageFormat==null || aImageFormat.trim().length()==0)
+		{
+			aImageFormat = "PNG";
+		}
+		
+		ImageIO.write(aBufferedImage, aImageFormat, out);
+
+		return out.toByteArray();
+	}
+	
 	public static BufferedImage loadImage(final String aSourceFolder, final String aSourceFileName) throws IOException
 	{
 		StringBuffer sb = new StringBuffer();
