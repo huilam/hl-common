@@ -298,11 +298,12 @@ public class FileUtil {
 			out 		= new BufferedOutputStream(byteOut);
 			in 			= new BufferedInputStream(new FileInputStream(aFile));
 			
-			byte[] buff = new byte[64*1024];
+			byte[] buff = new byte[8*1024];
 			int n = 0;
 		    while ((n = in.read(buff)) >= 0) {
 		        out.write(buff, 0, n);
 		    }
+		    out.flush();
 		    return byteOut.toByteArray();
 		}
 		finally
