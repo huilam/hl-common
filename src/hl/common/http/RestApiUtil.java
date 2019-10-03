@@ -1,6 +1,8 @@
 package hl.common.http;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
@@ -8,7 +10,13 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.json.JSONObject;
 
+import hl.common.FileUtil;
+
 public class RestApiUtil {
+	
+	protected final static String TYPE_APP_JSON 	= "application/json"; 
+	protected final static String TYPE_PLAINTEXT 	= "text/plain"; 
+	protected final static String TYPE_OCTET_STREAM = "octet-stream";
 	
 	public final static String PROXY_HOST 		= "proxyHost";
 	public final static String PROXY_PORT 		= "proxyPort";
@@ -106,4 +114,44 @@ public class RestApiUtil {
     	return apiClient.ping(aEndpointURL, aPingTimeOutMs);
     }
     
+    
+    public static boolean serveStaticWeb(HttpServletRequest req, HttpServletResponse res)
+    {
+    	boolean isServed = false;
+		File file = new File(req.getPathTranslated());
+		if(file.isFile())
+		{
+			byte[] byteFile = null;
+			try {
+				byteFile = FileUtil.getBytes(file);
+				
+				if(byteFile!=null)
+				{
+					HttpResp httpResp = new HttpResp();
+					httpResp.setHttp_status(HttpServletResponse.SC_OK);
+					
+					boolean isText = Files.probeContentType(file.toPath()).startsWith("text");
+					if(isText)
+					{
+						httpResp.setContent_type(TYPE_PLAINTEXT);
+						httpResp.setContent_data(new String(byteFile));
+					}
+					else
+					{
+						//byte
+						httpResp.setContent_type(TYPE_OCTET_STREAM);
+						httpResp.setContent_bytes(byteFile);
+					}
+					
+					RestApiUtil.processHttpResp(res,httpResp, -1);
+					isServed = true;
+				}
+				
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return isServed;
+    }
 }
