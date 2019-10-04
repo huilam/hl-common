@@ -114,52 +114,59 @@ public class RestApiUtil {
     	return apiClient.ping(aEndpointURL, aPingTimeOutMs);
     }
     
+    public static File getWebContentAsFile(HttpServletRequest req)
+    {
+    	if(req==null || req.getPathTranslated()==null)
+    		return null;
+    	
+    	File file = new File(req.getPathTranslated());
+		return (file.isFile()? file : null);
+    }
     
     public static boolean serveStaticWeb(HttpServletRequest req, HttpServletResponse res)
     {
-    	if(res==null || req==null || req.getPathTranslated()==null)
+    	File file = getWebContentAsFile(req);
+
+    	if(res==null || file==null)
     		return false;
     	
     	boolean isServed = false;
     	
-		File file = new File(req.getPathTranslated());
-		if(file.isFile())
-		{
-			byte[] byteFile = null;
-			try {
-				byteFile = FileUtil.getBytes(file);
+		byte[] byteFile = null;
+		try {
+			
+			byteFile = FileUtil.getBytes(file);
+			
+			if(byteFile!=null)
+			{
+				HttpResp httpResp = new HttpResp();
+				httpResp.setHttp_status(HttpServletResponse.SC_OK);
 				
-				if(byteFile!=null)
+				String sMimeType = Files.probeContentType(file.toPath());
+				boolean isText = sMimeType.startsWith("text");
+				if(isText)
 				{
-					HttpResp httpResp = new HttpResp();
-					httpResp.setHttp_status(HttpServletResponse.SC_OK);
-					
-					String sMimeType = Files.probeContentType(file.toPath());
-					boolean isText = sMimeType.startsWith("text");
-					if(isText)
-					{
-						httpResp.setContent_data(new String(byteFile));
-					}
-					else
-					{
-						httpResp.setContent_bytes(byteFile);
-					}
-
-					if(sMimeType==null || sMimeType.trim().length()==0)
-					{
-						sMimeType = isText ? TYPE_PLAINTEXT: TYPE_OCTET_STREAM;
-					}
-
-					httpResp.setContent_type(sMimeType);
-					
-					RestApiUtil.processHttpResp(res,httpResp, -1);
-					isServed = true;
+					httpResp.setContent_data(new String(byteFile));
 				}
+				else
+				{
+					httpResp.setContent_bytes(byteFile);
+				}
+
+				if(sMimeType==null || sMimeType.trim().length()==0)
+				{
+					sMimeType = isText ? TYPE_PLAINTEXT: TYPE_OCTET_STREAM;
+				}
+
+				httpResp.setContent_type(sMimeType);
 				
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				RestApiUtil.processHttpResp(res,httpResp, -1);
+				isServed = true;
 			}
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		return isServed;
     }
