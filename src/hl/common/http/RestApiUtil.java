@@ -130,18 +130,23 @@ public class RestApiUtil {
 					HttpResp httpResp = new HttpResp();
 					httpResp.setHttp_status(HttpServletResponse.SC_OK);
 					
-					boolean isText = Files.probeContentType(file.toPath()).startsWith("text");
+					String sMimeType = Files.probeContentType(file.toPath());
+					boolean isText = sMimeType.startsWith("text");
 					if(isText)
 					{
-						httpResp.setContent_type(TYPE_PLAINTEXT);
 						httpResp.setContent_data(new String(byteFile));
 					}
 					else
 					{
-						//byte
-						httpResp.setContent_type(TYPE_OCTET_STREAM);
 						httpResp.setContent_bytes(byteFile);
 					}
+
+					if(sMimeType==null || sMimeType.trim().length()==0)
+					{
+						sMimeType = isText ? TYPE_PLAINTEXT: TYPE_OCTET_STREAM;
+					}
+
+					httpResp.setContent_type(sMimeType);
 					
 					RestApiUtil.processHttpResp(res,httpResp, -1);
 					isServed = true;
