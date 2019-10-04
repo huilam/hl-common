@@ -117,7 +117,11 @@ public class RestApiUtil {
     
     public static boolean serveStaticWeb(HttpServletRequest req, HttpServletResponse res)
     {
+    	if(res==null || req==null || req.getPathTranslated()==null)
+    		return false;
+    	
     	boolean isServed = false;
+    	
 		File file = new File(req.getPathTranslated());
 		if(file.isFile())
 		{
