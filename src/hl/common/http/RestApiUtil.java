@@ -143,6 +143,10 @@ public class RestApiUtil {
 				httpResp.setHttp_status(HttpServletResponse.SC_OK);
 				
 				String sMimeType = Files.probeContentType(file.toPath());
+				
+				if(sMimeType==null)
+					sMimeType = "";
+					
 				boolean isText = sMimeType.startsWith("text");
 				if(isText)
 				{
@@ -152,7 +156,7 @@ public class RestApiUtil {
 				{
 					httpResp.setContent_bytes(byteFile);
 				}
-
+				
 				if(sMimeType==null || sMimeType.trim().length()==0)
 				{
 					sMimeType = isText ? TYPE_PLAINTEXT: TYPE_OCTET_STREAM;
