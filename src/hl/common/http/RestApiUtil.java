@@ -23,6 +23,8 @@ public class RestApiUtil {
 	public final static String HTTP 			= "http";
 	public final static String HTTPwithSSL 		= "https";
 	
+	public static String[] defaultStaticHtml 	= new String[] {"index.html", "index.htm"};
+	
 	private static RestApiClient apiClient = new RestApiClient();
 	
 	public static void setHttpProxy(String aUrl, String aPort)
@@ -113,13 +115,34 @@ public class RestApiUtil {
     {
     	return apiClient.ping(aEndpointURL, aPingTimeOutMs);
     }
-    
+
     public static File getWebContentAsFile(HttpServletRequest req)
+    {
+    	return getWebContentAsFile(req, defaultStaticHtml);
+    }
+    
+    public static File getWebContentAsFile(HttpServletRequest req, String[] defaultHtmlFile)
     {
     	if(req==null || req.getPathTranslated()==null)
     		return null;
     	
     	File file = new File(req.getPathTranslated());
+    	
+    	if(file.isDirectory() && defaultHtmlFile!=null)
+    	{
+    		String sPath = req.getPathTranslated();
+    		
+    		for(String sStaticFile : defaultHtmlFile)
+    		{
+    			File fileHTML = new File(sPath+"/"+sStaticFile);
+        		if(fileHTML.isFile())
+        		{
+        			file = fileHTML;
+        			break;
+        		}
+    		}
+    	}
+    	
 		return (file.isFile()? file : null);
     }
     
