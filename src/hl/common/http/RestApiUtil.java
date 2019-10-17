@@ -153,6 +153,27 @@ public class RestApiUtil {
     	if(res==null || file==null)
     		return false;
     	
+    	
+    	String sReqPath 	= req.getPathTranslated();
+    	String sStaticPath 	= file.getAbsolutePath();
+    	if(!sStaticPath.endsWith(sReqPath))
+    	{
+    		int iPos = sStaticPath.indexOf(sReqPath);
+    		if(iPos>-1)
+    		{
+	    		String sDefaultPath = sStaticPath.substring(iPos+sReqPath.length());
+	    		//auto default
+	    		try {
+					res.sendRedirect(req.getContextPath()+req.getPathInfo()+sDefaultPath);
+					return true;
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+    		}
+    	}
+    	
+    	
     	boolean isServed = false;
     	
 		byte[] byteFile = null;
