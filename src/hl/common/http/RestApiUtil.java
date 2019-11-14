@@ -128,7 +128,7 @@ public class RestApiUtil {
     	
     	File file = new File(req.getPathTranslated());
     	
-    	if(file.isDirectory() && defaultHtmlFile!=null)
+    	if(file!=null && file.isDirectory() && defaultHtmlFile!=null)
     	{
     		String sPath = req.getPathTranslated();
     		
