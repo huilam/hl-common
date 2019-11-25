@@ -1,6 +1,7 @@
 package hl.common;
 
 import java.awt.Color;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
@@ -20,6 +21,7 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Random;
 import javax.imageio.ImageIO;
+
 import hl.common.http.RestApiUtil;
 
 
@@ -787,6 +789,27 @@ public class ImgUtil {
 		return pixelize(aImgOrig, 1);
 	}
 	
+	public static BufferedImage cloneImage(final BufferedImage source){
+	    
+		if(source==null)
+			return null;
+		
+		BufferedImage b = new BufferedImage(source.getWidth(), source.getHeight(), source.getType());
+	    Graphics g = null;
+	    try {
+		    g = b.getGraphics();
+		    g.drawImage(source, 0, 0, null);
+	    }
+	    finally
+	    {
+	    	if(g!=null)
+	    	{
+	    		g.dispose();
+	    	}
+	    }
+	    return b;
+	}
+	
 	public static BufferedImage pixelize(final BufferedImage aImgOrig, int aFilterLoop) throws IOException
 	{
 		float fPixelise = 0.90f;
@@ -899,9 +922,16 @@ public class ImgUtil {
 			byte[] byteSignature = CryptoUtil.getMD5Checksum(aSignature.getBytes());
 			byte[] byteData = aData.getBytes();
 			
-			if(byteData.length % byteSignature.length !=0)
+			int iPaddingCount = byteData.length % byteSignature.length;
+			if(iPaddingCount !=0)
 			{
-				throw new IOException("signature:"+byteSignature.length+" data:"+byteData.length);
+				//data padding
+				for(int i=0; i<iPaddingCount; i++)
+				{
+					aData += "-";
+				}
+				byteData = aData.getBytes();
+				//throw new IOException("signature:"+byteSignature.length+" data:"+byteData.length);
 			}
 			
 			int y1 = 0;
