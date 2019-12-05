@@ -32,7 +32,7 @@ public class ImgUtil {
 	private static final String HTMLIMG_HEADER 		= ";base64,";
 	private static final int DATA_EMBED_MIN_HEIGHT 	= 16;
 	private static final int DATA_EMBED_MIN_WIDTH 	= 16;
-	
+
 	public static String convertToBMP(String aJpgFileName) throws IOException
 	{
 		return convert(aJpgFileName, "bmp");
@@ -794,7 +794,14 @@ public class ImgUtil {
 		if(source==null)
 			return null;
 		
-		BufferedImage b = new BufferedImage(source.getWidth(), source.getHeight(), source.getType());
+		int iType = source.getType();
+		
+		if(iType == BufferedImage.TYPE_CUSTOM)
+		{
+			iType = BufferedImage.TYPE_INT_RGB;
+		}
+		
+		BufferedImage b = new BufferedImage(source.getWidth(), source.getHeight(), iType);
 	    Graphics g = null;
 	    try {
 		    g = b.getGraphics();
