@@ -31,14 +31,20 @@ import java.io.InputStream;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class PropUtil{
 	
+	private static Pattern pattSysParam = Pattern.compile("(.*)\\$\\{(.*)\\}(.*)");
+
 	private static Logger logger = Logger.getLogger(PropUtil.class.getName());
 	
 	public static String getValue(Properties aProp, String aPropKey, String aDefaultValue)
@@ -118,7 +124,7 @@ public class PropUtil{
 			wrt.write("# "+sCurDateTime);
 			wrt.newLine();
 
-			Map<String, String> map = new TreeMap<String, String>((Map) aProp);
+			Map<String, String> map = new TreeMap<String, String>((Map<String, String>) aProp);
 			for(String sKey : map.keySet())
 			{
 				String sVal = map.get(sKey);
@@ -199,7 +205,43 @@ public class PropUtil{
 				in.close();
 		}
 		logger.log(Level.FINEST, "Loaded properties size - "+ prop.size());
+		
+		
+		if(prop!=null && prop.size()>0)
+		{
+			prop = replaceSysVar(prop);
+		}
+		
 		return prop;
+	}
+	
+	private static Properties replaceSysVar(Properties aProps)
+	{
+		for(Entry<Object, Object> e : aProps.entrySet())
+		{
+			Matcher m = pattSysParam.matcher((String)e.getValue());
+			while(m.find())
+			{
+				String sSysParamValue = getSysParamValue(m.group(2));
+				if(sSysParamValue!=null)
+				{
+					String sPropVal = m.group(1)+sSysParamValue+m.group(3);
+					e.setValue(sPropVal);
+				}
+			}
+		}
+		
+		return aProps;
+	}
+	
+	private static String getSysParamValue(String aSysParamName)
+	{
+		String sSysParamVal = System.getProperty(aSysParamName);
+		if(sSysParamVal==null)
+		{
+			sSysParamVal = System.getenv(aSysParamName);
+		}
+		return sSysParamVal;
 	}
 	
 	public static void main(String args[]) throws Exception
