@@ -124,7 +124,7 @@ public class PropUtil{
 			wrt.write("# "+sCurDateTime);
 			wrt.newLine();
 
-			Map<String, String> map = new TreeMap<String, String>((Map<String, String>) aProp);
+			Map<String, String> map = new TreeMap<String, String>((Map) aProp);
 			for(String sKey : map.keySet())
 			{
 				String sVal = map.get(sKey);
