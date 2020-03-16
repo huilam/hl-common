@@ -113,7 +113,7 @@ public class MultiLinePropReader {
 		{
 			if(!this.isPreserveComment)
 			{
-				if(iPos>0)
+				if(iPos>=0)
 				{
 					//remove 'partial' comment
 					aLineData = aLineData.substring(0, iPos);
@@ -155,8 +155,12 @@ public class MultiLinePropReader {
 				{
 					lLineNo++;
 					////
+					
 					String sTrimLine = removePartialComment(sLine.trim());
 					
+					System.out.println("[READ] "+lLineNo+" - "+sTrimLine);
+					
+
 					if(sTrimLine.length()==0)
 						continue;
 					
@@ -304,7 +308,7 @@ public class MultiLinePropReader {
     public static void main(String args[]) throws IOException
     {
     	
-    	File f = new File(new File(".").getAbsolutePath()+"/test.config");
+    	File f = new File(new File(".").getAbsolutePath()+"/test/test.config");
     	
     	MultiLinePropReader.EventListener e = new MultiLinePropReader.EventListener() {
 			
