@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,12 +20,16 @@ public class MultiLinePropReader {
 		public void onReadEnd(long aTotalLineRead);
 	}
 	
+	private static Logger logger = Logger.getLogger(MultiLinePropReader.class.getName());
+	
 	private File prop_file 				= null;
 	private String comment_prefix 		= "#";
 	private String keyvalue_separator 	= "=";
 	
-	private boolean isPreserveLineBreak = false;
-	private boolean isPreserveComment 	= false;
+	private boolean isPreserveLineBreak 	= false;
+	private boolean isPreserveComment 		= false;
+	private boolean isEnableDynamicComment  = false;
+	
 	private Pattern patt_set_start 		= null;
 	private EventListener event   		= null;
 	
@@ -67,6 +73,14 @@ public class MultiLinePropReader {
 	{
 		this.isPreserveComment = aIsPreverseComments;
 	}
+	
+	public void setIsEnableDynamicComment(boolean aIsEnableDynamicComment)
+	{
+		this.isEnableDynamicComment = aIsEnableDynamicComment;
+	}
+	
+	
+	
 	
 	public void start() throws IOException
 	{
@@ -116,7 +130,18 @@ public class MultiLinePropReader {
 				if(iPos>=0)
 				{
 					//remove 'partial' comment
-					aLineData = aLineData.substring(0, iPos);
+					String sTmp = aLineData.substring(0, iPos);
+					if(sTmp.trim().length()>0)
+					{
+						if(this.isEnableDynamicComment)
+						{
+							aLineData = sTmp;
+						}
+					}
+					else
+					{
+						aLineData = sTmp;
+					}
 				}
 			}
 		}
@@ -156,10 +181,9 @@ public class MultiLinePropReader {
 					lLineNo++;
 					////
 					
+					logger.log(Level.FINE, "[READ] "+lLineNo+"-"+sLine);
+					
 					String sTrimLine = removePartialComment(sLine.trim());
-					
-					System.out.println("[READ] "+lLineNo+" - "+sTrimLine);
-					
 
 					if(sTrimLine.length()==0)
 						continue;
@@ -307,6 +331,7 @@ public class MultiLinePropReader {
 	
     public static void main(String args[]) throws IOException
     {
+    	logger.setLevel(Level.INFO);
     	
     	File f = new File(new File(".").getAbsolutePath()+"/test/test.config");
     	
@@ -337,6 +362,7 @@ public class MultiLinePropReader {
        	prop.setCommentPrefix("#"); //Default '#'
        	prop.setIsPreserveComments(false); //Default false
        	prop.setIsPreserveLineBreak(false); //Default false
+       	prop.setIsEnableDynamicComment(false); //Default false
 		prop.addBlockCharacterSupport('[', ']');
 		prop.addBlockCharacterSupport('{', '}');
     	prop.setConfigSetStartRegex("^[VAR|URL]");
