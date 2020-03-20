@@ -20,7 +20,7 @@ public class CommonInfo {
 	private static JSONObject jsonSysProp = null;
 	
     
-    private static JSONObject getJDKInfo()
+    public static JSONObject getJDKInfo()
     {
     	JSONObject jsonInfo = new JSONObject();
     	
@@ -49,7 +49,7 @@ public class CommonInfo {
     
     
     //
-	private static JSONObject getSysProps()
+    public static JSONObject getSysProperties()
 	{
 		if(jsonSysProp!=null)
 			return jsonSysProp;
@@ -84,7 +84,7 @@ public class CommonInfo {
 	}
     
     //
-	private static JSONObject getEnvProps()
+    public static JSONObject getEnvProperties()
 	{
 		if(jsonEnvProp!=null)
 			return jsonEnvProp;
@@ -101,7 +101,7 @@ public class CommonInfo {
 	}
 	
     
-    private static JSONObject getDiskInfo()
+    public static JSONObject getDiskInfo()
     {
     	JSONObject jsonDrives = new JSONObject();
        	
@@ -202,8 +202,8 @@ public class CommonInfo {
     	System.out.println(getDiskInfo());
     	System.out.println(getJDKInfo());
     
-       	System.out.println(getSysProps().get("java"));
-       	System.out.println(getEnvProps());
+       	System.out.println(getSysProperties());
+       	System.out.println(getEnvProperties());
            	
     }
 }

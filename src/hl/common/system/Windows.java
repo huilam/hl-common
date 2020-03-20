@@ -73,7 +73,7 @@ public class Windows {
     	return mapSysInfo;
     }
 
-    public static JSONObject getInfoJson()
+    public static JSONObject getSystemInfo()
     {   
     	if(mapSysInfo.size()==0)
     	{
@@ -82,10 +82,10 @@ public class Windows {
     	
     	JSONObject jsonAll = new JSONObject();
     	JSONObject jsonTmp = new JSONObject();
-    	String sOSName 		= getSystemInfoVal("OS Name", 0);
-    	String sOSVer 		= getSystemInfoVal("OS Version", 0);
-       	String sTimeZone 	= getSystemInfoVal("Time Zone", 0);
-       	String sLastHotfix 	= getSystemInfoVal("Hotfix(s)", 1000);
+    	String sOSName 		= getSysInfoMapVal("OS Name", 0);
+    	String sOSVer 		= getSysInfoMapVal("OS Version", 0);
+       	String sTimeZone 	= getSysInfoMapVal("getSysInfoMapVal", 0);
+       	String sLastHotfix 	= getSysInfoMapVal("Hotfix(s)", 1000);
        	
        	jsonTmp.put("os.name", sOSName);
        	jsonTmp.put("os.version", sOSVer);
@@ -94,8 +94,8 @@ public class Windows {
        	
        	jsonAll.put("os", jsonTmp);
        	
-    	String sTotalRAM 	= getSystemInfoVal("Total Physical Memory", 0);
-       	String sAvailRAM 	= getSystemInfoVal("Available Physical Memory", 0);
+    	String sTotalRAM 	= getSysInfoMapVal("Total Physical Memory", 0);
+       	String sAvailRAM 	= getSysInfoMapVal("Available Physical Memory", 0);
        	jsonTmp = new JSONObject();
        	jsonTmp.put("memory.total", sTotalRAM);
        	jsonTmp.put("memory.available", sAvailRAM);
@@ -105,7 +105,7 @@ public class Windows {
     }
     
     
-    private static String getSystemInfoVal(String aKey, int aValIndex)
+    private static String getSysInfoMapVal(String aKey, int aValIndex)
     {
     	if(aValIndex<0)
     		aValIndex = 0;
@@ -123,7 +123,7 @@ public class Windows {
     
     public static void main(String args[]) throws Exception
     {
-    	System.out.println(getInfoJson());
+    	System.out.println(getSystemInfo());
     	
     }
 }
