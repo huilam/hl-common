@@ -276,6 +276,13 @@ public class SyncConfig {
 						}
 						
 						map.put(_PROPCACHE_SOURCE, this.endpoint_url);
+						
+						//
+						Map<String, String> mapRef = new TreeMap<String, String>();
+						mapRef.putAll(map);
+						EVENT_configReloaded(this.endpoint_url, this.last_sync_timestamp, mapRef);
+						//
+						
 					}
 				}
 			}
@@ -286,5 +293,9 @@ public class SyncConfig {
 		}
 		
 		return map;
+	}
+	
+	public void EVENT_configReloaded(String aURL, long aLastSyncTime, Map<String, String> mapConfig)
+	{
 	}
 }
