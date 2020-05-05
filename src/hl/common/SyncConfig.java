@@ -17,6 +17,13 @@ import hl.common.http.RestApiUtil;
 
 public class SyncConfig {
 
+	public interface SyncConfigEventListener
+	{
+		void onConfigReloaded(String aURL, long aLastSyncTime, Map<String, String> mapConfig);
+	}
+	
+	private SyncConfigEventListener listener = null;
+	
 	private static String _PROPCACHE_PREFIX 			= "_SyncConfig.";
 	private static String _PROPCACHE_LASTSYNC_EPOCHTIME = _PROPCACHE_PREFIX+"lastsync.epochtime";
 	private static String _PROPCACHE_LASTSYNC_URL 		= _PROPCACHE_PREFIX+"lastsync.url";
@@ -39,6 +46,11 @@ public class SyncConfig {
 	{
 		this.cache_filename = aCacheFileName;
 		this.mapProp = null;
+	}
+	
+	public void setEventListener(SyncConfigEventListener aEventListender)
+	{
+		this.listener = aEventListender;
 	}
 	
 	public void setEndpointUrl(String aEndPointUrl)
@@ -278,9 +290,12 @@ public class SyncConfig {
 						map.put(_PROPCACHE_SOURCE, this.endpoint_url);
 						
 						//
-						Map<String, String> mapRef = new TreeMap<String, String>();
-						mapRef.putAll(map);
-						EVENT_configReloaded(this.endpoint_url, this.last_sync_timestamp, mapRef);
+						if(this.listener!=null)
+						{
+							Map<String, String> mapRef = new TreeMap<String, String>();
+							mapRef.putAll(map);
+							listener.onConfigReloaded(this.endpoint_url, this.last_sync_timestamp, mapRef);
+						}
 						//
 						
 					}
@@ -295,7 +310,4 @@ public class SyncConfig {
 		return map;
 	}
 	
-	public void EVENT_configReloaded(String aURL, long aLastSyncTime, Map<String, String> mapConfig)
-	{
-	}
 }
