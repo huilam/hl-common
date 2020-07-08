@@ -779,9 +779,9 @@ public class ImgUtil {
 		if(iHeight<1)
 			iHeight = 1;
 		
-		BufferedImage imgPixelized = resizeImg(aImgOrig, (long)iWidth, (long)iHeight, true);
+		BufferedImage imgPixelized = resizeImg(aImgOrig, (long)iWidth, (long)iHeight, false);
 		
-		return resizeImg(imgPixelized, aImgOrig.getWidth(), aImgOrig.getHeight(), true);
+		return resizeImg(imgPixelized, aImgOrig.getWidth(), aImgOrig.getHeight(), false);
 	}
     
 	public static BufferedImage pixelize(final BufferedImage aImgOrig) throws IOException
@@ -983,6 +983,12 @@ public class ImgUtil {
 	
 	public static void main(String args[]) throws Exception
 	{
+		
+		BufferedImage img1 = loadImage("/Users/huilam/git/hl-common/test/encoded_X-Men-1920x1080.jpg");
+		BufferedImage img2 = pixelize(img1, 0.97f);
+		
+		System.out.println("[img1]"+img1.getWidth()+"x"+img1.getHeight());
+		System.out.println("[img2]"+img2.getWidth()+"x"+img2.getHeight());
 	}
 	
 }
