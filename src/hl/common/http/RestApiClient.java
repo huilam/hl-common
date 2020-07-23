@@ -597,9 +597,9 @@ public class RestApiClient {
 						}
 						stream = new BufferedInputStream(in);
 						
-						boolean isUnknownSize = conn.getContentLength()==-1;
+						boolean isUnknownSize = conn!=null && conn.getContentLength()==-1;
 
-						if(in.available()>0 || isUnknownSize)
+						if(in!=null && (in.available()>0 || isUnknownSize))
 						{
 							byte[] byteRead = new byte[4096];
 							int iBytes;
