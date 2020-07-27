@@ -27,6 +27,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -79,6 +80,8 @@ public class JdbcDBMgr {
 	private static List<String> listDoubleType 	= null;
 	private static List<String> listFloatType32bit 	= null;
 	private static List<String> listBooleanType = null;
+	
+	private String database_server_info	= "";
 		
 	static{
 		listNumericType = new ArrayList<String>();
@@ -217,6 +220,16 @@ public class JdbcDBMgr {
 		return this.mapReferenceConfig;
 	}
 	
+	public String getDatabaseServerVersion()
+	{
+		return this.database_server_info;
+	}
+	
+	public String getDatabaseDriverClassName()
+	{
+		return this.db_classname;
+	}
+	
 	private void initDB(Properties aProp) throws InstantiationException, IllegalAccessException, ClassNotFoundException, SQLException
 	{
 		db_classname = aProp.getProperty(KEY_DB_CLASSNAME);
@@ -244,6 +257,12 @@ public class JdbcDBMgr {
 			//test connection
 			connTest = getConnection(false);
 			isGetConnSuccess = (connTest!=null);
+			
+			if(isGetConnSuccess)
+			{
+				DatabaseMetaData meta = connTest.getMetaData();
+				this.database_server_info = meta.getDatabaseProductName()+" "+meta.getDatabaseProductVersion();
+			}
 		}finally
 		{
 			closeQuietly(connTest, null, null);
