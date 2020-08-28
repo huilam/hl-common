@@ -1,5 +1,7 @@
 package hl.common;
 
+import static java.awt.Color.RGBtoHSB;
+
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -685,6 +687,45 @@ public class ImgUtil {
 			}
 		}
 		return sb.toString();
+	}
+	
+
+	public static BufferedImage toThermal(final BufferedImage imgInput)
+	{
+		BufferedImage imgOut = new BufferedImage(
+				imgInput.getWidth(), imgInput.getHeight(), imgInput.getType());
+		
+		int pixel;
+        int red;
+        int blue;
+        int green;
+        float[] hsbvals = new float[3];
+        
+		BufferedImage imgTmp = new BufferedImage(
+				imgInput.getWidth(), imgInput.getHeight(), imgInput.getType());;
+
+        for(int x = 0; x < imgInput.getWidth(); x++){
+            for (int y = 0; y < imgInput.getHeight(); y++){
+                pixel = imgInput.getRGB(x,y);
+                red = (pixel & 0x00ff0000) >> 16;
+                blue = (pixel & 0x0000ff00) >> 8;
+                green = (pixel & 0x000000ff);
+                hsbvals = RGBtoHSB(red, green, blue, hsbvals);
+                if(hsbvals[2] > 0.7){
+                	imgTmp.setRGB(x,y,Color.red.getRGB());
+                }else if(hsbvals[2] >=0.2 && hsbvals[2] < 0.5){
+                	imgTmp.setRGB(x, y, Color.blue.getRGB());
+                }else if(hsbvals[2] >= 0.5 && hsbvals[2] < 0.7){
+                	imgTmp.setRGB(x, y, Color.green.getRGB());
+                }
+            }
+        }
+        
+        Graphics2D graphics = imgOut.createGraphics();
+        graphics.drawImage(imgTmp,0,0,null);
+        graphics.dispose();
+        
+		return imgOut;
 	}
 	
 	public static BufferedImage grayscale(BufferedImage aBufferedImage) throws IOException
