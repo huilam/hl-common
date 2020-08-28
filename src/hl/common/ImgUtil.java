@@ -737,7 +737,7 @@ public class ImgUtil {
 		BufferedImage newImage = new BufferedImage(
 				(int) aBufferedImage.getWidth(), 
 				(int) aBufferedImage.getHeight(),
-				BufferedImage.TYPE_INT_ARGB);
+				aBufferedImage.getType());
 		
 	        int h = aBufferedImage.getHeight();
 	        int w = aBufferedImage.getWidth();
