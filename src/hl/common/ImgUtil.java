@@ -37,12 +37,17 @@ public class ImgUtil {
 
 	public static String convertToBMP(String aJpgFileName) throws IOException
 	{
-		return convert(aJpgFileName, "bmp");
+		return convert(aJpgFileName, "BMP");
 	}
 	
 	public static String convertToJPG(String aBmpFileName) throws IOException
 	{
-		return convert(aBmpFileName, "jpg");
+		return convert(aBmpFileName, "JPG");
+	}
+	
+	public static String convertToPNG(String aBmpFileName) throws IOException
+	{
+		return convert(aBmpFileName, "PNG");
 	}
 	
 	public static byte[] toBytes(BufferedImage aBufferedImage, String aImageFormat) throws IOException
@@ -54,8 +59,25 @@ public class ImgUtil {
 			aImageFormat = "PNG";
 		}
 		
-		ImageIO.write(aBufferedImage, aImageFormat, out);
-
+		try {
+			ImageIO.write(aBufferedImage, aImageFormat, out);
+		}
+		catch(IOException ioEx)
+		{
+			String supportedFormatNames[] = ImageIO.getWriterFormatNames();
+			StringBuffer sb = new StringBuffer();
+			for(int i=0; i<supportedFormatNames.length; i++)
+			{
+				if(sb.length()>0)
+					sb.append(",");
+				sb.append(supportedFormatNames[i]);
+			}
+			Exception ex = new Exception("Supported Format :["+sb.toString()+"]");
+			ioEx.addSuppressed(ex);
+			throw ioEx;
+		}
+		
+		
 		return out.toByteArray();
 	}
 	
