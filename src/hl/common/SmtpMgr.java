@@ -51,12 +51,10 @@ public class SmtpMgr{
 	private String smtp_host 	= null;
 	private int smtp_port 		= 25;
 	
-	
 	private MimeMultipart mimeMultipart = null;
 	
 	public SmtpMgr()
 	{
-		
 	}
 	
 	public void setSmtpServer(String aSmtpHost, int aSmtpPort)
@@ -125,10 +123,10 @@ public class SmtpMgr{
 		Transport.send(m);
 	}
 	
-	public void send(String aEmailSubject, String aFromAddress, String aToAddress) throws MessagingException
+	public void send(String aEmailSubject, String aFromAddress, String[] aToAddresses) throws MessagingException
 	{
 		sendMultipartEmail(
-				aFromAddress, new String[] {aToAddress}, 
+				aFromAddress, aToAddresses, 
 				aEmailSubject, this.mimeMultipart);
 		
 		if(this.mimeMultipart!=null)
@@ -178,17 +176,6 @@ public class SmtpMgr{
 		BodyPart p = new MimeBodyPart();
 		p.setContent(aContent, ContentType);
 		addMimeBodyPart(p);
-	}
-	
-	
-	public void sendHtmlEmail(
-			String aFromAddress, 
-			String aToAddresses,
-			String aEmailSubject,
-			String aHtmlContent) throws MessagingException
-	{
-		sendHtmlEmail(aFromAddress, new String[] {aToAddresses}, 
-				aEmailSubject, aHtmlContent);
 	}
 	
 	public void sendHtmlEmail(
