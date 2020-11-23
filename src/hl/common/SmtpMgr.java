@@ -102,7 +102,7 @@ public class SmtpMgr{
 		return sess;
 	}
 	
-	public void sendMultipartEmail(
+	private void sendMultipartEmail(
 			String aFromAddress, 
 			String[] aToAddresses,
 			String aEmailSubject,
@@ -171,27 +171,16 @@ public class SmtpMgr{
 		return p;
 	}
 
+	public void addHtmlContent(String aContent) throws MessagingException
+	{
+		addContent(aContent, "text/html");
+	}
+	
 	public void addContent(String aContent, String ContentType) throws MessagingException
 	{
 		BodyPart p = new MimeBodyPart();
 		p.setContent(aContent, ContentType);
 		addMimeBodyPart(p);
-	}
-	
-	public void sendHtmlEmail(
-			String aFromAddress, 
-			String[] aToAddresses,
-			String aEmailSubject,
-			String aHtmlContent) throws MessagingException
-	{
-		
-		BodyPart part1 = new MimeBodyPart();
-		part1.setContent(aHtmlContent,"text/html");
-		
-		MimeMultipart mp = new MimeMultipart();
-		mp.addBodyPart(part1);
-		
-		sendMultipartEmail(aFromAddress, aToAddresses, aEmailSubject, mp);
 	}
 	
 	public static void main(String args[]) throws Exception
