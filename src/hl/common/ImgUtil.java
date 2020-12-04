@@ -820,9 +820,29 @@ public class ImgUtil {
     {
         BufferedImage croppedImage = null;
         if (inputImg != null && cropLeft >= 0 && cropTop >= 0 && cropWidth > 0 && cropHeight > 0) {
+        	
+        	int iWidth 	= inputImg.getWidth();
+        	int iHeight = inputImg.getHeight();
+        	
+        	int iCropMaxX = cropLeft + cropWidth;
+        	int iCropMaxY = cropTop + cropHeight;
+        	
+        	if(iCropMaxX>iWidth)
+        	{
+        		int iAdjW = iCropMaxX-iWidth;
+        		cropWidth -= iAdjW;
+        	}
+        	
+        	if(iCropMaxY>iHeight)
+        	{
+        		int iAdjH = iCropMaxY-iHeight;
+        		cropHeight -= iAdjH;
+        	}
+        	
              //Force ARBG to RBG only
-             BufferedImage img = new BufferedImage(inputImg.getWidth(), inputImg.getHeight(), BufferedImage.TYPE_INT_RGB);
+             BufferedImage img = new BufferedImage(iWidth, iHeight, BufferedImage.TYPE_INT_RGB);
              img.createGraphics().drawImage(inputImg, 0, 0, Color.WHITE, null);
+             
              croppedImage = img.getSubimage(cropLeft, cropTop, cropWidth, cropHeight);
         }
         return croppedImage;
