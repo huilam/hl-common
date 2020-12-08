@@ -365,14 +365,14 @@ public class FileUtil {
     	Throwable exception = null;
     	
     	try {
-    		System.out.println("Attempt to load native library '"+aLibraryName+"' ... ");
+    		//System.out.println("Attempt to load native library '"+aLibraryName+"' ... ");
     		System.loadLibrary(aLibraryName);
-    		System.out.println("success");
+    		//System.out.println("success");
     		return true;
     	}
     	catch(Throwable e)
     	{
-    		System.out.println("failed");
+    		//System.out.println("failed");
     		isLoaded = false;
     		exception = e;
     	}
@@ -421,15 +421,14 @@ public class FileUtil {
 				}
 	    	}
 	    	try {
-	    		System.out.println("Attempt to load native library from '"+url.getPath()+"' ...");
-	    		
+	    		//System.out.println("Attempt to load native library from '"+url.getPath()+"' ...");
 	    		System.load(url.getPath());
 	        	isLoaded = true;
-	        	System.out.println("success");
+	        	//System.out.println("success");
 	        } catch (Throwable e) {
 	        	exception = e;
 	    		isLoaded = false;
-	    		System.out.println("failed");
+	    		//System.out.println("failed");
 	        }
     	}
     	
