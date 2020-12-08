@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
@@ -357,6 +358,88 @@ public class FileUtil {
 			}
 		}
 	}
+	
+	public static boolean loadNativeLib(String aLibraryName, String aLibPath) throws Exception
+    {
+    	boolean isLoaded = false;
+    	Throwable exception = null;
+    	
+    	try {
+    		System.out.println("Attempt to load native library '"+aLibraryName+"' ... ");
+    		System.loadLibrary(aLibraryName);
+    		System.out.println("success");
+    		return true;
+    	}
+    	catch(Throwable e)
+    	{
+    		System.out.println("failed");
+    		isLoaded = false;
+    		exception = e;
+    	}
+    	
+    	if(!isLoaded)
+    	{
+			StringBuffer sbLibFileName = new StringBuffer(aLibPath);
+			
+			if(!aLibPath.endsWith("/"))
+				sbLibFileName.append("/");
+			
+			String sOSName = System.getProperty("os.name");
+			if(sOSName==null)
+				sOSName = "";
+			
+			boolean isWindows = sOSName.toLowerCase().indexOf("win")>-1;
+			boolean isMac = sOSName.toLowerCase().indexOf("mac")>-1;
+			
+			if(!isWindows)
+			{
+				sbLibFileName.append("lib");
+			}
+			
+			sbLibFileName.append(aLibraryName);
+			
+			if(isWindows)
+			{
+				sbLibFileName.append(".dll");
+			}
+			else if(isMac)
+			{
+				sbLibFileName.append(".dylib");
+			}
+			else
+			{
+				sbLibFileName.append(".so");
+			}
+			
+	    	URL url = FileUtil.class.getResource(sbLibFileName.toString());
+	    	if(url==null)
+	    	{
+	    		try {
+					url = new URL("file:/"+sbLibFileName.toString());
+				} catch (MalformedURLException e) {
+					e.printStackTrace();
+				}
+	    	}
+	    	try {
+	    		System.out.println("Attempt to load native library from '"+url.getPath()+"' ...");
+	    		
+	    		System.load(url.getPath());
+	        	isLoaded = true;
+	        	System.out.println("success");
+	        } catch (Throwable e) {
+	        	exception = e;
+	    		isLoaded = false;
+	    		System.out.println("failed");
+	        }
+    	}
+    	
+    	if(!isLoaded && exception!=null)
+    	{
+    		throw new Exception(exception.getMessage());
+    	}
+    	
+    	return isLoaded;
+    }
 	
     public static void main(String args[]) throws IOException
     {
