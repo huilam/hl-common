@@ -13,11 +13,31 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.servlet.http.HttpServletRequest;
+
 
 public class InetUtil {
 	
 	private static Logger logger = Logger.getLogger(InetUtil.class.getName());
 	private static Pattern pattIPv4 = Pattern.compile("^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$");
+
+	private static String[] ipHeaders = new String[] {"X-Forwarded-For"};
+	
+	public static String getRemoteIP(HttpServletRequest aReq)
+	{
+		String sReqIP = aReq.getRemoteAddr();
+		
+		for(String sIpHeaderName : ipHeaders)
+		{
+			String sIP = aReq.getHeader(sIpHeaderName);
+			if(sIP!=null)
+			{
+				sReqIP = sIP;
+				break;
+			}
+		}
+		return sReqIP;
+	}
 	
 	public static boolean isIPv4(String aIPAddress)
 	{
