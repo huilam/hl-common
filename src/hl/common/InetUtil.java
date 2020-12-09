@@ -21,7 +21,10 @@ public class InetUtil {
 	private static Logger logger = Logger.getLogger(InetUtil.class.getName());
 	private static Pattern pattIPv4 = Pattern.compile("^(?:[0-9]{1,3}\\.){3}[0-9]{1,3}$");
 
-	private static String[] ipHeaders = new String[] {"X-Forwarded-For"};
+	private static String[] ipHeaders = new String[] {
+			"X-Forwarded-For", 
+			"X-Client-IP", 
+			"X-Forwarded-Host"};
 	
 	public static String getRemoteIP(HttpServletRequest aReq)
 	{
@@ -30,10 +33,20 @@ public class InetUtil {
 		for(String sIpHeaderName : ipHeaders)
 		{
 			String sIP = aReq.getHeader(sIpHeaderName);
-			if(sIP!=null)
+			if(sIP==null || sIP.trim().length()==0)
 			{
-				sReqIP = sIP;
-				break;
+				//try with lowercase
+				sIP = aReq.getHeader(sIpHeaderName.toLowerCase());
+			}
+			
+			if(sIP!=null && sIP.trim().length()>0)
+			{
+				try {
+					sReqIP = getIPAddress(sIP);
+					break;
+				} catch (UnknownHostException e) {
+					//ignore
+				}
 			}
 		}
 		return sReqIP;
@@ -114,7 +127,7 @@ public class InetUtil {
 		logger.setLevel(Level.FINE);
 		
 		String sMatchedIP = getClosestMatchIPAddress(inetEVAAddress, listIPAddr);
-		System.out.println("Matched IP :"+sMatchedIP);
+		System.out.println("Matched IP :"+getIPAddress(sMatchedIP));
 	}
 	
 }
