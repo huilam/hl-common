@@ -17,6 +17,8 @@ import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
@@ -410,7 +412,7 @@ public class FileUtil {
 				sbLibFileName.append(".so");
 			}
 			
-			String sLibLoadPath = sbLibFileName.toString().replaceAll("#", "/");
+			String sLibLoadPath = URLEncoder.encode(sbLibFileName.toString(), "UTF-8");
 			
 			//Trying to load it from achieve (WAR etc)
 	    	URL url = getCallerClass().getResource(sLibLoadPath);
@@ -428,7 +430,8 @@ public class FileUtil {
 	    	sLoadFrom += " : "+sLibLoadPath;
 	    	
 	    	try {
-	    		System.load(sLibLoadPath);
+	    		
+	    		System.load(URLDecoder.decode(sLibLoadPath, "UTF-8"));
 	        	isLoaded = true;
 	        } catch (Throwable e) {
 	        	exception = e;
@@ -457,9 +460,9 @@ public class FileUtil {
 	
     public static void main(String args[]) throws Exception
     {
-    	URL url = new URL("file:/c:/test#111");
+    	URL url = new URL("File:/aaa/test%23111");
     	
-    	System.out.println(url.getPath());
+    	System.out.println(URLDecoder.decode(url.getPath(), "UTF-8"));
     	
     	
     }
