@@ -363,16 +363,15 @@ public class FileUtil {
     {
     	boolean isLoaded = false;
     	Throwable exception = null;
+    	String sLoadFrom = "";
     	
     	try {
-    		//System.out.println("Attempt to load native library '"+aLibraryName+"' ... ");
     		System.loadLibrary(aLibraryName);
-    		//System.out.println("success");
-    		return true;
+    		isLoaded = true;
+    		sLoadFrom = "System : "+aLibraryName;
     	}
     	catch(Throwable e)
     	{
-    		//System.out.println("failed");
     		isLoaded = false;
     		exception = e;
     	}
@@ -411,36 +410,52 @@ public class FileUtil {
 				sbLibFileName.append(".so");
 			}
 			
-	    	URL url = FileUtil.class.getResource(sbLibFileName.toString());
+			//Trying to load it from achieve (WAR etc)
+	    	URL url = getCallerClass().getResource(sbLibFileName.toString());
+	    	sLoadFrom = "Archive";
 	    	if(url==null)
 	    	{
 	    		try {
+	    			//Trying to load it from physical path
 					url = new URL("file:/"+sbLibFileName.toString());
+					sLoadFrom = "File";
 				} catch (MalformedURLException e) {
 					e.printStackTrace();
 				}
 	    	}
+	    	String sLibLoadPath = url.getPath().replace('#', '/');
+	    	
+	    	sLoadFrom += " : "+sLibLoadPath;
+	    	
 	    	try {
-	    		//System.out.println("Attempt to load native library from '"+url.getPath()+"' ...");
-	    		System.load(url.getPath());
+	    		System.load(sLibLoadPath);
 	        	isLoaded = true;
-	        	//System.out.println("success");
 	        } catch (Throwable e) {
 	        	exception = e;
 	    		isLoaded = false;
-	    		//System.out.println("failed");
 	        }
     	}
     	
     	if(!isLoaded && exception!=null)
     	{
-    		throw new Exception(exception.getMessage());
+    		throw new Exception(exception.getMessage()+"- libname:"+aLibraryName+" libpath:"+aLibPath);
+    	}
+    	
+    	if(isLoaded)
+    	{
+    		System.out.println("Successfully loaded native libraries "+aLibraryName+" from "+sLoadFrom);
     	}
     	
     	return isLoaded;
     }
 	
-    public static void main(String args[]) throws IOException
+	private static Class getCallerClass() throws ClassNotFoundException
+	{
+		String sCallerClassName = Thread.currentThread().getStackTrace()[2].getClassName();
+		return Class.forName(sCallerClassName);
+	}
+	
+    public static void main(String args[]) throws Exception
     {
     }
 }
