@@ -414,6 +414,11 @@ public class FileUtil {
 			
 			String sLibLoadPath = URLEncoder.encode(sbLibFileName.toString(), "UTF-8");
 			
+			sLibLoadPath = sLibLoadPath.replaceAll("%2F", "/");
+			sLibLoadPath = sLibLoadPath.replaceAll("%5C", "/");
+			
+			//System.out.println("### Encoded URL : "+sLibLoadPath);
+			
 			//Trying to load it from achieve (WAR etc)
 	    	URL url = getCallerClass().getResource(sLibLoadPath);
 	    	sLoadFrom = "Archive";
@@ -427,11 +432,13 @@ public class FileUtil {
 					e.printStackTrace();
 				}
 	    	}
+	    	
+	    	sLibLoadPath = URLDecoder.decode(url.getPath(), "UTF-8");
 	    	sLoadFrom += " : "+sLibLoadPath;
 	    	
 	    	try {
-	    		
-	    		System.load(URLDecoder.decode(sLibLoadPath, "UTF-8"));
+	    		//System.out.println("### Trying to load from "+sLibLoadPath);
+	    		System.load(sLibLoadPath);
 	        	isLoaded = true;
 	        } catch (Throwable e) {
 	        	exception = e;
@@ -460,9 +467,8 @@ public class FileUtil {
 	
     public static void main(String args[]) throws Exception
     {
-    	URL url = new URL("File:/aaa/test%23111");
     	
-    	System.out.println(URLDecoder.decode(url.getPath(), "UTF-8"));
+    	System.out.println(URLEncoder.encode("\\", "UTF-8"));
     	
     	
     }
