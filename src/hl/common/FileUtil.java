@@ -410,21 +410,21 @@ public class FileUtil {
 				sbLibFileName.append(".so");
 			}
 			
+			String sLibLoadPath = sbLibFileName.toString().replaceAll("#", "/");
+			
 			//Trying to load it from achieve (WAR etc)
-	    	URL url = getCallerClass().getResource(sbLibFileName.toString());
+	    	URL url = getCallerClass().getResource(sLibLoadPath);
 	    	sLoadFrom = "Archive";
 	    	if(url==null)
 	    	{
 	    		try {
 	    			//Trying to load it from physical path
-					url = new URL("file:/"+sbLibFileName.toString());
+					url = new URL("file:/"+sLibLoadPath);
 					sLoadFrom = "File";
 				} catch (MalformedURLException e) {
 					e.printStackTrace();
 				}
 	    	}
-	    	String sLibLoadPath = url.getPath().replace('#', '/');
-	    	
 	    	sLoadFrom += " : "+sLibLoadPath;
 	    	
 	    	try {
@@ -457,5 +457,10 @@ public class FileUtil {
 	
     public static void main(String args[]) throws Exception
     {
+    	URL url = new URL("file:/c:/test#111");
+    	
+    	System.out.println(url.getPath());
+    	
+    	
     }
 }
