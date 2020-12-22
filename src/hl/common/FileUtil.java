@@ -91,14 +91,24 @@ public class FileUtil {
 			
 			if(sData==null)
 			{
+				
+				if(!aResourcePath.startsWith("/"))
+				{
+					aResourcePath = "/"+aResourcePath;
+				}
+				
 				//resource bundle
 				InputStream in = null;
 				try {
-					in = FileUtil.class.getResourceAsStream(aResourcePath);
+					in = getCallerClass().getResourceAsStream(aResourcePath);
 					if(in!=null)
 					{
 						sData = getContent(new InputStreamReader(in));
 					}
+				}
+				catch(ClassNotFoundException ex)
+				{
+					ex.printStackTrace();
 				}
 				finally
 				{
@@ -128,7 +138,7 @@ public class FileUtil {
 				
 				while((sLine = rdr.readLine())!=null)
 				{
-					if(sLine.trim().length()>0)
+					if(sb.length()>0)
 					{
 						sb.append("\n");
 					}
