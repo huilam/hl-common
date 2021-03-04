@@ -92,7 +92,7 @@ public class FileUtil {
 			if(sData==null)
 			{
 				
-				if(!aResourcePath.startsWith("/"))
+				if(aResourcePath.indexOf("/")<0)
 				{
 					aResourcePath = "/"+aResourcePath;
 				}
@@ -471,7 +471,18 @@ public class FileUtil {
 	
 	private static Class getCallerClass() throws ClassNotFoundException
 	{
-		String sCallerClassName = Thread.currentThread().getStackTrace()[2].getClassName();
+		StackTraceElement[] stacks = Thread.currentThread().getStackTrace();
+		
+		String sCallerClassName = FileUtil.class.getName();
+		
+		for(int i=0; i<stacks.length; i++)
+		{
+			if(stacks[i].getClassName().startsWith("hl."))
+				continue;
+			sCallerClassName = stacks[i].getClassName();
+			break;
+		}
+		
 		return Class.forName(sCallerClassName);
 	}
 	
