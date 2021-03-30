@@ -34,6 +34,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.EmptyStackException;
@@ -526,19 +527,39 @@ public class JdbcDBMgr {
 		if(aResultSet!=null)
 		{
 			try{
-				if(aResultSet.getStatement()!=null)
+				Statement stmtRs = aResultSet.getStatement();
+				if(stmtRs!=null)
 				{
-					sSQL = aResultSet.getStatement().toString(); 
+					sSQL = stmtRs.toString(); 
 				}
 				aResultSet.close();
-			}catch(Exception ex) { }
-		}
+			}catch(Exception ex) { 
+				logger.log(Level.WARNING, ex.getMessage()+"\nSQL:"+sSQL);
+			}
+		}		
 		///////////////////
 		if(aStmt!=null)
-		{
+		{	
+			try {
+				ResultSet rs = aStmt.getResultSet();
+				if(rs!=null && !rs.isClosed())
+				{
+					Statement stmtRs = aResultSet.getStatement();
+					if(stmtRs!=null)
+					{
+						sSQL = stmtRs.toString(); 
+					}
+					rs.close();
+				}
+			} catch (SQLException ex) {
+				logger.log(Level.WARNING, ex.getMessage()+"\nSQL:"+sSQL);
+			}
+			
 			try{
 				aStmt.close();
-			}catch(Exception ex) { }
+			}catch(Exception ex) { 
+				logger.log(Level.WARNING, ex.getMessage()+"\nSQL:"+sSQL);
+			}
 		}
 		///////////////////
 		if(aConn!=null)
@@ -565,8 +586,8 @@ public class JdbcDBMgr {
 				{
 					try {
 						aConn.close();
-					} catch (SQLException e) {
-						//ignore
+					} catch (SQLException ex) {
+						logger.log(Level.WARNING, ex.getMessage()+"\nSQL:"+sSQL);
 					}
 				}
 			}
