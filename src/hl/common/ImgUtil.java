@@ -8,6 +8,7 @@ import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.awt.image.Raster;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
@@ -25,6 +26,7 @@ import java.util.Random;
 import javax.imageio.ImageIO;
 
 import hl.common.http.RestApiUtil;
+import oss.image.filters.CannyEdgeDetector;
 
 
 public class ImgUtil {
@@ -759,7 +761,7 @@ public class ImgUtil {
 		BufferedImage newImage = new BufferedImage(
 				(int) aBufferedImage.getWidth(), 
 				(int) aBufferedImage.getHeight(),
-				aBufferedImage.getType());
+				BufferedImage.TYPE_INT_ARGB);
 		
 	        int h = aBufferedImage.getHeight();
 	        int w = aBufferedImage.getWidth();
@@ -1064,14 +1066,148 @@ public class ImgUtil {
 		return aBufferedImage;
 	}
 	
+	// Modified from http://mindmeat.blogspot.com/2008/07/java-image-comparison.html
+	public static Rectangle[] compareImages(BufferedImage img1, BufferedImage img2) throws IOException {
+		int factorA = 3;
+		
+		String path = new File(".").getCanonicalPath()+"/test/";
+
+		// setup change display image
+		img1 = grayscale(img1);
+		img2 = grayscale(img2);
+		
+		int widthProcess = 320;
+		float widthResizeRatio = 1.0f;
+		
+		if(img1.getWidth() > widthProcess)
+		{
+			widthResizeRatio = img1.getWidth()/widthProcess; 
+		}
+		
+		img1 = resizeImg(img1, widthProcess, 0, true);
+		img2 = resizeImg(img2, widthProcess, 0, true);
+		
+		ImgUtil.saveAsFile(img1, new File(path+"img1-gray.jpg"));
+		ImgUtil.saveAsFile(img2, new File(path+"img2-gray.jpg"));
+		
+		CannyEdgeDetector filter = new CannyEdgeDetector();
+		filter.setLowThreshold(0.5f);
+		filter.setHighThreshold(1f);
+		//		
+		filter.setSourceImage(img1);
+		filter.process();
+		img1 = cloneImage(filter.getEdgesImage());
+		//
+		filter.setSourceImage(img2);
+		filter.process();
+		img2 = cloneImage(filter.getEdgesImage());
+		
+		ImgUtil.saveAsFile(img1, new File(path+"img1-edge.jpg"));
+		ImgUtil.saveAsFile(img2, new File(path+"img2-edge.jpg"));
+		//////////////////
+		
+		// how big are each section
+		int iCompareXSeg = 20;//25;
+		int iCompareYSeg = 2;//13;
+
+		int blocksx = (img1.getWidth() / iCompareXSeg);
+		int blocksy = (img1.getHeight() / iCompareYSeg);
+
+		// set to a match by default, if a change is found then flag non-match
+
+		List<Rectangle> listRectDiff = new ArrayList<Rectangle>();
+		
+		int y = 0;
+		int x = 0;
+		int iSegX = 0;
+		int iSegY = 0;
+		try {
+			// loop through whole image and compare individual blocks of images
+
+			int iSegW = blocksx - 1;
+			int iSegH = blocksy - 1;
+			
+			for (y = 0; y < iCompareYSeg; y++) {
+				for (x = 0; x < iCompareXSeg; x++) {
+					
+					iSegX = x*blocksx;
+					iSegY = y*blocksy;
+					
+					int b1 = getAverageBrightness(img1.getSubimage(iSegX, iSegY, iSegW, iSegH));
+					int b2 = getAverageBrightness(img2.getSubimage(iSegX, iSegY, iSegW, iSegH));
+					int diff = Math.abs(b1 - b2);
+					if (diff > factorA) { // the difference in a certain region has passed the threshold value of factorA
+						// draw an indicator on the change image to show where change was detected.
+						
+						int iOrgRegX = (int)(iSegX * widthResizeRatio);
+						int iOrgRegY = (int)(iSegY * widthResizeRatio);
+						int iOrgRegW = (int)(iSegW * widthResizeRatio);
+						int iOrgRegH = (int)(iSegH * widthResizeRatio);
+						
+						listRectDiff.add(new Rectangle(iOrgRegX, iOrgRegY, iOrgRegW, iOrgRegH));;
+					}
+				}
+			}
+		}catch(Exception ex)
+		{
+			ex.printStackTrace();
+			System.out.println("iSegX:"+iSegX+" ,iSegY:"+(iSegY));
+		}
+		
+		return listRectDiff.toArray(new Rectangle[listRectDiff.size()]);
+	}
+	
+	// http://mindmeat.blogspot.com/2008/07/java-image-comparison.html
+	// returns a value specifying some kind of average brightness in the image.
+	private static int getAverageBrightness(BufferedImage img) {
+		int factorD = 10;
+		
+		Raster r = img.getData();
+		int total = 0;
+		for (int y = 0; y < r.getHeight(); y++) {
+			for (int x = 0; x < r.getWidth(); x++) {
+				total += r.getSample(r.getMinX() + x, r.getMinY() + y, 0);
+			}
+		}
+		return (int)(total / ((r.getWidth()/factorD)*(r.getHeight()/factorD)));
+	}
+	
+	
+	
 	public static void main(String args[]) throws Exception
 	{
+		String sRootPath = new File(".").getCanonicalPath();
 		
-		BufferedImage img1 = loadImage("/Users/huilam/git/hl-common/test/encoded_X-Men-1920x1080.jpg");
-		BufferedImage img2 = pixelize(img1, 0.97f);
+		String sImg1FileName = sRootPath+"/test/CAM02_empty.jpg";
+		String sImg2FileName = sRootPath+"/test/CAM02_Sunn.jpg";
 		
-		System.out.println("[img1]"+img1.getWidth()+"x"+img1.getHeight());
-		System.out.println("[img2]"+img2.getWidth()+"x"+img2.getHeight());
+		System.out.println("sImg1FileName:"+sImg1FileName);
+		System.out.println("sImg2FileName:"+sImg2FileName);
+		
+		BufferedImage img1 = loadImage(sImg1FileName);
+		BufferedImage img2 = loadImage(sImg2FileName);
+		
+		Rectangle[] rect = compareImages(img1, img2);
+		
+		System.out.println("rect.length="+rect.length);
+		
+		Graphics g = img2.getGraphics();
+	    try {
+	    	g.setColor(Color.RED);
+		    for(int i=0; i<rect.length; i++ )
+		    {
+		    	System.out.println("x:"+rect[i].x+", y:"+rect[i].y+", w:"+rect[i].width+", h:"+rect[i].height);
+		    	g.drawRect(rect[i].x, rect[i].y, rect[i].width, rect[i].height );
+		    }
+	    }
+	    finally
+	    {
+	    	if(g!=null)
+	    	{
+	    		g.dispose();
+	    	}
+	    }
+	    saveAsFile(img2, new File(sImg2FileName+"_annotate.png"));
 	}
 	
 }
