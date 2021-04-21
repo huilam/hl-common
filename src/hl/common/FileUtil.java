@@ -91,13 +91,12 @@ public class FileUtil {
 			
 			if(sData==null)
 			{
-				
+				//resource bundle				
 				if(!aResourcePath.startsWith("/"))
 				{
 					aResourcePath = "/"+aResourcePath;
 				}
-				
-				//resource bundle
+
 				InputStream in = null;
 				try {
 					in = getCallerClass().getResourceAsStream(aResourcePath);
@@ -105,10 +104,6 @@ public class FileUtil {
 					{
 						sData = getContent(new InputStreamReader(in));
 					}
-				}
-				catch(ClassNotFoundException ex)
-				{
-					ex.printStackTrace();
 				}
 				finally
 				{
@@ -469,21 +464,41 @@ public class FileUtil {
     	return isLoaded;
     }
 	
-	private static Class getCallerClass() throws ClassNotFoundException
+	private static Class getCallerClass() 
 	{
 		StackTraceElement[] stacks = Thread.currentThread().getStackTrace();
-		
-		String sCallerClassName = FileUtil.class.getName();
+		Class classCaller = FileUtil.class;
 		
 		for(int i=0; i<stacks.length; i++)
 		{
-			if(stacks[i].getClassName().startsWith("hl."))
-				continue;
-			sCallerClassName = stacks[i].getClassName();
-			break;
+			String sCallerClassName = stacks[i].getClassName();
+			
+			if("javax.servlet.http.HttpServlet".equals(sCallerClassName))
+			{
+				return FileUtil.class;
+			}
+			//System.out.println(" - "+i+" ) "+sCallerClassName);
 		}
 		
-		return Class.forName(sCallerClassName);
+		for(int i=0; i<stacks.length; i++)
+		{
+			String sCallerClassName = stacks[i].getClassName();
+			
+			//System.out.println("++getCallerClass()="+sCallerClassName);
+			
+			if(sCallerClassName.equals(FileUtil.class.getName())
+				|| sCallerClassName.equals(Thread.class.getName()))
+				continue;
+			
+			try {
+				Class.forName(sCallerClassName);
+				classCaller = Class.forName(sCallerClassName);
+				break;
+			} catch (ClassNotFoundException e) {
+			}			
+		}
+		
+		return classCaller;
 	}
 	
     public static void main(String args[]) throws Exception
