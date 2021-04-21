@@ -92,7 +92,7 @@ public class FileUtil {
 			if(sData==null)
 			{
 				
-				if(aResourcePath.indexOf("/")<0)
+				if(!aResourcePath.startsWith("/"))
 				{
 					aResourcePath = "/"+aResourcePath;
 				}
