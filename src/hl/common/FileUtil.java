@@ -25,9 +25,11 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Vector;
+import java.util.logging.Logger;
 
 public class FileUtil {
 
+	private static Logger logger = Logger.getLogger(FileUtil.class.getName());
 	private static final int BUFFER_SIZE = 32768;
 	
 	public static File getJavaClassPath(Class aClass)
