@@ -26,6 +26,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.Date;
@@ -90,10 +92,12 @@ public class JdbcDBMgr {
 		listNumericType.add(Integer.class.getSimpleName());
 		listNumericType.add(long.class.getSimpleName());
 		listNumericType.add(Long.class.getSimpleName());
+		listNumericType.add(BigInteger.class.getSimpleName());
 
 		listDoubleType = new ArrayList<String>();
 		listDoubleType.add(double.class.getSimpleName());
 		listDoubleType.add(Double.class.getSimpleName());
+		listDoubleType.add(BigDecimal.class.getSimpleName());
 		
 		listFloatType32bit = new ArrayList<String>();
 		listFloatType32bit.add(float.class.getSimpleName());
