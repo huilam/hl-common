@@ -103,7 +103,7 @@ public class CommonException extends Exception {
 			throwable_cause = null;
 		}
 		
-		if(aThrowable!=null)
+		if(aThrowable!=null && debug_mode)
 		{
 			aThrowable.printStackTrace();
 		}
