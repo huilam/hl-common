@@ -755,11 +755,10 @@ public class ImgUtil {
 		if(aBufferedImage==null)
 			return null;
 		
-		//with transparency 
 		BufferedImage newImage = new BufferedImage(
 				(int) aBufferedImage.getWidth(), 
 				(int) aBufferedImage.getHeight(),
-				BufferedImage.TYPE_INT_ARGB);
+				aBufferedImage.getType());
 		
 	        int h = aBufferedImage.getHeight();
 	        int w = aBufferedImage.getWidth();
