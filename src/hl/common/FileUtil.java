@@ -385,7 +385,7 @@ public class FileUtil {
     		exception = e;
     	}
     	
-    	if(!isLoaded)
+    	if(!isLoaded && aLibPath!=null && aLibPath.trim().length()>0)
     	{
 			StringBuffer sbLibFileName = new StringBuffer(aLibPath);
 			
