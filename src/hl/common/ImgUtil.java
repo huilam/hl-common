@@ -251,10 +251,10 @@ public class ImgUtil {
 		return aImageBase64;
 	}
 	
-	public static void base64ToImageFile(final String aImageBase64, final String aOutputFormat, final String aImageFileName) throws IOException
+	public static boolean base64ToImageFile(final String aImageBase64, final String aOutputFormat, final String aImageFileName) throws IOException
 	{	
 		BufferedImage img = base64ToImage(aImageBase64);
-		saveAsFile(img, aOutputFormat, new File(aImageFileName));
+		return saveAsFile(img, aOutputFormat, new File(aImageFileName));
 	}
 	
     public static String getBase64FromFile(String aFileName) throws IOException
@@ -301,7 +301,7 @@ public class ImgUtil {
 		return sb.toString();
     }
 	
-    public static void writeBase64ToFile(File aFile, final String aBase64Content) throws IOException
+    public static boolean writeBase64ToFile(File aFile, final String aBase64Content) throws IOException
     {
     	if(aFile.exists())
     	{
@@ -322,10 +322,10 @@ public class ImgUtil {
 			if(wrt!=null)
 				wrt.close();
 		}
-		tmpOutputFile.renameTo(aFile);
+		return tmpOutputFile.renameTo(aFile);
     }
 
-    public static void saveAsFile(BufferedImage aBufferedImage, File aOutputFile) throws IOException
+    public static boolean saveAsFile(BufferedImage aBufferedImage, File aOutputFile) throws IOException
 	{
     	String sImgFormat = "JPG";
     	String sFileName = aOutputFile.getName();
@@ -335,10 +335,10 @@ public class ImgUtil {
     		sImgFormat = sFileName.substring(iExtPos+1).toUpperCase();
     	}
     	
-    	saveAsFile(aBufferedImage, sImgFormat, aOutputFile);
+    	return saveAsFile(aBufferedImage, sImgFormat, aOutputFile);
 	}
     
-    public static void saveAsFile(BufferedImage aBufferedImage, String aOutputFileFormat, File aOutputFile) throws IOException
+    public static boolean saveAsFile(BufferedImage aBufferedImage, String aOutputFileFormat, File aOutputFile) throws IOException
 	{
     	if(aOutputFileFormat!=null)
     	{
@@ -363,13 +363,14 @@ public class ImgUtil {
     	
 		createFoldersIfNotExist(aOutputFile);
 		File tmpOutputFile = new File(aOutputFile.getPath()+".wip");
-		ImageIO.write(aBufferedImage, aOutputFileFormat, tmpOutputFile);
+		boolean isCreated = ImageIO.write(aBufferedImage, aOutputFileFormat, tmpOutputFile);
 		
 		if(aOutputFile.exists())
 		{
 			aOutputFile.delete();
 		}
-		tmpOutputFile.renameTo(aOutputFile);
+		
+		return isCreated && tmpOutputFile.renameTo(aOutputFile);
 	}
     
     private static boolean createFoldersIfNotExist(File aOutputFile)
