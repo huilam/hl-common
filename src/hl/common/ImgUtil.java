@@ -362,7 +362,9 @@ public class ImgUtil {
     	}
     	
 		createFoldersIfNotExist(aOutputFile);
-		File tmpOutputFile = new File(aOutputFile.getPath()+".wip");
+		String sWipFileName = aOutputFile.getPath()+"_"+System.nanoTime()+".wip";
+		
+		File tmpOutputFile = new File(sWipFileName);
 		boolean isCreated = ImageIO.write(aBufferedImage, aOutputFileFormat, tmpOutputFile);
 		
 		if(aOutputFile.exists())
