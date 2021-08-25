@@ -528,6 +528,22 @@ public class JdbcDBMgr {
 	public void closeQuietly(Connection aConn, PreparedStatement aStmt, ResultSet aResultSet ) 
 	{
 		String sSQL = "";
+		
+		Class classCaller = null;
+		
+		if(aResultSet!=null)
+		{
+			classCaller = ThreadMgr.getCallerClass(aResultSet.getClass());
+		}
+		else if(aStmt!=null)
+		{
+			classCaller = ThreadMgr.getCallerClass(aStmt.getClass());
+		}
+		else if(aConn!=null)
+		{
+			classCaller = ThreadMgr.getCallerClass(aConn.getClass());
+		}
+
 		if(aResultSet!=null)
 		{
 			try{
@@ -575,8 +591,13 @@ public class JdbcDBMgr {
 				
 				if(lElapsedMs > conn_timeout_ms)
 				{
+					String sCallerName = null;
+					
+					if(classCaller!=null)
+						sCallerName = classCaller.getName();
+					
 					//Log warning
-					logger.log(Level.WARNING, "[long SQL] "+lElapsedMs+"ms -"+sSQL);
+					logger.log(Level.WARNING, "[long SQL] "+lElapsedMs+"ms callerClass:"+sCallerName+" -"+sSQL);
 				}
 			}
 			
