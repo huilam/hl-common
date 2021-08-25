@@ -51,6 +51,8 @@ import java.util.logging.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import hl.common.thread.ThreadMgr;
+
 public class JdbcDBMgr {
 
 	private static Logger logger = Logger.getLogger(JdbcDBMgr.class.getName());
