@@ -76,4 +76,41 @@ public class ThreadMgr {
 		return System.currentTimeMillis()-lStartTime;
 	}
 	
+	public static Class getCallerClass(Class aClass) 
+	{
+		StackTraceElement[] stacks = Thread.currentThread().getStackTrace();
+		Class classCaller = aClass;
+		
+		for(int i=0; i<stacks.length; i++)
+		{
+			String sCallerClassName = stacks[i].getClassName();
+			
+			if("javax.servlet.http.HttpServlet".equals(sCallerClassName))
+			{
+				return FileUtil.class;
+			}
+			//System.out.println(" - "+i+" ) "+sCallerClassName);
+		}
+		
+		for(int i=0; i<stacks.length; i++)
+		{
+			String sCallerClassName = stacks[i].getClassName();
+			
+			//System.out.println("++getCallerClass()="+sCallerClassName);
+			
+			if(sCallerClassName.equals(aClass.getName())
+				|| sCallerClassName.equals(Thread.class.getName())
+				|| sCallerClassName.equals(Thread.class.getName()))
+				continue;
+			
+			try {
+				Class.forName(sCallerClassName);
+				classCaller = Class.forName(sCallerClassName);
+				break;
+			} catch (ClassNotFoundException e) {
+			}			
+		}
+		
+		return classCaller;
+	}
 }
