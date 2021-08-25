@@ -87,7 +87,7 @@ public class ThreadMgr {
 			
 			if("javax.servlet.http.HttpServlet".equals(sCallerClassName))
 			{
-				return FileUtil.class;
+				return aClass.getClass();
 			}
 			//System.out.println(" - "+i+" ) "+sCallerClassName);
 		}
