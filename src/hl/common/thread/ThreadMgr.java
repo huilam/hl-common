@@ -99,7 +99,7 @@ public class ThreadMgr {
 			//System.out.println("++getCallerClass()="+sCallerClassName);
 			
 			if(sCallerClassName.equals(aClass.getName())
-				|| sCallerClassName.equals(Thread.class.getName())
+				|| sCallerClassName.equals(ThreadMgr.class.getName())
 				|| sCallerClassName.equals(Thread.class.getName()))
 				continue;
 			
