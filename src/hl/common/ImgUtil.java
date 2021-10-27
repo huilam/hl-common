@@ -639,6 +639,24 @@ public class ImgUtil {
 		return newImage;
 	}
 	
+	public static BufferedImage convertImageType(BufferedImage aInputImg, int aNewImageType)
+	{
+		BufferedImage imgNew = new BufferedImage(aInputImg.getWidth(), aInputImg.getHeight(), aNewImageType);
+		
+		Graphics2D g = null;
+		try {
+			g = (Graphics2D) imgNew.createGraphics();
+	        g.drawImage(aInputImg,0,0,null);
+		}
+		finally
+		{
+			if(g!=null)
+				 g.dispose();
+		}
+		
+		return imgNew;
+	}
+	
 	public static BufferedImage getImageAltTiles(BufferedImage aImage, int aTileSize, boolean aIsOdd) throws IOException
 	{
 		if(aImage==null)
