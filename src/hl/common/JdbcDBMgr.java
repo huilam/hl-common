@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.sql.Array;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.Date;
@@ -39,6 +40,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EmptyStackException;
 import java.util.List;
 import java.util.Map;
@@ -423,7 +425,39 @@ public class JdbcDBMgr {
 				}
 				else
 				{
-					throw new SQLException("Unsupported datatype - "+sParamClassName+" : "+String.valueOf(param));
+					if(param!=null && param.getClass().isArray())
+					{
+						String sArrayType = "VARCHAR";
+						String sClassName = param.getClass().getName();
+						
+						sClassName = sClassName.substring(2, sClassName.length()-1);
+						
+						if(listNumericType.contains(sClassName))
+						{
+							sArrayType = "bigint";
+						}
+						else if(listDoubleType.contains(sClassName) || listFloatType32bit.contains(sClassName))
+						{
+							sArrayType = "float8";
+						}
+						else if(listBooleanType.contains(sClassName))
+						{
+							sArrayType = "boolean";
+						}
+
+						Connection conn = aStatement.getConnection();
+						Array array = conn.createArrayOf(sArrayType, (Object[])param);
+						param = array;
+					}
+					
+					if(param instanceof Array)
+					{
+						aStatement.setArray(i+1, (Array) param);
+					}
+					else
+					{
+						throw new SQLException("Unsupported datatype - "+sParamClassName+" : "+String.valueOf(param));
+					}
 				}
 				
 			}
