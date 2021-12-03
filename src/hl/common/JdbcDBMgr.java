@@ -428,7 +428,7 @@ public class JdbcDBMgr {
 					if(param!=null && param.getClass().isArray())
 					{
 						String sArrayType = "VARCHAR";
-						String sClassName = param.getClass().getName();
+						String sClassName = param.getClass().getSimpleName();
 						
 						sClassName = sClassName.substring(2, sClassName.length()-1);
 						
