@@ -430,7 +430,14 @@ public class JdbcDBMgr {
 						String sArrayType = "VARCHAR";
 						String sClassName = param.getClass().getSimpleName();
 						
-						sClassName = sClassName.substring(2, sClassName.length()-1);
+						if(sClassName.endsWith("[]"))
+						{
+							sClassName = sClassName.substring(0, sClassName.length()-2);
+						}
+						else
+						{
+							sClassName = sClassName.substring(2, sClassName.length()-1);
+						}
 						
 						if(listNumericType.contains(sClassName))
 						{
