@@ -2,6 +2,7 @@ package hl.common;
 
 import static java.awt.Color.RGBtoHSB;
 
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -770,6 +771,40 @@ public class ImgUtil {
         
 		return imgOut;
 	}
+
+	public static BufferedImage adjOpacity(BufferedImage aBufferedImage, float aOpacity) throws IOException
+	{
+		if(aBufferedImage==null)
+			return null;
+		
+		if(aOpacity<0)
+			aOpacity = 0;
+		else if(aOpacity>1)
+			aOpacity = 1;
+		
+		BufferedImage newImage = new BufferedImage(
+				(int) aBufferedImage.getWidth(), 
+				(int) aBufferedImage.getHeight(),
+				BufferedImage.TYPE_INT_ARGB);
+		
+		
+		Graphics2D g = null;
+		try {
+			g = (Graphics2D) newImage.getGraphics();
+	
+			AlphaComposite composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, aOpacity);
+			g.setComposite(composite); 
+			
+			g.drawImage(aBufferedImage, 0, 0, aBufferedImage.getWidth()-1, aBufferedImage.getHeight()-1, null);
+			
+		}finally
+		{
+			if(g!=null)
+				g.dispose();
+		}
+        
+		return newImage;
+	}	
 	
 	public static BufferedImage grayscale(BufferedImage aBufferedImage) throws IOException
 	{
