@@ -783,8 +783,7 @@ public class ImgUtil {
 			aOpacity = 1;
 		
 		int iImageType = BufferedImage.TYPE_4BYTE_ABGR;
-		
-		
+
 		switch(aBufferedImage.getType())
 		{
 			case BufferedImage.TYPE_INT_BGR:;
@@ -793,7 +792,7 @@ public class ImgUtil {
 				iImageType = BufferedImage.TYPE_INT_ARGB;;
 				break;
 		}
-		
+	
 		BufferedImage newImage = new BufferedImage(
 				aBufferedImage.getWidth(), 
 				aBufferedImage.getHeight(),
@@ -806,7 +805,6 @@ public class ImgUtil {
 	
 			AlphaComposite composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, aOpacity);
 			g.setComposite(composite); 
-			
 			g.drawImage(aBufferedImage, 0,0, null);
 			
 		}finally
