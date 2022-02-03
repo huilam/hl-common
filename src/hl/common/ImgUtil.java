@@ -772,7 +772,7 @@ public class ImgUtil {
 		return imgOut;
 	}
 
-	public static BufferedImage adjOpacity(BufferedImage aBufferedImage, float aOpacity) throws IOException
+	public static BufferedImage adjOpacity(BufferedImage aBufferedImage, float aOpacity)
 	{
 		if(aBufferedImage==null)
 			return null;
@@ -782,10 +782,22 @@ public class ImgUtil {
 		else if(aOpacity>1)
 			aOpacity = 1;
 		
+		int iImageType = BufferedImage.TYPE_4BYTE_ABGR;
+		
+		
+		switch(aBufferedImage.getType())
+		{
+			case BufferedImage.TYPE_INT_BGR:;
+			case BufferedImage.TYPE_INT_RGB:;
+			case BufferedImage.TYPE_INT_ARGB:
+				iImageType = BufferedImage.TYPE_INT_ARGB;;
+				break;
+		}
+		
 		BufferedImage newImage = new BufferedImage(
-				(int) aBufferedImage.getWidth(), 
-				(int) aBufferedImage.getHeight(),
-				BufferedImage.TYPE_INT_ARGB);
+				aBufferedImage.getWidth(), 
+				aBufferedImage.getHeight(),
+				iImageType);
 		
 		
 		Graphics2D g = null;
@@ -795,7 +807,7 @@ public class ImgUtil {
 			AlphaComposite composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, aOpacity);
 			g.setComposite(composite); 
 			
-			g.drawImage(aBufferedImage, 0, 0, aBufferedImage.getWidth()-1, aBufferedImage.getHeight()-1, null);
+			g.drawImage(aBufferedImage, 0,0, null);
 			
 		}finally
 		{
