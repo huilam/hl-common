@@ -61,6 +61,11 @@ public class ImgUtil {
 		}
 		
 		try {
+			
+			if(hasAlpha(aBufferedImage) && !aImageFormat.equalsIgnoreCase("PNG"))
+			{
+				aBufferedImage = removeAlpha(aBufferedImage);
+			}
 			ImageIO.write(aBufferedImage, aImageFormat, out);
 		}
 		catch(IOException ioEx)
@@ -81,6 +86,61 @@ public class ImgUtil {
 		
 		return out.toByteArray();
 	}
+	
+	private static boolean hasAlpha(final BufferedImage aImage)
+	{
+		boolean foundAlpha = false;
+		if(aImage!=null)
+		{
+			foundAlpha = (aImage.getColorModel().hasAlpha());
+		}
+		return foundAlpha;
+	}
+	
+	public static BufferedImage removeAlpha(BufferedImage aImage)
+	{
+		BufferedImage imgNew = null;
+		switch(aImage.getType())
+		{
+			case BufferedImage.TYPE_INT_ARGB:
+				imgNew = new BufferedImage(
+						aImage.getWidth(), 
+						aImage.getHeight(), 
+						BufferedImage.TYPE_INT_RGB);
+				break;
+			case BufferedImage.TYPE_4BYTE_ABGR:
+				imgNew = new BufferedImage(
+						aImage.getWidth(), 
+						aImage.getHeight(), 
+						BufferedImage.TYPE_3BYTE_BGR);
+				break;
+		}
+		
+		return copyImageTo(aImage, imgNew);
+	}
+	
+	public static BufferedImage addAlpha(BufferedImage aImage)
+	{
+		BufferedImage imgNew = null;
+		switch(aImage.getType())
+		{
+			case BufferedImage.TYPE_INT_RGB:
+				imgNew = new BufferedImage(
+						aImage.getWidth(), 
+						aImage.getHeight(), 
+						BufferedImage.TYPE_INT_ARGB);
+				break;
+			case BufferedImage.TYPE_3BYTE_BGR:
+				imgNew = new BufferedImage(
+						aImage.getWidth(), 
+						aImage.getHeight(), 
+						BufferedImage.TYPE_4BYTE_ABGR);
+				break;
+		}
+		
+		return copyImageTo(aImage, imgNew);
+	}
+	
 	
 	public static BufferedImage loadImage(final String aSourceFolder, final String aSourceFileName) throws IOException
 	{
@@ -949,10 +1009,25 @@ public class ImgUtil {
 			iType = BufferedImage.TYPE_INT_RGB;
 		}
 		
-		BufferedImage b = new BufferedImage(source.getWidth(), source.getHeight(), iType);
+		BufferedImage dest = new BufferedImage(source.getWidth(), source.getHeight(), iType);
+		
+		return copyImageTo(source, dest);
+	}
+	
+	public static BufferedImage copyImageTo(final BufferedImage source, BufferedImage dest){
+	    
+		if(source==null)
+			return null;
+		
+		BufferedImage imgReturn = dest;
+		if(imgReturn==null) 
+		{
+			imgReturn = new BufferedImage(source.getWidth(), source.getHeight(), source.getType());
+		}
+		
 	    Graphics g = null;
 	    try {
-		    g = b.getGraphics();
+		    g = imgReturn.getGraphics();
 		    g.drawImage(source, 0, 0, null);
 	    }
 	    finally
@@ -962,7 +1037,7 @@ public class ImgUtil {
 	    		g.dispose();
 	    	}
 	    }
-	    return b;
+	    return imgReturn;
 	}
 	
 	public static BufferedImage pixelize(final BufferedImage aImgOrig, int aFilterLoop) throws IOException
