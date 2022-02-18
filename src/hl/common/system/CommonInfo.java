@@ -19,6 +19,43 @@ public class CommonInfo {
 	private static JSONObject jsonEnvProp = null;
 	private static JSONObject jsonSysProp = null;
 	
+	private static final String[] CMD_CPU_MODEL_LINUX 	= new String[] {"/bin/sh", "-c", "cat /proc/cpuinfo | grep 'model name'" };
+	private static final String[] CMD_CPU_MODEL_MACOS  	= new String[] {"/bin/sh", "-c", "sysctl -n machdep.cpu.brand_string | grep ''" };
+	private static final String[] CMD_CPU_MODEL_WIN  	= new String[] {"echo","%PROCESSOR_IDENTIFIER%"};
+	
+	private static String sCpuInfo = null;
+	
+    private static String getCpuInfo()
+    {
+    	if(sCpuInfo!=null && sCpuInfo.length()>0)
+    	{
+    		return sCpuInfo;
+    	}
+    	
+    	String sOSName = System.getProperty("os.name");
+		if(sOSName==null)
+			sOSName = "";
+		
+		boolean isWindows = sOSName.toLowerCase().indexOf("win")>-1;
+		boolean isMac = sOSName.toLowerCase().indexOf("mac")>-1;
+		
+		String[] sCpuCmd = CMD_CPU_MODEL_LINUX;
+		if(isWindows)
+			sCpuCmd = CMD_CPU_MODEL_LINUX;
+		else if(isMac)
+			sCpuCmd = CMD_CPU_MODEL_MACOS;
+		
+    	List<String> listCpu = CommonInfo.execCommand(sCpuCmd);
+    	if(listCpu!=null && listCpu.size()>0)
+    	{
+    		if(listCpu.get(0)!=null)
+    		{
+    			sCpuInfo = listCpu.get(0);
+    		}
+    	}
+    	return sCpuInfo;
+    }
+	
     
     public static JSONObject getJDKInfo()
     {
@@ -55,7 +92,6 @@ public class CommonInfo {
 			return jsonSysProp;
 		
 		jsonSysProp = new JSONObject();
-		
 		
 		Properties prop = System.getProperties();
 		for(Object oKey : prop.keySet())
@@ -97,6 +133,16 @@ public class CommonInfo {
 		{
 			jsonEnvProp.put(sKey , mapProp.get(sKey));
 		}
+		
+		if(jsonEnvProp.optString("PROCESSOR_IDENTIFIER")==null)
+		{
+			String sCpuInfo = getCpuInfo();
+			if(sCpuInfo!=null && sCpuInfo.length()>0)
+			{
+				jsonEnvProp.put("PROCESSOR_IDENTIFIER", sCpuInfo);
+			}
+		}
+		
 		return jsonEnvProp;
 	}
 	
@@ -199,6 +245,7 @@ public class CommonInfo {
     
     public static void main(String args[]) throws Exception
     {
+    	System.out.println(getCpuInfo());
     	System.out.println(getDiskInfo());
     	System.out.println(getJDKInfo());
     
