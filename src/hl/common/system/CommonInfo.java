@@ -21,7 +21,7 @@ public class CommonInfo {
 	
 	private static final String[] CMD_CPU_MODEL_LINUX 	= new String[] {"/bin/sh", "-c", "cat /proc/cpuinfo | grep 'model name'" };
 	private static final String[] CMD_CPU_MODEL_MACOS  	= new String[] {"/bin/sh", "-c", "sysctl -n machdep.cpu.brand_string | grep ''" };
-	private static final String[] CMD_CPU_MODEL_WIN  	= new String[] {"echo","%PROCESSOR_IDENTIFIER%"};
+	//private static final String[] CMD_CPU_MODEL_WIN  	= new String[] {"echo","%PROCESSOR_IDENTIFIER%"};
 	
 	private static String sCpuInfo = null;
 	
@@ -36,13 +36,10 @@ public class CommonInfo {
 		if(sOSName==null)
 			sOSName = "";
 		
-		boolean isWindows = sOSName.toLowerCase().indexOf("win")>-1;
 		boolean isMac = sOSName.toLowerCase().indexOf("mac")>-1;
 		
 		String[] sCpuCmd = CMD_CPU_MODEL_LINUX;
-		if(isWindows)
-			sCpuCmd = CMD_CPU_MODEL_LINUX;
-		else if(isMac)
+		if(isMac)
 			sCpuCmd = CMD_CPU_MODEL_MACOS;
 		
     	List<String> listCpu = CommonInfo.execCommand(sCpuCmd);
