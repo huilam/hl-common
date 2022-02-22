@@ -9,12 +9,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 
 public class CommonInfo {
+	
+	private static Logger logger = Logger.getLogger(CommonInfo.class.getSimpleName());
 
 	private static JSONObject jsonEnvProp = null;
 	private static JSONObject jsonSysProp = null;
@@ -43,7 +47,12 @@ public class CommonInfo {
 			sCpuCmd = CMD_CPU_MODEL_MACOS;
 		
     	List<String> listCpu = CommonInfo.execCommand(sCpuCmd);
-    	if(listCpu!=null && listCpu.size()>0)
+    	
+    	if(listCpu==null)
+    	{
+    		logger.log(Level.FINEST, "Failed to execute "+String.join(" ", sCpuCmd)+".");
+    	}
+    	else if(listCpu.size()>0)
     	{
     		if(listCpu.get(0)!=null)
     		{
