@@ -99,6 +99,9 @@ public class ImgUtil {
 	
 	public static BufferedImage removeAlpha(BufferedImage aImage)
 	{
+		if(!hasAlpha(aImage))
+			return aImage;
+		
 		BufferedImage imgNew = null;
 		switch(aImage.getType())
 		{
@@ -121,6 +124,9 @@ public class ImgUtil {
 	
 	public static BufferedImage addAlpha(BufferedImage aImage)
 	{
+		if(hasAlpha(aImage))
+			return aImage;
+		
 		BufferedImage imgNew = null;
 		switch(aImage.getType())
 		{
