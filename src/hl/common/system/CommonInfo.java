@@ -281,9 +281,12 @@ public class CommonInfo {
     	System.out.println(getJDKInfo());
     
        	System.out.println(getSysProperties());
-       	System.out.println(getEnvProperties());
        	
-       	System.out.println("CPU_INFO="+getEnvProperties().optString("CPU_INFO"));
+       	JSONObject jsonEnvProp = getEnvProperties();
+       	System.out.println(jsonEnvProp);
+       	
+    	System.out.println("PROCESSOR_IDENTIFIER="+jsonEnvProp.optString("PROCESSOR_IDENTIFIER"));
+       	System.out.println("CPU_INFO="+jsonEnvProp.optString("CPU_INFO"));
            	
     }
 }
