@@ -147,20 +147,20 @@ public class CommonInfo {
 			jsonEnvProp.put(sKey , mapProp.get(sKey));
 		}
 		
-		if(jsonEnvProp.optString("PROCESSOR_IDENTIFIER")==null)
+		if(jsonEnvProp.optString("PROCESSOR_IDENTIFIER", null)==null)
 		{
 			String sProcessorIdent = getCpuInfo();
 			if(sProcessorIdent!=null && sProcessorIdent.length()>0)
 			{
 				jsonEnvProp.put("PROCESSOR_IDENTIFIER", sProcessorIdent);
 			}
-			else if(System.getProperty("PROCESSOR_IDENTIFIER")==null)
+			else if(System.getProperty("PROCESSOR_IDENTIFIER", null)==null)
 			{
 				jsonEnvProp.put("PROCESSOR_IDENTIFIER", System.getProperty("PROCESSOR_IDENTIFIER"));
 			}
 		}
 		
-		if(jsonEnvProp.optString("CPU_INFO")==null)
+		if(jsonEnvProp.optString("CPU_INFO", null)==null)
 		{
 			String sCpuInfo = null;
 			sCpuInfo = getCpuInfo();
@@ -168,7 +168,7 @@ public class CommonInfo {
 			{
 				jsonEnvProp.put("CPU_INFO", sCpuInfo);
 			}
-			else if(jsonEnvProp.optString("PROCESSOR_IDENTIFIER")!=null)
+			else if(jsonEnvProp.optString("PROCESSOR_IDENTIFIER", null)!=null)
 			{
 				jsonEnvProp.put("CPU_INFO", jsonEnvProp.optString("PROCESSOR_IDENTIFIER"));
 			}
@@ -282,6 +282,8 @@ public class CommonInfo {
     
        	System.out.println(getSysProperties());
        	System.out.println(getEnvProperties());
+       	
+       	System.out.println("CPU_INFO="+getEnvProperties().optString("CPU_INFO"));
            	
     }
 }
