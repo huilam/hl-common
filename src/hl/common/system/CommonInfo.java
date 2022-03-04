@@ -36,6 +36,16 @@ public class CommonInfo {
     		return sCpuInfo;
     	}
     	
+    	String sEnv = System.getenv("CPU_INFO");
+    	if(sEnv==null || sEnv.trim().length()==0)
+    	{
+    		sEnv = System.getProperty("CPU_INFO");
+    	}
+    	if(sEnv!=null && sEnv.trim().length()>0)
+    	{
+    		return sEnv;
+    	}
+    	
     	String sOSName = System.getProperty("os.name");
 		if(sOSName==null)
 			sOSName = "";
@@ -48,16 +58,13 @@ public class CommonInfo {
 		
     	List<String> listCpu = CommonInfo.execCommand(sCpuCmd);
     	
-    	if(listCpu==null)
+    	if(listCpu==null || listCpu.size()==0)
     	{
     		logger.log(Level.FINEST, "Failed to execute "+String.join(" ", sCpuCmd)+".");
     	}
-    	else if(listCpu.size()>0)
+    	else 
     	{
-    		if(listCpu.get(0)!=null)
-    		{
-    			sCpuInfo = listCpu.get(0);
-    		}
+    		sCpuInfo = listCpu.get(0);
     	}
     	return sCpuInfo;
     }
@@ -142,10 +149,28 @@ public class CommonInfo {
 		
 		if(jsonEnvProp.optString("PROCESSOR_IDENTIFIER")==null)
 		{
-			String sCpuInfo = getCpuInfo();
+			String sProcessorIdent = getCpuInfo();
+			if(sProcessorIdent!=null && sProcessorIdent.length()>0)
+			{
+				jsonEnvProp.put("PROCESSOR_IDENTIFIER", sProcessorIdent);
+			}
+			else if(System.getProperty("PROCESSOR_IDENTIFIER")==null)
+			{
+				jsonEnvProp.put("PROCESSOR_IDENTIFIER", System.getProperty("PROCESSOR_IDENTIFIER"));
+			}
+		}
+		
+		if(jsonEnvProp.optString("CPU_INFO")==null)
+		{
+			String sCpuInfo = null;
+			sCpuInfo = getCpuInfo();
 			if(sCpuInfo!=null && sCpuInfo.length()>0)
 			{
-				jsonEnvProp.put("PROCESSOR_IDENTIFIER", sCpuInfo);
+				jsonEnvProp.put("CPU_INFO", sCpuInfo);
+			}
+			else if(jsonEnvProp.optString("PROCESSOR_IDENTIFIER")!=null)
+			{
+				jsonEnvProp.put("CPU_INFO", jsonEnvProp.optString("PROCESSOR_IDENTIFIER"));
 			}
 		}
 		
