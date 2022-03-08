@@ -433,7 +433,7 @@ public class FileUtil {
 	    	{
 	    		try {
 	    			//Trying to load it from physical path
-					url = new URL("file:/"+sLibLoadPath);
+					url = new URL("file://"+sLibLoadPath);
 					sLoadFrom = "File";
 				} catch (MalformedURLException e) {
 					e.printStackTrace();
