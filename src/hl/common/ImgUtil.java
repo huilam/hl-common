@@ -19,10 +19,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.Base64;
-import java.util.List;
-import java.util.Random;
 import javax.imageio.ImageIO;
 
 import hl.common.http.RestApiUtil;
@@ -30,11 +27,7 @@ import hl.common.http.RestApiUtil;
 
 public class ImgUtil {
 	
-	public enum MOZAIC_STYLE { RANDOM_COLOR, RANDOM_TILES, TRANSPARENT }; 
-	
 	private static final String HTMLIMG_HEADER 		= ";base64,";
-	private static final int DATA_EMBED_MIN_HEIGHT 	= 16;
-	private static final int DATA_EMBED_MIN_WIDTH 	= 16;
 
 	public static String convertToBMP(String aJpgFileName) throws IOException
 	{
@@ -609,103 +602,6 @@ public class ImgUtil {
 		return img;
 	}
 	
-	//mozaic 
-	public static BufferedImage mozaic(BufferedImage aImage, int aTileSize, 
-			MOZAIC_STYLE aMozaicStyle, boolean aIsOdd) throws IOException
-	{
-		if(aImage==null)
-			return null;
-		
-		int maxw = aImage.getWidth();
-		int maxh = aImage.getHeight();
-		
-		int cols = maxw / aTileSize;
-		int rows = maxh / aTileSize;
-		
-		BufferedImage newImage = new BufferedImage(maxw, maxh, BufferedImage.TYPE_INT_ARGB);
-		
-		int px = 0;
-		int py = 0;
-		
-		Graphics2D gfx 				= null;
-		BufferedImage tmpImg 		= null;
-		List<BufferedImage> listImg = new ArrayList<BufferedImage>();
-
-		int adj = (aIsOdd?1:0);
-		int x = adj;
-        int y = 0;
-
-		boolean isOddRow = aIsOdd;
-        //Prepare Data
-        switch(aMozaicStyle)
-    	{
-        	case RANDOM_TILES : 
-    	        for(; y<rows; y++)
-    	        {
-    	        	py = y*aTileSize;
-    		        for(;x<cols;)
-    		        {
-    		        	px = x*aTileSize;
-    		        	tmpImg = aImage.getSubimage(px, py, aTileSize, aTileSize);
-    		        	listImg.add(tmpImg);
-    		        	x+=2;
-    		        }
-    		        isOddRow = !isOddRow;
-    		        x = isOddRow?1:0;
-    	        };
-    	        break;
-        	case TRANSPARENT :
-        		return getImageAltTiles(aImage, aTileSize, !aIsOdd);
-        		
-        	default:;
-    	}
-        	
-
-		try {
-	        
-	        gfx = newImage.createGraphics();
-	        Random rand = new Random();
-	        
-	        isOddRow = aIsOdd;
-	        x = adj; 
-            y = 0;
-            
-	        for(; y<rows; y++)
-	        {
-	        	py 	= y*aTileSize;
-		        for(;x<cols;)
-		        {
-		        	px = x*aTileSize;
-		        	
-		        	switch(aMozaicStyle)
-		        	{
-		        		case RANDOM_TILES :
-		        		{
-				        	gfx.drawImage(listImg.remove(rand.nextInt(listImg.size())), px, py, null);
-		        			break;
-		        		}
-		        		case RANDOM_COLOR :
-		        		{
-		        			gfx.setColor(new Color(rand.nextFloat(), rand.nextFloat(), rand.nextFloat()));
-		        			gfx.fillRect(px, py, aTileSize , aTileSize);
-		        			break;
-		        		}
-		        		default:;
-		        	}
-		        	x+=2;
-		        }
-		        isOddRow = !isOddRow;
-		        x = isOddRow?1:0;
-	        }
-
-	    }finally {
-	    	if(gfx!=null)
-	    		gfx.dispose();
-	    }
-        
-		return newImage;
-	}
-	
 	public static BufferedImage convertImageType(BufferedImage aInputImg, int aNewImageType)
 	{
 		BufferedImage imgNew = new BufferedImage(aInputImg.getWidth(), aInputImg.getHeight(), aNewImageType);
@@ -722,120 +618,6 @@ public class ImgUtil {
 		}
 		
 		return imgNew;
-	}
-	
-	public static BufferedImage getImageAltTiles(BufferedImage aImage, int aTileSize, boolean aIsOdd) throws IOException
-	{
-		if(aImage==null)
-			return null;
-		
-		int maxw = aImage.getWidth();
-		int maxh = aImage.getHeight();
-		
-		int cols = maxw / aTileSize;
-		int rows = maxh / aTileSize;
-		
-		BufferedImage newImage = new BufferedImage(maxw, maxh, BufferedImage.TYPE_INT_ARGB);
-		
-		int px = 0;
-		int py = 0;
-		
-		BufferedImage tmpImg = null;
-		Graphics2D gfx = null;
-		
-        try {
-	        gfx = newImage.createGraphics();
-	        
-	        int x = aIsOdd?1:0;
-	        int y = 0;
-			boolean isOddRow = aIsOdd;
-			
-	        for(; y<rows; y++)
-	        {
-	        	py = y*aTileSize;
-		        for(;x<cols;)
-		        {
-		        	px = x*aTileSize;
-		        	tmpImg = aImage.getSubimage(px, py, aTileSize, aTileSize);
-		        	gfx.drawImage(tmpImg, px, py, null);
-		        	x+=2;
-		        }
-		        isOddRow = !isOddRow;
-		        x = isOddRow?1:0;
-	        }
-	    }finally {
-	    	if(gfx!=null)
-	    		gfx.dispose();
-	    }
-        
-		return newImage;
-	}
-	
-	public static String img2Ascii(BufferedImage aBufferedImage, long aWidth, long aHeight) throws IOException
-	{
-		StringBuffer sb = new StringBuffer();
-		
-		String sChArt = ".,oaOB#@";
-		
-		if(aBufferedImage!=null)
-		{
-			BufferedImage imgTmp = resizeImg(aBufferedImage, aWidth, aHeight, true);
-			imgTmp = grayscale(imgTmp);
-			
-			long imgW = imgTmp.getWidth();
-			long imgH = imgTmp.getHeight();
-			
-			for(int y=0; y<imgH; y++)
-			{
-				for(int x=0; x<imgW; x++)
-				{
-					Color c = new Color(imgTmp.getRGB(x, y));
-					int iVal = (int)((c.getRed()*0.33f)+(c.getGreen()*0.33f)+(c.getBlue()*0.34f))/32;
-					sb.append(sChArt.charAt(iVal));
-				}
-				sb.append("\n");
-			}
-		}
-		return sb.toString();
-	}
-	
-
-	public static BufferedImage toThermal(final BufferedImage imgInput)
-	{
-		BufferedImage imgOut = new BufferedImage(
-				imgInput.getWidth(), imgInput.getHeight(), imgInput.getType());
-		
-		int pixel;
-        int red;
-        int blue;
-        int green;
-        float[] hsbvals = new float[3];
-        
-		BufferedImage imgTmp = new BufferedImage(
-				imgInput.getWidth(), imgInput.getHeight(), imgInput.getType());;
-
-        for(int x = 0; x < imgInput.getWidth(); x++){
-            for (int y = 0; y < imgInput.getHeight(); y++){
-                pixel = imgInput.getRGB(x,y);
-                red = (pixel & 0x00ff0000) >> 16;
-                blue = (pixel & 0x0000ff00) >> 8;
-                green = (pixel & 0x000000ff);
-                hsbvals = RGBtoHSB(red, green, blue, hsbvals);
-                if(hsbvals[2] > 0.7){
-                	imgTmp.setRGB(x,y,Color.red.getRGB());
-                }else if(hsbvals[2] >=0.2 && hsbvals[2] < 0.5){
-                	imgTmp.setRGB(x, y, Color.blue.getRGB());
-                }else if(hsbvals[2] >= 0.5 && hsbvals[2] < 0.7){
-                	imgTmp.setRGB(x, y, Color.green.getRGB());
-                }
-            }
-        }
-        
-        Graphics2D graphics = imgOut.createGraphics();
-        graphics.drawImage(imgTmp,0,0,null);
-        graphics.dispose();
-        
-		return imgOut;
 	}
 
 	public static BufferedImage adjOpacity(BufferedImage aBufferedImage, float aOpacity)
@@ -881,44 +663,6 @@ public class ImgUtil {
         
 		return newImage;
 	}	
-	
-	public static BufferedImage grayscale(BufferedImage aBufferedImage) throws IOException
-	{
-		if(aBufferedImage==null)
-			return null;
-		
-		BufferedImage newImage = new BufferedImage(
-				(int) aBufferedImage.getWidth(), 
-				(int) aBufferedImage.getHeight(),
-				aBufferedImage.getType());
-		
-	        int h = aBufferedImage.getHeight();
-	        int w = aBufferedImage.getWidth();
-	        for(int x=0; x<w; x++)
-	        {
-		        for(int y=0; y<h; y++)
-		        {
-		        	int p = aBufferedImage.getRGB(x, y);
-		        	int a = (p>>24)&0xff;
-		        	
-		        	int r = (p>>16)&0xff;
-		        	int g = (p>>8)&0xff;
-		        	int b = p&0xff;
-		        	
-		        	int rgb_sum = r+g+b;
-
-		        	//
-		        	r = rgb_sum/3;
-		        	g = r;
-		        	b = r;
-		        	//
-		        	p = (a<<24) | (r<<16) | (g<<8) | b;
-		        	newImage.setRGB(x, y, p);
-		        }
-	        }
-        
-		return newImage;
-	}
 	
 	public static BufferedImage overlayImage(BufferedImage aBufferedImage, BufferedImage aSubImage, int x, int y) throws IOException
 	{
@@ -978,30 +722,6 @@ public class ImgUtil {
         }
         return croppedImage;
     }
-
-    public static BufferedImage pixelize(final BufferedImage aImgOrig, float aPixelizeThreshold) throws IOException
-	{
-		if(aImgOrig==null)
-			return null;
-		
-		float fPixelPercent = 1-aPixelizeThreshold;
-		float iWidth 	= aImgOrig.getWidth() * fPixelPercent;
-		float iHeight 	= aImgOrig.getHeight() * fPixelPercent;
-		
-		if(iWidth<1)
-			iWidth = 1;
-		if(iHeight<1)
-			iHeight = 1;
-		
-		BufferedImage imgPixelized = resizeImg(aImgOrig, (long)iWidth, (long)iHeight, false);
-		
-		return resizeImg(imgPixelized, aImgOrig.getWidth(), aImgOrig.getHeight(), false);
-	}
-    
-	public static BufferedImage pixelize(final BufferedImage aImgOrig) throws IOException
-	{
-		return pixelize(aImgOrig, 1);
-	}
 	
 	public static BufferedImage cloneImage(final BufferedImage source){
 	    
@@ -1046,22 +766,6 @@ public class ImgUtil {
 	    return imgReturn;
 	}
 	
-	public static BufferedImage pixelize(final BufferedImage aImgOrig, int aFilterLoop) throws IOException
-	{
-		float fPixelise = 0.90f;
-		
-		BufferedImage imgTmp = pixelize(aImgOrig, fPixelise);
-	
-		if(aFilterLoop>1)
-		{
-			for(int i=0; i<aFilterLoop-1; i++)
-			{
-				imgTmp = pixelize(imgTmp, fPixelise);
-			}
-		}
-		return imgTmp;
-	}
-	
 	public static byte[] getChecksum(final BufferedImage aBufferedImage) throws IOException, NoSuchAlgorithmException
 	{
 		if(aBufferedImage!=null)
@@ -1074,139 +778,45 @@ public class ImgUtil {
 		return null;
 	}
 	
-	private static int byte2int(byte aByte)
-	{
-		return aByte & 0xff;
-	}
 	
-	public static String getEmbededData(
-			BufferedImage aBufferedImage,
-			String aSignature) throws IOException, NoSuchAlgorithmException
-	{
-		String sEncodedData = null;
-		
-		if(aBufferedImage!=null)
-		{
-			long lImgH = aBufferedImage.getHeight();
-			long lImgW = aBufferedImage.getWidth();
-			
-			if((lImgH<DATA_EMBED_MIN_HEIGHT)||(lImgW<DATA_EMBED_MIN_WIDTH))
-			{
-				return null;
-			}
-			
-			byte[] byteSignature = CryptoUtil.getMD5Checksum(aSignature.getBytes());
-			
-			
-			int y1 = 0;
-			int y2 = aBufferedImage.getHeight()-1;
-        	int yLoop = new Color(aBufferedImage.getRGB(0, 0)).getGreen();
-        	if(yLoop<=0)
-        		yLoop = 1;
-        	
-        	int colW = byteSignature.length;
-        	
-			byte[] byteData = new byte[colW*yLoop];
+	////////////////////////////////////////////////////////////////////////////////////v
+	///     Filters
+	////////////////////////////////////////////////////////////////////////////////////v
 
-			for(int i=0; i<colW; i+=2)
-			{
-				Color c = new Color(aBufferedImage.getRGB(i, y1));
-	        	int v1 = byte2int(byteSignature[i]);
-	        	int v2 = byte2int(byteSignature[i+1]);
-	        	
-	        	if(v1!=c.getRed() || v2!=c.getBlue())
-	        	{
-	        		System.out.println("break!");
-	        		System.out.println("v1="+v1+":"+c.getRed());
-	        		System.out.println("v2="+v2+":"+c.getBlue());
-	        		return null;
-	        	}
-	        	
-				////////////////////////////////////
-				for(int l=0; l<yLoop; l++)
-				{
-		        	c = new Color(aBufferedImage.getRGB(i, y2-l));
-		        	int idx = i+(l*(colW));
-					//System.out.println("getEncodedData.idx:"+idx);
-		        	
-		        	byteData[idx] = (byte) c.getRed();
-		        	byteData[idx+1] = (byte) c.getBlue();
-				}
-			}
-			
-			sEncodedData = new String(byteData);
-			
-		}
-		return sEncodedData; 
+	@Deprecated
+	public static BufferedImage pixelize(final BufferedImage aImgOrig, float aPixelizeThreshold) throws IOException
+	{
+		return ImgFilters.pixelize(aImgOrig, aPixelizeThreshold);
+	}
+    
+	@Deprecated
+	public static BufferedImage pixelize(final BufferedImage aImgOrig) throws IOException
+	{
+		return ImgFilters.pixelize(aImgOrig);
 	}
 	
-	public static BufferedImage embedData(
-			BufferedImage aBufferedImage,
-			String aSignature,
-			String aData) throws IOException, NoSuchAlgorithmException
+	@Deprecated
+	public static BufferedImage grayscale(BufferedImage aBufferedImage) throws IOException
 	{
-		if(aBufferedImage!=null)
-		{
-			long lImgH = aBufferedImage.getHeight();
-			long lImgW = aBufferedImage.getWidth();
-			
-			if((lImgH<DATA_EMBED_MIN_HEIGHT)||(lImgW<DATA_EMBED_MIN_WIDTH))
-			{
-				throw new IOException("Image width and heigh is smaller than minimum data embeding size !");
-			}
-			
-			byte[] byteSignature = CryptoUtil.getMD5Checksum(aSignature.getBytes());
-			byte[] byteData = aData.getBytes();
-			
-			int iPaddingCount = byteData.length % byteSignature.length;
-			if(iPaddingCount !=0)
-			{
-				//data padding
-				for(int i=0; i<iPaddingCount; i++)
-				{
-					aData += "-";
-				}
-				byteData = aData.getBytes();
-				//throw new IOException("signature:"+byteSignature.length+" data:"+byteData.length);
-			}
-			
-			int y1 = 0;
-			int y2 = aBufferedImage.getHeight()-1;
-			
-			int colW = byteSignature.length;
-			int yLoop = byteData.length / colW;
-			
-			if(yLoop<=0)
-				yLoop = 1;
-			
-			for(int i=0; i<colW; i+=2)
-			{
-				Color c = new Color(aBufferedImage.getRGB(i, y1));
-	        	
-	        	int v1 = byte2int(byteSignature[i]);
-	        	int v2 = byte2int(byteSignature[i+1]);
-	        	int g  = i==0?(yLoop):c.getGreen();
-	        	
-	        	
-	        	Color c2 = new Color(v1, g, v2);
-				aBufferedImage.setRGB(i, y1, c2.getRGB());
-				
-				////////////////////////////////////
-				for(int l=0; l<yLoop; l++)
-				{
-					int idx = i+(l*(colW));
-					//System.out.println("encode.idx:"+idx);
-					
-					c = new Color(aBufferedImage.getRGB(i, y2-l));
-		        	
-		        	v1 = byte2int(byteData[idx]);
-		        	v2 = byte2int(byteData[idx+1]);
-		        	//
-		        	c2 = new Color(v1, c.getGreen(), v2);
-		        	aBufferedImage.setRGB(i, y2-l, c2.getRGB());
-				}
-			}
-		}
-		return aBufferedImage;
+		return ImgFilters.grayscale(aBufferedImage);
 	}
+	
+	@Deprecated
+	public static BufferedImage getImageAltTiles(BufferedImage aImage, int aTileSize, boolean aIsOdd) throws IOException
+	{
+		return ImgFilters.getImageAltTiles(aImage, aTileSize, aIsOdd);
+	}
+	
+	@Deprecated
+	public static String img2Ascii(BufferedImage aBufferedImage, long aWidth, long aHeight) throws IOException
+	{
+		return ImgFilters.img2Ascii(aBufferedImage, aWidth, aHeight);
+	}
+	
+	@Deprecated
+	public static BufferedImage toThermal(final BufferedImage imgInput)
+	{
+		return ImgFilters.toThermal(imgInput);
+	}
+	
 }
