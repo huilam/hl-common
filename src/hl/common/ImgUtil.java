@@ -1,7 +1,5 @@
 package hl.common;
 
-import static java.awt.Color.RGBtoHSB;
-
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics;
