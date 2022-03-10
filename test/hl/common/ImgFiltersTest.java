@@ -39,6 +39,8 @@ public class ImgFiltersTest {
 			
 			BufferedImage imgTransparent = ImgUtil.adjOpacity(img, 0.50f);
 			
+			BufferedImage imgTransparent2 = ImgUtil.removeAlpha(imgTransparent);
+			
 			BufferedImage imgThermal = ImgFilters.toThermal(img);
 			imgThermal = ImgUtil.adjOpacity(imgThermal, 0.50f);
 			
@@ -47,6 +49,7 @@ public class ImgFiltersTest {
 			for(String sExt : new String[] {"png", "jpg"})
 			{
 				ImgUtil.saveAsFile(imgTransparent, new File(sOutputPrefixName+"_transparent."+sExt));	
+				ImgUtil.saveAsFile(imgTransparent2, new File(sOutputPrefixName+"_transparent2."+sExt));	
 				ImgUtil.saveAsFile(imgThermal, new File(sOutputPrefixName+"_thermal."+sExt));
 				ImgUtil.saveAsFile(imgPixelate, new File(sOutputPrefixName+"_pixelate."+sExt));
 			}

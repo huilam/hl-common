@@ -662,32 +662,83 @@ public class ImgUtil {
 		return newImage;
 	}	
 	
-	public static BufferedImage overlayImage(BufferedImage aBufferedImage, BufferedImage aSubImage, int x, int y) throws IOException
+	public static BufferedImage overlayImage(BufferedImage aBackgroundImg, BufferedImage aSubImage, int x, int y) throws IOException
 	{
-		if(aBufferedImage==null)
+		return overlayImage(aBackgroundImg, aSubImage, x, y, 1);
+	}
+	
+	public static BufferedImage overlayImage(BufferedImage aBackgroundImg, BufferedImage aOverlayImg, double aOpacity)
+	{
+		return overlayImage(aBackgroundImg, aOverlayImg, 0, 0, aOpacity);
+	}
+
+	public static BufferedImage overlayImage(BufferedImage aBackgroundImg, BufferedImage aOverlayImg, int x, int y, double aOpacity)
+	{
+		if(aBackgroundImg==null || aOverlayImg==null)
 			return null;
 		
-		if(aSubImage==null)
-			return aBufferedImage;
-	
-		//with transparency 
-		BufferedImage newImage = new BufferedImage(
-				(int) aBufferedImage.getWidth(), 
-				(int) aBufferedImage.getHeight(),
-				BufferedImage.TYPE_INT_ARGB);
+		if(aOpacity<0.1)
+			aOpacity = 0.1;
+		
+		if(aOpacity>1.0)
+			aOpacity = 1;
+		
+		BufferedImage imgNew = new BufferedImage(aOverlayImg.getWidth(), aOverlayImg.getHeight(), aOverlayImg.getType());
+		
+		if(aBackgroundImg.getWidth()!=aOverlayImg.getWidth())
+		{
+			try {
+				aBackgroundImg = ImgUtil.resizeImg(aBackgroundImg, aOverlayImg.getWidth(), aOverlayImg.getHeight(), false);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 		
 		Graphics2D g = null;
-        try {
-	        g = newImage.createGraphics();
-	        g.drawImage(aBufferedImage, 0, 0, null);
-	        g.drawImage(aSubImage, x, y, null);
-        }finally {
-        	if(g!=null)
-        		g.dispose();
-        }
-        
-		return newImage;
+		try {
+			
+			g = imgNew.createGraphics();
+			g.setComposite(AlphaComposite.SrcOver);
+			g.drawImage(aBackgroundImg, 0, 0, null);
+			
+			g.setComposite(AlphaComposite.SrcOver.derive((float)aOpacity));
+			g.drawImage(aOverlayImg, x, y, null);
+			
+		}finally
+		{
+			if(g!=null)
+				g.dispose();
+		}
+		
+		return imgNew;
 	}
+	
+	public static BufferedImage floodfillImage(BufferedImage aImage, Color aFillColor, double aOpacity)
+	{
+		if(aImage==null)
+			return null;
+		
+		BufferedImage imgReturn = ImgUtil.cloneImage(aImage);
+		
+		Graphics2D g = null;
+		try {
+			Color c = aFillColor;
+			
+			double dOpacity = (aOpacity) * 255;
+			g = (Graphics2D) imgReturn.getGraphics();
+			g.setColor(new Color(c.getRed(), c.getBlue(), c.getGreen(), (int)dOpacity));
+			g.fillRect(0, 0, imgReturn.getWidth(), aImage.getHeight());
+		}
+		finally
+		{
+			if(g!=null)
+				g.dispose();
+		}
+		
+		return imgReturn;
+	}
+	
+	
 	
     public static BufferedImage cropImage(BufferedImage inputImg, int cropLeft, int cropTop, int cropWidth, int cropHeight) 
     {
