@@ -90,7 +90,7 @@ public class ImgUtil {
 	
 	public static BufferedImage removeAlpha(BufferedImage aImage)
 	{
-		if(!hasAlpha(aImage))
+		if(aImage==null || !hasAlpha(aImage))
 			return aImage;
 		
 		BufferedImage imgNew = null;
@@ -115,7 +115,7 @@ public class ImgUtil {
 	
 	public static BufferedImage addAlpha(BufferedImage aImage)
 	{
-		if(hasAlpha(aImage))
+		if(aImage==null || hasAlpha(aImage))
 			return aImage;
 		
 		BufferedImage imgNew = null;
