@@ -42,7 +42,7 @@ public class ImgFiltersTest {
 			BufferedImage imgThermal = ImgFilters.toThermal(img);
 			imgThermal = ImgUtil.adjOpacity(imgThermal, 0.50f);
 			
-			BufferedImage imgPixelate = ImgFilters.pixelize(img, 0.50f);
+			BufferedImage imgPixelate = ImgFilters.pixelize(img, 0.70f);
 			
 			for(String sExt : new String[] {"png", "jpg"})
 			{

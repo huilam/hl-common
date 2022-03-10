@@ -169,8 +169,8 @@ public class ImgFilters {
 			return null;
 		
 		float fPixelPercent = 1-aPixelizeThreshold;
-		float iWidth 	= (aImgOrig.getWidth()/2) * fPixelPercent;
-		float iHeight 	= (aImgOrig.getHeight()/2) * fPixelPercent;
+		double iWidth 	= (aImgOrig.getWidth()*0.25) * fPixelPercent;
+		double iHeight 	= (aImgOrig.getHeight()*0.25) * fPixelPercent;
 		
 		if(iWidth<1)
 			iWidth = 1;
