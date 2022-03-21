@@ -683,16 +683,11 @@ public class ImgUtil {
 		if(aOpacity>1.0)
 			aOpacity = 1;
 		
-		BufferedImage imgNew = new BufferedImage(aOverlayImg.getWidth(), aOverlayImg.getHeight(), aOverlayImg.getType());
+		BufferedImage imgNew = new BufferedImage(aBackgroundImg.getWidth(), aBackgroundImg.getHeight(), aBackgroundImg.getType());
 		
-		if(aBackgroundImg.getWidth()!=aOverlayImg.getWidth())
-		{
-			try {
-				aBackgroundImg = ImgUtil.resizeImg(aBackgroundImg, aOverlayImg.getWidth(), aOverlayImg.getHeight(), false);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+		imgNew = addAlpha(imgNew);
+		aBackgroundImg = addAlpha(aBackgroundImg);
+		aOverlayImg = addAlpha(aOverlayImg);
 		
 		Graphics2D g = null;
 		try {
