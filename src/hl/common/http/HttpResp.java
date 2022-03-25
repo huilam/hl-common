@@ -85,7 +85,9 @@ public class HttpResp {
 			{
 				String sTrimData = content_data.trim().toLowerCase();
 				if(sTrimData.startsWith("{") && sTrimData.endsWith("}")
-					||sTrimData.startsWith("[") && sTrimData.endsWith("]"))
+					||
+					sTrimData.startsWith("[") && sTrimData.endsWith("]") 
+					&& sTrimData.indexOf("{")>-1 && sTrimData.indexOf("}")>-1)
 				setContent_type("application/json");
 			}
 			else
