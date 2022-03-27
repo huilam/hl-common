@@ -4,7 +4,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.ToLongBiFunction;
 
 public class HttpResp {
 	//
@@ -77,22 +76,25 @@ public class HttpResp {
 		this.content_data = content_data;
 	}
 	public void setContent_data(String content_data) {
+		
 		this.content_data = content_data;
 		
-		if(content_data!=null && isStringContent())
+		if(content_data!=null && this.content_type==null)
 		{
-			if(this.content_type==null)
+			if(isStringContent())
 			{
 				String sTrimData = content_data.trim().toLowerCase();
-				if(sTrimData.startsWith("{") && sTrimData.endsWith("}")
-					||
-					sTrimData.startsWith("[") && sTrimData.endsWith("]") 
-					&& sTrimData.indexOf("{")>-1 && sTrimData.indexOf("}")>-1)
-				setContent_type("application/json");
-			}
-			else
-			{
-				setContent_type("text/plain");
+				
+				boolean isJsonObj 	= sTrimData.startsWith("{") && sTrimData.endsWith("}");
+				boolean isJsonArray = sTrimData.startsWith("[") && sTrimData.endsWith("]");
+				if(isJsonObj || isJsonArray)
+				{
+					setContent_type("application/json");
+				}
+				else
+				{
+					setContent_type("text/plain");
+				}
 			}
 		}
 	}
