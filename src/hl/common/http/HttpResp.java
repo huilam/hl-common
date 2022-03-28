@@ -16,6 +16,21 @@ public class HttpResp {
 	private String request_url 			= null;
 	private String server_ip 			= null;
 	//
+	public final String TYPE_IMAGE_JPG 	= "image/jpeg";
+	public final String TYPE_IMAGE_GIF 	= "image/gif";
+	public final String TYPE_IMAGE_PNG 	= "image/png";
+	public final String TYPE_IMAGE_BMP 	= "image/bmp";
+	
+	public final String TYPE_VIDEO_MP4 	= "video/mp4";
+	public final String TYPE_AUDIO_MP3 	= "audio/mpeg";
+	
+	public final String TYPE_APPL_JSON 	= "application/json";
+	public final String TYPE_APPL_PDF 	= "application/pdf";
+	public final String TYPE_TEXT_HTML 	= "text/html";
+	//-- default
+	public final String TYPE_PLAINTEXT 	= "text/plain";
+	public final String TYPE_BINARY 	= "application/octet-stream";
+	//
 	private Map<String, String> mapErrors = new HashMap<String, String>();
 	
 	public boolean isSuccess()
@@ -79,7 +94,7 @@ public class HttpResp {
 		
 		this.content_data = content_data;
 		
-		if(content_data!=null && this.content_type==null)
+		if(this.content_data!=null && this.content_type==null)
 		{
 			if(isStringContent())
 			{
@@ -89,11 +104,7 @@ public class HttpResp {
 				boolean isJsonArray = sTrimData.startsWith("[") && sTrimData.endsWith("]");
 				if(isJsonObj || isJsonArray)
 				{
-					setContent_type("application/json");
-				}
-				else
-				{
-					setContent_type("text/plain");
+					setContent_type_as_Json();
 				}
 			}
 		}
@@ -101,6 +112,11 @@ public class HttpResp {
 	public String getContent_type() {
 		return content_type;
 	}
+	
+	public void setContent_type_as_Json() {
+		setContent_type(TYPE_APPL_JSON);
+	}
+	
 	public void setContent_type(String content_type) {
 		this.content_type = content_type;
 	}	
