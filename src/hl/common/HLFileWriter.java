@@ -147,7 +147,7 @@ public class HLFileWriter{
 					{
 						if(f.getName().startsWith(this.filename))
 						{
-							mapFileList.put(new Long(f.lastModified()), f);
+							mapFileList.put(f.lastModified(), f);
 						}
 					}
 					
