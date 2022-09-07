@@ -5,10 +5,12 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.security.SecureClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -87,10 +89,17 @@ public class CommonInfo {
 
     	
 		JSONArray jsonArr = new JSONArray();
-    	URLClassLoader urlClassLoader = (URLClassLoader) CommonInfo.class.getClassLoader();
-    	for(URL url : urlClassLoader.getURLs())
+		
+		String sJavaClassPath = System.getProperty("java.class.path");
+		
+		StringTokenizer tk = new StringTokenizer(sJavaClassPath, ":");
+		
+		if(!tk.hasMoreTokens())
+			tk = new StringTokenizer(sJavaClassPath, ";");
+		
+    	while(tk.hasMoreTokens())
     	{
-    		jsonArr.put(url.getPath());
+    		jsonArr.put(tk.nextToken());
     	}
     	jsonInfo.put("java.classpath", jsonArr);
     	
@@ -276,17 +285,17 @@ public class CommonInfo {
     
     public static void main(String args[]) throws Exception
     {
-    	System.out.println(getCpuInfo());
-    	System.out.println(getDiskInfo());
-    	System.out.println(getJDKInfo());
+    	//System.out.println(getCpuInfo());
+    	//System.out.println(getDiskInfo());
+    	//System.out.println(getJDKInfo());
     
-       	System.out.println(getSysProperties());
+       	//System.out.println(getSysProperties());
        	
-       	JSONObject jsonEnvProp = getEnvProperties();
-       	System.out.println(jsonEnvProp);
+       	//JSONObject jsonEnvProp = getEnvProperties();
+       	//System.out.println(jsonEnvProp);
        	
-    	System.out.println("PROCESSOR_IDENTIFIER="+jsonEnvProp.optString("PROCESSOR_IDENTIFIER"));
-       	System.out.println("CPU_INFO="+jsonEnvProp.optString("CPU_INFO"));
+    	//System.out.println("PROCESSOR_IDENTIFIER="+jsonEnvProp.optString("PROCESSOR_IDENTIFIER"));
+       	//System.out.println("CPU_INFO="+jsonEnvProp.optString("CPU_INFO"));
            	
     }
 }
