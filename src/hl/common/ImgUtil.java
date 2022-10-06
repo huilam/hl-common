@@ -44,7 +44,8 @@ public class ImgUtil {
 	
 	public static byte[] toBytes(BufferedImage aBufferedImage, String aImageFormat) throws IOException
 	{
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		ByteArrayOutputStream out = null;
+		byte[] byteImg = null;
 		
 		if(aImageFormat==null || aImageFormat.trim().length()==0)
 		{
@@ -53,11 +54,15 @@ public class ImgUtil {
 		
 		try {
 			
+			out = new ByteArrayOutputStream();
+			
 			if(hasAlpha(aBufferedImage) && !aImageFormat.equalsIgnoreCase("PNG"))
 			{
 				aBufferedImage = removeAlpha(aBufferedImage);
 			}
 			ImageIO.write(aBufferedImage, aImageFormat, out);
+			
+			byteImg = out.toByteArray();
 		}
 		catch(IOException ioEx)
 		{
@@ -73,9 +78,13 @@ public class ImgUtil {
 			ioEx.addSuppressed(ex);
 			throw ioEx;
 		}
+		finally
+		{
+			if(out!=null)
+				out.close();
+		}
 		
-		
-		return out.toByteArray();
+		return byteImg;
 	}
 	
 	private static boolean hasAlpha(final BufferedImage aImage)
@@ -211,6 +220,8 @@ public class ImgUtil {
 		
 		saveAsFile(image, aOutputFileFormat, fileOutput);
 		
+		image.flush();
+		
 		if(fileOutput.isFile())
 			return fileOutput.getPath();
 		else
@@ -228,13 +239,17 @@ public class ImgUtil {
 		}
 		
 		BufferedImage img = loadImage(aSourceURI);
-		return imageToBase64(img, sFormat);
+		String sBase64 = imageToBase64(img, sFormat);
+		img.flush();
+		return sBase64;
 	}
 	
 	public static String imageFileToBase64(final String aSourceURI, final String aImgFormat) throws IOException
 	{
 		BufferedImage img = loadImage(aSourceURI);
-		return imageToBase64(img, aImgFormat);
+		String sBase64 = imageToBase64(img, aImgFormat);
+		img.flush();
+		return sBase64;
 	}
 	
 	public static String imageToBase64(BufferedImage aBufferedImage, final String aImgFormat) throws IOException
@@ -271,6 +286,8 @@ public class ImgUtil {
 				ImageIO.write(aBufferedImage, aImgFormat, outImg);
 				
 				sBase64 = Base64.getEncoder().encodeToString(outImg.toByteArray());
+				
+				aBufferedImage.flush();
 			}finally
 			{
 				if(outImg!=null)
@@ -430,6 +447,8 @@ public class ImgUtil {
 			aOutputFile.delete();
 		}
 		
+		aBufferedImage.flush();
+		
 		return isCreated && tmpOutputFile.renameTo(aOutputFile);
 	}
     
@@ -456,7 +475,9 @@ public class ImgUtil {
 	{
 		BufferedImage img = base64ToImage(aImageBase64);
 		img = resizeImg(img, aNewWidth, aNewHeight, isMaintainAspectRatio);
-		return imageToBase64(img, "JPG");
+		String sBase64 = imageToBase64(img, "JPG");
+		img.flush();
+		return sBase64;
 	}
 	
 	public static BufferedImage resizeImg(BufferedImage aBufferedImage, long aNewWidth, long aNewHeight, boolean isMaintainAspectRatio) throws IOException
@@ -558,7 +579,9 @@ public class ImgUtil {
 	{
 		BufferedImage img = base64ToImage(aImageBase64);
 		img = flipImg(img, isFlipHorizontal);
-		return ImgUtil.imageToBase64(img, "JPG");
+		String sBase64 = ImgUtil.imageToBase64(img, "JPG");
+		img.flush();
+		return sBase64;
 	}
 	
 	public static BufferedImage flipImg(BufferedImage aImage, boolean isFlipHorizontal) throws IOException
@@ -763,6 +786,7 @@ public class ImgUtil {
              img.createGraphics().drawImage(inputImg, 0, 0, Color.WHITE, null);
              
              croppedImage = img.getSubimage(cropLeft, cropTop, cropWidth, cropHeight);
+             img.flush();
         }
         return croppedImage;
     }
@@ -812,14 +836,24 @@ public class ImgUtil {
 	
 	public static byte[] getChecksum(final BufferedImage aBufferedImage) throws IOException, NoSuchAlgorithmException
 	{
+		byte[] byteChecksum = null;
 		if(aBufferedImage!=null)
 		{
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			ImageIO.write(aBufferedImage, "PNG", baos);
-			byte[] bytes = baos.toByteArray();
-			return CryptoUtil.getMD5Checksum(bytes);
+			
+			ByteArrayOutputStream baos = null;
+			try {
+				baos = new ByteArrayOutputStream();
+				ImageIO.write(aBufferedImage, "PNG", baos);
+				byte[] bytes = baos.toByteArray();
+				byteChecksum = CryptoUtil.getMD5Checksum(bytes);
+			}
+			finally
+			{
+				if(baos!=null)
+					baos.close();
+			}
 		}
-		return null;
+		return byteChecksum;
 	}
 	
 	
