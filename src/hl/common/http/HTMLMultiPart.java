@@ -10,10 +10,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.security.KeyManagementException;
 import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,6 +41,9 @@ public class HTMLMultiPart {
 	private String basic_auth_uid 			= null;
 	private String basic_auth_pwd 			= null;
 	
+	private int byte_buffer_size 			= 4096;
+	
+	
 	public HTMLMultiPart(String aUrl)
 	{
 		this.url = aUrl;
@@ -54,6 +54,7 @@ public class HTMLMultiPart {
 		mapExtContentType.put("png", "image/png");
 	}
 	
+	/**
 	private void addFile(String aAttrName, File aFile) throws IOException
 	{
 		if(!aFile.isFile())
@@ -64,6 +65,8 @@ public class HTMLMultiPart {
 		byte[] byteFile = FileUtil.getBytes(aFile);
 		addFileBytes(aAttrName, aFile.getName(), byteFile);
 	}
+	**/
+	
 	
 	public void addFileBytes(String aAttrName, String aFileName, byte[] aBytes) throws IOException
 	{
@@ -152,7 +155,7 @@ public class HTMLMultiPart {
 			wrt.flush();
 			
 			int bytesRead;
-			byte[] dataBuffer = new byte[4096];
+			byte[] dataBuffer = new byte[byte_buffer_size];
 			
 			for(String sAttrName : mapFiles.keySet())
 			{
@@ -186,7 +189,7 @@ public class HTMLMultiPart {
 				wrt.flush();
 				//
 				long lTotalRead = 0;
-				dataBuffer = new byte[4096];
+				dataBuffer = new byte[byte_buffer_size];
 				try {
 					inputBytes = new ByteArrayInputStream(byteFile);			 
 					while((bytesRead = inputBytes.read(dataBuffer)) != -1) {
