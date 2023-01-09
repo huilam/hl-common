@@ -82,6 +82,17 @@ public class RestApiUtil {
     	apiClient.processHttpResp(res, aHttpReq, aGzipThresholdBytes);
     }
     
+    public static HttpResp httpSubmit(String aHttpMethod, String aEndpointURL, 
+    		String aContentType, String aContentData) throws IOException
+    {
+    	String sHttpMethod = aHttpMethod;
+    	
+    	if(sHttpMethod!=null)
+    		sHttpMethod = sHttpMethod.toUpperCase();
+    	
+    	return apiClient.httpSubmit(sHttpMethod, aEndpointURL, aContentType, aContentData);
+    }
+    
     public static HttpResp httpDelete(String aEndpointURL, 
     		String aContentType, String aContentData) throws IOException
     {
