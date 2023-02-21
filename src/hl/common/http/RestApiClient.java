@@ -597,9 +597,8 @@ public class RestApiClient {
 						}
 						stream = new BufferedInputStream(in);
 						
-						boolean isUnknownSize = conn!=null && conn.getContentLength()==-1;
-
-						if(in!=null && (in.available()>0 || isUnknownSize))
+						//# conn.getContentLength()==-1 unknown size
+						if(in!=null && (conn.getContentLength()!=0))
 						{
 							byte[] byteRead = new byte[4096];
 							int iBytes;
@@ -680,6 +679,11 @@ public class RestApiClient {
 			{
 				if(in!=null)
 					in.close();
+				
+				if(conn!=null)
+				{
+					conn.disconnect();
+				}
 			}
 		}
 		catch(FileNotFoundException ex)
