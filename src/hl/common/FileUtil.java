@@ -10,6 +10,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -501,6 +502,40 @@ public class FileUtil {
 		}
 		
 		return classCaller;
+	}
+	
+	public static File[] getFilesWithExtensions(File aFolder, String[] aFileExts)
+	{
+		File[] files = new File[]{};
+		
+		if(aFolder!=null && aFolder.isDirectory())
+		{
+			if(aFileExts!=null && aFileExts.length>0)
+			{
+				files = aFolder.listFiles(
+							new FilenameFilter() {
+					
+							@Override
+							public boolean accept(File dir, String name) {
+								String sFName = name.toUpperCase();
+								for(String sExt : aFileExts)
+								{
+									if(sFName.endsWith(sExt.toUpperCase()))
+									{
+										return true;
+									}
+								}
+								return false;
+							}
+						});
+			}
+			else
+			{
+				files = aFolder.listFiles();
+			}
+		}
+		
+		return files;
 	}
 	
     public static void main(String args[]) throws Exception
