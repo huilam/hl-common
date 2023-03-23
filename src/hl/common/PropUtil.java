@@ -31,7 +31,6 @@ import java.io.InputStream;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -43,7 +42,7 @@ import java.util.regex.Pattern;
 
 public class PropUtil{
 	
-	private static Pattern pattSysParam = Pattern.compile("(.*)\\$\\{(.*)\\}(.*)");
+	private static Pattern pattSysParam = Pattern.compile("(.*)\\$\\{env:(.*)\\}(.*)");
 
 	private static Logger logger = Logger.getLogger(PropUtil.class.getName());
 	

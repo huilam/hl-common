@@ -76,6 +76,11 @@ public class ZipUtil{
 	
 	public static void unZip(String aZipFile, String aDestFolder) throws IOException
 	{
+		unZip(aZipFile, aDestFolder, false);
+	}
+	
+	public static void unZip(String aZipFile, String aDestFolder, boolean isRemoveFolders) throws IOException
+	{
 		File folderDest = new File(aDestFolder);
 		
 		//if not exits create the dest folder
@@ -101,14 +106,26 @@ public class ZipUtil{
 			ZipEntry entry = null;
 			while((entry = zipIn.getNextEntry())!=null)
 			{
-	            String filePath = folderDest.getPath() + File.separator + entry.getName();
+				String itemName = entry.getName();
+				if(isRemoveFolders)
+	            {
+	            	File f = new File(itemName);
+	            	itemName = f.getName();
+	            }
+				
+	            String filePath = folderDest.getPath() + File.separator + itemName;
+	            
 	            if (!entry.isDirectory()) {
 	                // if the entry is a file, extracts it
 	            	FileUtil.inputStreamToFile(zipIn, filePath);
 	            } else {
-	                // if the entry is a directory, make the directory
-	                File dir = new File(filePath);
-	                dir.mkdir();
+	                
+	            	if(!isRemoveFolders)
+	            	{
+		            	// if the entry is a directory, make the directory
+		                File dir = new File(filePath);
+		                dir.mkdir();
+	            	}
 	            }
 	            zipIn.closeEntry();
 	        }
