@@ -79,7 +79,7 @@ public class ZipUtil{
 		unZip(aZipFile, aDestFolder, false);
 	}
 	
-	public static void unZip(String aZipFile, String aDestFolder, boolean isRemoveFolders) throws IOException
+	public static void unZip(String aZipFile, String aDestFolder, boolean isFlattenFolders) throws IOException
 	{
 		File folderDest = new File(aDestFolder);
 		
@@ -107,7 +107,7 @@ public class ZipUtil{
 			while((entry = zipIn.getNextEntry())!=null)
 			{
 				String itemName = entry.getName();
-				if(isRemoveFolders)
+				if(isFlattenFolders)
 	            {
 	            	File f = new File(itemName);
 	            	itemName = f.getName();
@@ -120,7 +120,7 @@ public class ZipUtil{
 	            	FileUtil.inputStreamToFile(zipIn, filePath);
 	            } else {
 	                
-	            	if(!isRemoveFolders)
+	            	if(!isFlattenFolders)
 	            	{
 		            	// if the entry is a directory, make the directory
 		                File dir = new File(filePath);
