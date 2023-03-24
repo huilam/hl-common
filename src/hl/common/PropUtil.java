@@ -42,7 +42,7 @@ import java.util.regex.Pattern;
 
 public class PropUtil{
 	
-	private static Pattern pattSysParam = Pattern.compile("\\$\\{env\\:(.*?)\\}");
+	private static Pattern pattSysParam = Pattern.compile("(\\$\\{env\\:(.*?)\\})");
 
 	private static Logger logger = Logger.getLogger(PropUtil.class.getName());
 	
@@ -218,16 +218,19 @@ public class PropUtil{
 	{
 		for(Entry<Object, Object> e : aProps.entrySet())
 		{
-			Matcher m = pattSysParam.matcher((String)e.getValue());
+			String sPropVal = (String) e.getValue();
+			
+			Matcher m = pattSysParam.matcher(sPropVal);
 			while(m.find())
 			{
-				String sSysParamValue = getSysParamValue(m.group(2));
+				String sSysParamName 	= m.group(2);
+				String sSysParamValue 	= getSysParamValue(sSysParamName);
 				if(sSysParamValue!=null)
 				{
-					String sPropVal = m.group(1)+sSysParamValue+m.group(3);
-					e.setValue(sPropVal);
+					sPropVal = sPropVal.replace(m.group(1), sSysParamValue);
 				}
 			}
+			e.setValue(sPropVal);
 		}
 		
 		return aProps;
