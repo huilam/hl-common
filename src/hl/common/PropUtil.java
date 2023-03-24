@@ -42,7 +42,7 @@ import java.util.regex.Pattern;
 
 public class PropUtil{
 	
-	private static Pattern pattSysParam = Pattern.compile("(.*)\\$\\{env:(.*)\\}(.*)");
+	private static Pattern pattSysParam = Pattern.compile("\\$\\{env\\:(.*?)\\}");
 
 	private static Logger logger = Logger.getLogger(PropUtil.class.getName());
 	
