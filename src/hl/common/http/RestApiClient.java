@@ -93,6 +93,11 @@ public class RestApiClient {
 		this.conn_timeout = aTimeOutMs;
 	}
 	
+	public void setReadTimeout(int aTimeOutMs)
+	{
+		this.read_timeout = aTimeOutMs;
+	}
+	
 	public void setCustomLogger(Logger aLogger)
 	{
 		logger = aLogger;
@@ -216,12 +221,10 @@ public class RestApiClient {
 				byteContent = aHttpResp.getContent_data().getBytes(UTF_8);
 			}
 			
-			long lContentLen 	= byteContent.length;
-			
-			if(aGzipBytesThreshold>0 && lContentLen >= aGzipBytesThreshold)
+			if(aGzipBytesThreshold>0 
+					&& (byteContent.length) >= aGzipBytesThreshold)
 			{
 				byteContent = ZipUtil.compress(byteContent);
-				lContentLen = byteContent.length;
 				res.addHeader(HEADER_CONTENT_ENCODING, TYPE_ENCODING_GZIP);
 			}
 			
@@ -239,7 +242,7 @@ public class RestApiClient {
 				res.setContentType(TYPE_APP_JSON);
 			}
 			
-			res.setContentLengthLong(lContentLen);
+			res.setContentLengthLong(byteContent.length);
 			res.getOutputStream().write(byteContent);
 		}
 
@@ -301,7 +304,8 @@ public class RestApiClient {
 			
 			conn = (HttpURLConnection) url.openConnection();
 			conn.setDoOutput(true);
-			conn.setConnectTimeout(conn_timeout);
+			conn.setConnectTimeout(this.conn_timeout);
+			conn.setReadTimeout(this.read_timeout);
 			conn.setRequestProperty(HEADER_CONTENT_TYPE, aContentType);
 			conn.setRequestMethod(aHttpMethod);
 			
@@ -527,7 +531,6 @@ public class RestApiClient {
 			conn.setInstanceFollowRedirects(true);
 			conn.setConnectTimeout(this.conn_timeout);
 			conn.setReadTimeout(this.read_timeout);
-			
 			
 			conn = appendBasicAuth(conn);
 			
