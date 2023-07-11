@@ -15,8 +15,10 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Base64;
 import javax.imageio.ImageIO;
 
@@ -25,21 +27,66 @@ import hl.common.http.RestApiUtil;
 
 public class ImgUtil {
 	
+	private static final String BYTES_HEXHDR_JPG 	= "FFD8";
+	private static final String BYTES_HEXHDR_PNG 	= "89504E47";
+	private static final String BYTES_HEXHDR_BMP 	= "424D";
+	
 	private static final String HTMLIMG_HEADER 		= ";base64,";
+	
+	public static final String IMGTYPE_JPG = "JPG";
+	public static final String IMGTYPE_PNG = "PNG";
+	public static final String IMGTYPE_BMP = "BMP";
+	
 
 	public static String convertToBMP(String aJpgFileName) throws IOException
 	{
-		return convert(aJpgFileName, "BMP");
+		return convert(aJpgFileName, IMGTYPE_BMP);
 	}
 	
 	public static String convertToJPG(String aBmpFileName) throws IOException
 	{
-		return convert(aBmpFileName, "JPG");
+		return convert(aBmpFileName, IMGTYPE_JPG);
 	}
 	
 	public static String convertToPNG(String aBmpFileName) throws IOException
 	{
-		return convert(aBmpFileName, "PNG");
+		return convert(aBmpFileName, IMGTYPE_PNG);
+	}
+	
+	public static String getImageTypeByBase64(String aBase64)
+	{
+		if(aBase64==null)
+			return null;
+		
+		byte[] bytes = Base64.getDecoder().decode(aBase64);
+		return getImageTypeByBytes(bytes);
+	}
+	
+	public static String getImageTypeByBytes(byte[] aByteArray)
+	{
+		if(aByteArray==null || aByteArray.length<4)
+			return null;
+		
+		byte[] byte8 = Arrays.copyOf(aByteArray, 8);
+		
+		String aImgType = null;
+		
+		String sByte8Str = new BigInteger(1, byte8).toString(16).toUpperCase();
+
+		if(sByte8Str.startsWith(BYTES_HEXHDR_JPG))
+		{
+			aImgType = IMGTYPE_JPG;
+		}
+		else if(sByte8Str.startsWith(BYTES_HEXHDR_PNG))
+		{
+			aImgType = IMGTYPE_PNG;
+		}
+		else if(sByte8Str.startsWith(BYTES_HEXHDR_BMP))
+		{
+			aImgType = IMGTYPE_BMP;
+		}
+		
+		return aImgType;
 	}
 	
 	public static byte[] toBytes(BufferedImage aBufferedImage, String aImageFormat) throws IOException
@@ -49,14 +96,14 @@ public class ImgUtil {
 		
 		if(aImageFormat==null || aImageFormat.trim().length()==0)
 		{
-			aImageFormat = "PNG";
+			aImageFormat = IMGTYPE_PNG;
 		}
 		
 		try {
 			
 			out = new ByteArrayOutputStream();
 			
-			if(hasAlpha(aBufferedImage) && !aImageFormat.equalsIgnoreCase("PNG"))
+			if(hasAlpha(aBufferedImage) && !aImageFormat.equalsIgnoreCase(IMGTYPE_PNG))
 			{
 				aBufferedImage = removeAlpha(aBufferedImage);
 			}
@@ -230,7 +277,7 @@ public class ImgUtil {
 	
 	public static String imageFileToBase64(final String aSourceURI) throws IOException
 	{
-		String sFormat = "JPG";
+		String sFormat = IMGTYPE_JPG;
 		
 		int iPos = aSourceURI.indexOf(".");
 		if(iPos>-1)
@@ -263,7 +310,7 @@ public class ImgUtil {
 			try{
 				outImg = new ByteArrayOutputStream();
 				
-				if(!aImgFormat.equalsIgnoreCase("PNG"))
+				if(!aImgFormat.equalsIgnoreCase(IMGTYPE_PNG))
 				{
 					if(aBufferedImage.getType()!=BufferedImage.TYPE_INT_RGB)
 					{
@@ -402,7 +449,7 @@ public class ImgUtil {
 
     public static boolean saveAsFile(BufferedImage aBufferedImage, File aOutputFile) throws IOException
 	{
-    	String sImgFormat = "JPG";
+    	String sImgFormat = IMGTYPE_JPG;
     	String sFileName = aOutputFile.getName();
     	int iExtPos = sFileName.lastIndexOf(".");
     	if(iExtPos>-1)
@@ -417,7 +464,7 @@ public class ImgUtil {
 	{
     	if(aOutputFileFormat!=null)
     	{
-    		if(!aOutputFileFormat.equalsIgnoreCase("PNG"))
+    		if(!aOutputFileFormat.equalsIgnoreCase(IMGTYPE_PNG))
     		{
     			//remove transparency 
     			BufferedImage newImage = new BufferedImage(
@@ -475,7 +522,7 @@ public class ImgUtil {
 	{
 		BufferedImage img = base64ToImage(aImageBase64);
 		img = resizeImg(img, aNewWidth, aNewHeight, isMaintainAspectRatio);
-		String sBase64 = imageToBase64(img, "JPG");
+		String sBase64 = imageToBase64(img, IMGTYPE_JPG);
 		img.flush();
 		return sBase64;
 	}
@@ -579,7 +626,7 @@ public class ImgUtil {
 	{
 		BufferedImage img = base64ToImage(aImageBase64);
 		img = flipImg(img, isFlipHorizontal);
-		String sBase64 = ImgUtil.imageToBase64(img, "JPG");
+		String sBase64 = ImgUtil.imageToBase64(img, IMGTYPE_JPG);
 		img.flush();
 		return sBase64;
 	}
@@ -843,7 +890,7 @@ public class ImgUtil {
 			ByteArrayOutputStream baos = null;
 			try {
 				baos = new ByteArrayOutputStream();
-				ImageIO.write(aBufferedImage, "PNG", baos);
+				ImageIO.write(aBufferedImage, IMGTYPE_PNG, baos);
 				byte[] bytes = baos.toByteArray();
 				byteChecksum = CryptoUtil.getMD5Checksum(bytes);
 			}
