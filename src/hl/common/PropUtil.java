@@ -149,6 +149,11 @@ public class PropUtil{
 	
 	public static Properties loadProperties(String aPropFileName) throws IOException 
 	{
+		return loadProperties(PropUtil.class, aPropFileName);
+	}
+	
+	public static Properties loadProperties(Class<?> aClass, String aPropFileName) throws IOException 
+	{
 		Properties prop = null;
 		InputStream in 	= null;
 		try{
@@ -159,7 +164,7 @@ public class PropUtil{
 			File fileProp = new File(aPropFileName);
 			if(!fileProp.isFile())
 			{
-				URL url = PropUtil.class.getResource("/"+aPropFileName);
+				URL url = aClass.getResource("/"+aPropFileName);
 				if(url!=null)
 				{
 					fileProp = new File(url.getPath());
@@ -185,7 +190,7 @@ public class PropUtil{
 				try{					
 					logger.log(Level.FINEST, "Trying to load from resource ... "+"/" + aPropFileName);
 					//
-					is = PropUtil.class.getResourceAsStream("/" + aPropFileName);				
+					is = aClass.getResourceAsStream("/" + aPropFileName);				
 					prop = new Properties();
 					prop.load(is);
 				}catch(Exception e){
