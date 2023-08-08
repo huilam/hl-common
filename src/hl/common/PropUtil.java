@@ -187,14 +187,21 @@ public class PropUtil{
 			else
 			{
 				InputStream is = null;
-				try{					
-					logger.log(Level.FINEST, "Trying to load from resource ... "+"/" + aPropFileName);
+				try{
+					logger.log(Level.FINEST, "Trying to load from resource ... "+aPropFileName);
 					//
-					is = aClass.getResourceAsStream("/" + aPropFileName);				
+					try{
+						is = aClass.getResourceAsStream(aPropFileName);	
+					}catch(Exception e){
+					}
+					
+					if(is==null)
+						is = aClass.getResourceAsStream("/"+aPropFileName);
+					
 					prop = new Properties();
 					prop.load(is);
 				}catch(Exception e){
-					 throw new IOException("Properties file NOT found ! - "+aPropFileName);
+					 throw new IOException("Properties file NOT found ! - "+aPropFileName+"  aClass:"+aClass.getName());
 				}
 				finally
 				{
