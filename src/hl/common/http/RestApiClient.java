@@ -25,10 +25,13 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -83,7 +86,9 @@ public class RestApiClient {
 	private static Object objectSyn 		= new Object(); 
 	
 	private static Map<KeyStore, SSLContext> mapKeystoreSSLContext = new HashMap<KeyStore, SSLContext>();
-	private static SSLContext anyHostSSLContext = null;
+	private static SSLContext anyHostSSLContext 	= null;
+	
+	private static String[] strBinaryContentTypes 	= new String[] {"octet-stream","image","audio"};
 	
 	private int conn_timeout	 	= 5000;
 	private int read_timeout	 	= 30000;
@@ -423,6 +428,19 @@ public class RestApiClient {
     	return httpResp;
     }
     
+    public static boolean isBinaryContentType(String aContentType)
+    {
+    	boolean isBinary = false;
+    	for(int i=0; i<strBinaryContentTypes.length && !isBinary; i++)
+    	{
+    		if(strBinaryContentTypes[i].indexOf(aContentType)>-1)
+    		{
+    			isBinary = true;
+    		}
+    	}
+    	return isBinary;
+    }
+    
     public static SSLSocketFactory getTrustAnyHostSSLSocketFactory() throws NoSuchAlgorithmException, KeyManagementException
     {
     	SSLContext sc = anyHostSSLContext;
@@ -631,8 +649,7 @@ public class RestApiClient {
 								
 								if(byteContent.length>0)
 								{
-									if(sContentType.indexOf("octet-stream")>-1
-										|| sContentType.indexOf("image")>-1)
+									if(isBinaryContentType(sContentType))
 									{
 										httpResp.setContent_bytes(byteContent);
 									}
