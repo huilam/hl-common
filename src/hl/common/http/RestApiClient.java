@@ -433,7 +433,7 @@ public class RestApiClient {
     	boolean isBinary = false;
     	for(int i=0; i<strBinaryContentTypes.length && !isBinary; i++)
     	{
-    		if(strBinaryContentTypes[i].indexOf(aContentType)>-1)
+    		if(aContentType.indexOf(strBinaryContentTypes[i])>-1)
     		{
     			isBinary = true;
     		}
