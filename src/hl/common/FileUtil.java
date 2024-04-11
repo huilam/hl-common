@@ -79,6 +79,11 @@ public class FileUtil {
 	
 	public static String loadContent(String aResourcePath)
 	{
+		return loadContent(getCallerClass(), aResourcePath);
+	}
+	
+	public static String loadContent(Class aCallerClass, String aResourcePath)
+	{
 		String sData = null;
 		if(aResourcePath!=null)
 		{
@@ -102,11 +107,27 @@ public class FileUtil {
 
 				InputStream in = null;
 				try {
-					in = getCallerClass().getResourceAsStream(aResourcePath);
+					
+					if(aCallerClass==null)
+						aCallerClass = getCallerClass();
+					
+					in = aCallerClass.getResourceAsStream(aResourcePath);
 					if(in!=null)
 					{
 						sData = getContent(new InputStreamReader(in));
 					}
+					else
+					{
+						// Attempt to load from caller class package
+						String sResPath = "/"+aCallerClass.getPackageName().replace('.','/')+aResourcePath;
+						
+						in = aCallerClass.getResourceAsStream(sResPath);
+						if(in!=null)
+						{
+							sData = getContent(new InputStreamReader(in));
+						}
+					}
+					
 				}
 				finally
 				{

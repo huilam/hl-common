@@ -221,13 +221,13 @@ public class PropUtil{
 		
 		if(prop!=null && prop.size()>0)
 		{
-			prop = replacePropVar(prop);
+			prop = replacePropVar(new Class[]{aClass, PropUtil.class}, prop);
 		}
 		
 		return prop;
 	}
 	
-	private static Properties replacePropVar(Properties aProps)
+	private static Properties replacePropVar(Class[] aClasses, Properties aProps)
 	{
 		for(Entry<Object, Object> e : aProps.entrySet())
 		{
@@ -250,7 +250,7 @@ public class PropUtil{
 			while(m.find())
 			{
 				String sFileName 	= m.group(2);
-				String sFileContent = loadFileContentAsText(sFileName);
+				String sFileContent = loadFileContentAsText(aClasses, sFileName);
 				if(sFileContent!=null)
 				{
 					sPropVal = sPropVal.replace(m.group(1), sFileContent);
@@ -264,13 +264,15 @@ public class PropUtil{
 		return aProps;
 	}
 	
-	private static String loadFileContentAsText(String aFilePath)
+	private static String loadFileContentAsText(Class[] aClasses, String aFilePath)
 	{
 		String sContent = null;
-		File fileText = new File(aFilePath);
-		if(fileText.isFile())
+		
+		for(Class aClass : aClasses)
 		{
-			sContent = FileUtil.loadContent(aFilePath);
+			sContent = FileUtil.loadContent(aClass, aFilePath);
+			if(sContent!=null && sContent.trim().length()>0)
+				break;
 		}
 		return sContent;
 	}
