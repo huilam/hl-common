@@ -42,7 +42,8 @@ import java.util.regex.Pattern;
 
 public class PropUtil{
 	
-	private static Pattern pattSysParam = Pattern.compile("(\\$\\{env\\:(.*?)\\})");
+	private static Pattern pattEnvParam = Pattern.compile("(\\$\\{env\\:(.*?)\\})");
+	private static Pattern pattFileParam = Pattern.compile("(\\$\\{file\\:(.*?)\\})");
 
 	private static Logger logger = Logger.getLogger(PropUtil.class.getName());
 	
@@ -220,35 +221,61 @@ public class PropUtil{
 		
 		if(prop!=null && prop.size()>0)
 		{
-			prop = replaceSysVar(prop);
+			prop = replacePropVar(prop);
 		}
 		
 		return prop;
 	}
 	
-	private static Properties replaceSysVar(Properties aProps)
+	private static Properties replacePropVar(Properties aProps)
 	{
 		for(Entry<Object, Object> e : aProps.entrySet())
 		{
 			String sPropVal = (String) e.getValue();
 			
-			Matcher m = pattSysParam.matcher(sPropVal);
+			//System Env
+			Matcher m = pattEnvParam.matcher(sPropVal);
 			while(m.find())
 			{
-				String sSysParamName 	= m.group(2);
-				String sSysParamValue 	= getSysParamValue(sSysParamName);
-				if(sSysParamValue!=null)
+				String sEnvParamName 	= m.group(2);
+				String sEnvParamValue 	= getEnvParamValue(sEnvParamName);
+				if(sEnvParamValue!=null)
 				{
-					sPropVal = sPropVal.replace(m.group(1), sSysParamValue);
+					sPropVal = sPropVal.replace(m.group(1), sEnvParamValue);
 				}
 			}
+			
+			// File Content
+			m = pattFileParam.matcher(sPropVal);
+			while(m.find())
+			{
+				String sFileName 	= m.group(2);
+				String sFileContent = loadFileContentAsText(sFileName);
+				if(sFileContent!=null)
+				{
+					sPropVal = sPropVal.replace(m.group(1), sFileContent);
+				}
+			}
+			
+			//
 			e.setValue(sPropVal);
 		}
 		
 		return aProps;
 	}
 	
-	private static String getSysParamValue(String aSysParamName)
+	private static String loadFileContentAsText(String aFilePath)
+	{
+		String sContent = null;
+		File fileText = new File(aFilePath);
+		if(fileText.isFile())
+		{
+			sContent = FileUtil.loadContent(aFilePath);
+		}
+		return sContent;
+	}
+	
+	private static String getEnvParamValue(String aSysParamName)
 	{
 		String sSysParamVal = System.getProperty(aSysParamName);
 		if(sSysParamVal==null)
