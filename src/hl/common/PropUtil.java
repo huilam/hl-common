@@ -229,6 +229,7 @@ public class PropUtil{
 	
 	private static Properties replacePropVar(Class[] aClasses, Properties aProps)
 	{
+		int iVarCount = 0;
 		for(Entry<Object, Object> e : aProps.entrySet())
 		{
 			String sPropVal = (String) e.getValue();
@@ -237,10 +238,12 @@ public class PropUtil{
 			Matcher m = pattEnvParam.matcher(sPropVal);
 			while(m.find())
 			{
+				iVarCount++;
 				String sEnvParamName 	= m.group(2);
 				String sEnvParamValue 	= getEnvParamValue(sEnvParamName);
 				if(sEnvParamValue!=null)
 				{
+					iVarCount--;
 					sPropVal = sPropVal.replace(m.group(1), sEnvParamValue);
 				}
 			}
@@ -249,10 +252,12 @@ public class PropUtil{
 			m = pattFileParam.matcher(sPropVal);
 			while(m.find())
 			{
+				iVarCount++;
 				String sFileName 	= m.group(2);
 				String sFileContent = loadFileContentAsText(aClasses, sFileName);
 				if(sFileContent!=null)
 				{
+					iVarCount--;
 					sPropVal = sPropVal.replace(m.group(1), sFileContent);
 				}
 			}
@@ -260,7 +265,12 @@ public class PropUtil{
 			//
 			e.setValue(sPropVal);
 		}
-		
+		//
+		if(iVarCount>0)
+		{
+			System.err.println("unReplaced-Vars="+iVarCount);
+		}
+		//
 		return aProps;
 	}
 	
