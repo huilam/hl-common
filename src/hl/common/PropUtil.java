@@ -163,12 +163,14 @@ public class PropUtil{
 			aPropFileName = aPropFileName.replace("#", File.separator);
 			
 			File fileProp = new File(aPropFileName);
-			if(!fileProp.isFile())
+			if(aClass!=PropUtil.class)
 			{
 				URL url = aClass.getResource("/"+aPropFileName);
 				if(url!=null)
 				{
-					fileProp = new File(url.getPath());
+					File fileTmp = new File(url.getPath());
+					if(fileTmp.isFile())
+						fileProp = fileTmp;
 				}
 			}
 			
