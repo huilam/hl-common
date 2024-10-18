@@ -10,15 +10,11 @@
 	<classpathentry kind="lib" path="lib/exclude/servlet-api.jar"/>
 	<classpathentry kind="lib" path="lib/ldap/api-all-1.0.0.jar"/>
 	<classpathentry kind="lib" path="lib/ldap/commons-collections-3.2.2.jar"/>
-	<classpathentry kind="lib" path="lib/ldap/mina-core-2.0.16.jar"/>
 	<classpathentry kind="lib" path="lib/ldap/slf4j-api-1.7.25.jar"/>
-	<classpathentry kind="lib" path="lib/redis/jedis-jedis-2.9.0.jar"/>
-	<classpathentry kind="lib" path="lib/guava-22.0.jar"/>
-	<classpathentry kind="lib" path="lib/org.json.jar"/>
-	<classpathentry kind="lib" path="lib/javax.mail.jar"/>
-	<classpathentry kind="lib" path="lib/jetty-all-9.4.19.v20190610-uber.jar"/>
-	<classpathentry kind="lib" path="lib/zxing/core-3.4.0.jar"/>
-	<classpathentry kind="lib" path="lib/zxing/javase-3.4.0.jar"/>
-	<classpathentry kind="lib" path="lib/activation-1.1.1.jar"/>
-	<classpathentry kind="output" path="build"/>
+	<classpathentry kind="lib" path="lib/json-20240303.jar"/>
+	<classpathentry kind="lib" path="lib/guava/failureaccess-1.0.1.jar"/>
+	<classpathentry kind="lib" path="lib/guava/guava-33.3.1-jre.jar"/>
+	<classpathentry kind="lib" path="lib/javamail/activation-1.1.1.jar"/>
+	<classpathentry kind="lib" path="lib/javamail/javax.mail-1.6.2.jar"/>
+	<classpathentry kind="output" path="classes"/>
 </classpath>
