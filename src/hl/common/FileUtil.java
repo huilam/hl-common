@@ -177,6 +177,9 @@ public class FileUtil {
 						int iRemarkPos = sLine.indexOf(aRemarks);
 						if(iRemarkPos>-1)
 						{
+							if(iRemarkPos==0) //whole line is remarks
+								continue;
+							
 							sLine = sLine.substring(0, iRemarkPos);
 						}
 					}
