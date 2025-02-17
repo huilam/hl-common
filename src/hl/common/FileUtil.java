@@ -181,10 +181,15 @@ public class FileUtil {
 								continue;
 							
 							sLine = sLine.substring(0, iRemarkPos);
+							
+							if(sLine.trim().length()==0)
+							{
+								continue;
+							}
 						}
 					}
 					
-					sb.append(sLine);
+					sb.append(sLine.trim());
 				}
 				
 				if(sb.length()>0)
