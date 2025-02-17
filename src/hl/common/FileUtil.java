@@ -32,6 +32,8 @@ public class FileUtil {
 
 	private static Logger logger = Logger.getLogger(FileUtil.class.getName());
 	private static final int BUFFER_SIZE = 32768;
+	private static final String DEF_REMARKS = "#";
+	
 	
 	public static File getJavaClassPath(Class aClass)
 	{
@@ -84,6 +86,11 @@ public class FileUtil {
 	
 	public static String loadContent(Class aCallerClass, String aResourcePath)
 	{
+		return loadContent(aCallerClass, aResourcePath, DEF_REMARKS);
+	}
+	
+	public static String loadContent(Class aCallerClass, String aResourcePath, String aRemarks)
+	{
 		String sData = null;
 		if(aResourcePath!=null)
 		{
@@ -91,7 +98,7 @@ public class FileUtil {
 			if(f.exists())
 			{
 				try {
-					sData = getContent(new FileReader(f));
+					sData = getContent(new FileReader(f), aRemarks);
 				} catch (FileNotFoundException e) {
 					e.printStackTrace();
 				}
@@ -114,7 +121,7 @@ public class FileUtil {
 					in = aCallerClass.getResourceAsStream(aResourcePath);
 					if(in!=null)
 					{
-						sData = getContent(new InputStreamReader(in));
+						sData = getContent(new InputStreamReader(in), aRemarks);
 					}
 					else
 					{
@@ -124,7 +131,7 @@ public class FileUtil {
 						in = aCallerClass.getResourceAsStream(sResPath);
 						if(in!=null)
 						{
-							sData = getContent(new InputStreamReader(in));
+							sData = getContent(new InputStreamReader(in), aRemarks);
 						}
 					}
 					
@@ -144,9 +151,12 @@ public class FileUtil {
 		return sData;
 	}
 	
-	private static String getContent(Reader aReader) 
+	private static String getContent(Reader aReader, String aRemarks) 
 	{
 		String sData = null;
+		
+		boolean isRemoveRemark = (aRemarks!=null && aRemarks.trim().length()>0);
+		
 		if(aReader!=null)
 		{
 			StringBuffer sb = new StringBuffer();
@@ -161,6 +171,16 @@ public class FileUtil {
 					{
 						sb.append("\n");
 					}
+					
+					if(isRemoveRemark)
+					{
+						int iRemarkPos = sLine.indexOf(aRemarks);
+						if(iRemarkPos>-1)
+						{
+							sLine = sLine.substring(0, iRemarkPos);
+						}
+					}
+					
 					sb.append(sLine);
 				}
 				
