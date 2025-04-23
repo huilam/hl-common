@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -231,7 +232,8 @@ public class PropUtil{
 	
 	private static Properties replacePropVar(Class[] aClasses, Properties aProps)
 	{
-		int iVarCount = 0;
+		Map<String, String> mapVars = new HashMap<String,String>();
+		
 		for(Entry<Object, Object> e : aProps.entrySet())
 		{
 			String sPropVal = (String) e.getValue();
@@ -240,13 +242,14 @@ public class PropUtil{
 			Matcher m = pattEnvParam.matcher(sPropVal);
 			while(m.find())
 			{
-				iVarCount++;
 				String sEnvParamName 	= m.group(2);
+				mapVars.put(sEnvParamName, m.group(1));
+				
 				String sEnvParamValue 	= getEnvParamValue(sEnvParamName);
 				if(sEnvParamValue!=null)
 				{
-					iVarCount--;
 					sPropVal = sPropVal.replace(m.group(1), sEnvParamValue);
+					mapVars.remove(sEnvParamName);
 				}
 			}
 			
@@ -254,13 +257,13 @@ public class PropUtil{
 			m = pattFileParam.matcher(sPropVal);
 			while(m.find())
 			{
-				iVarCount++;
 				String sFileName 	= m.group(2);
+				mapVars.put(sFileName, m.group(1));
 				String sFileContent = loadFileContentAsText(aClasses, sFileName);
 				if(sFileContent!=null)
 				{
-					iVarCount--;
 					sPropVal = sPropVal.replace(m.group(1), sFileContent);
+					mapVars.remove(sFileName);
 				}
 			}
 			
@@ -268,9 +271,13 @@ public class PropUtil{
 			e.setValue(sPropVal);
 		}
 		//
-		if(iVarCount>0)
+		if(mapVars.size()>0)
 		{
-			System.err.println("unReplaced-Vars="+iVarCount);
+			System.err.println("unReplaced-Vars="+mapVars.size());
+			for(String sVarName : mapVars.keySet())
+			{
+				System.err.println("   - "+sVarName+" = "+mapVars.get(sVarName));
+			}
 		}
 		//
 		return aProps;
