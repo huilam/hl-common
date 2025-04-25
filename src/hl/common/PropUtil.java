@@ -224,13 +224,14 @@ public class PropUtil{
 		
 		if(prop!=null && prop.size()>0)
 		{
-			prop = replacePropVar(new Class[]{aClass, PropUtil.class}, prop);
+			File folder = new File(aPropFileName).getParentFile();
+			prop = replacePropVar(new Class[]{aClass, PropUtil.class}, prop, folder);
 		}
 		
 		return prop;
 	}
 	
-	private static Properties replacePropVar(Class[] aClasses, Properties aProps)
+	private static Properties replacePropVar(Class[] aClasses, Properties aProps, File aPropFolder)
 	{
 		Map<String, String> mapVars = new HashMap<String,String>();
 		
@@ -260,6 +261,11 @@ public class PropUtil{
 				String sFileName 	= m.group(2);
 				mapVars.put(sFileName, m.group(1));
 				String sFileContent = loadFileContentAsText(aClasses, sFileName);
+				if(sFileContent==null && aPropFolder!=null)
+				{
+					sFileContent = loadFileContentAsText(aClasses, aPropFolder.getAbsolutePath()+sFileName);
+				}
+				
 				if(sFileContent!=null)
 				{
 					sPropVal = sPropVal.replace(m.group(1), sFileContent);
@@ -274,6 +280,11 @@ public class PropUtil{
 		if(mapVars.size()>0)
 		{
 			System.err.println("unReplaced-Vars="+mapVars.size());
+			for(Class c : aClasses)
+			{
+				System.err.println("   class: "+c.getName());
+			}
+			
 			for(String sVarName : mapVars.keySet())
 			{
 				System.err.println("   - "+sVarName+" = "+mapVars.get(sVarName));
