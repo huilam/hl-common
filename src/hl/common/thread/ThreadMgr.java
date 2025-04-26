@@ -85,7 +85,7 @@ public class ThreadMgr {
 		{
 			String sCallerClassName = stacks[i].getClassName();
 			
-			if("javax.servlet.http.HttpServlet".equals(sCallerClassName))
+			if("jakarta.servlet.http.HttpServlet".equals(sCallerClassName))
 			{
 				return aClass.getClass();
 			}
