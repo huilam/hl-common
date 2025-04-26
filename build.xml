@@ -9,7 +9,7 @@
 	
 	<target name="compile" depends="clean">
 		<mkdir dir="${build}"/>
-		<javac srcdir="${src}" destdir="${build}" debug="true" source="11" target="11" includeantruntime="false">
+		<javac srcdir="${src}" destdir="${build}" debug="true" source="17" target="17" includeantruntime="false">
 			<classpath refid="compile.classpath"/>
 		</javac>
 	</target>
