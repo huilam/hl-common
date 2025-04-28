@@ -11,7 +11,6 @@ import java.util.Properties;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import hl.common.PropUtil;
 import hl.common.http.HttpResp;
 import hl.common.http.RestApiUtil;
 

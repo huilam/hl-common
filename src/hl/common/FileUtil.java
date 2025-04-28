@@ -35,7 +35,7 @@ public class FileUtil {
 	private static final String DEF_REMARKS = "#";
 	
 	
-	public static File getJavaClassPath(Class aClass)
+	public static File getJavaClassPath(Class<?> aClass)
 	{
 		File folder = null;
 		if(aClass!=null)
@@ -84,12 +84,12 @@ public class FileUtil {
 		return loadContent(getCallerClass(), aResourcePath);
 	}
 	
-	public static String loadContent(Class aCallerClass, String aResourcePath)
+	public static String loadContent(Class<?> aCallerClass, String aResourcePath)
 	{
 		return loadContent(aCallerClass, aResourcePath, DEF_REMARKS);
 	}
 	
-	public static String loadContent(Class aCallerClass, String aResourcePath, String aRemarks)
+	public static String loadContent(Class<?> aCallerClass, String aResourcePath, String aRemarks)
 	{
 		String sData = null;
 		if(aResourcePath!=null)
@@ -516,10 +516,10 @@ public class FileUtil {
     	return isLoaded;
     }
 	
-	private static Class getCallerClass() 
+	private static Class<?> getCallerClass() 
 	{
 		StackTraceElement[] stacks = Thread.currentThread().getStackTrace();
-		Class classCaller = FileUtil.class;
+		Class<?> classCaller = FileUtil.class;
 		
 		for(int i=0; i<stacks.length; i++)
 		{
