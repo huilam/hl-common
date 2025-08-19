@@ -5,6 +5,8 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.json.JSONObject;
+
 public class HttpResp {
 	//
 	private int http_status 			= 0;
@@ -89,7 +91,14 @@ public class HttpResp {
 	}
 	public void setContent_bytes(byte[] content_data) {
 		this.content_data = content_data;
+		setContent_type_as_BinaryStream();
 	}
+	
+	public void setContent_data(JSONObject content_data) {
+		this.content_data = content_data.toString();
+		setContent_type_as_Json();
+	}
+	
 	public void setContent_data(String content_data) {
 		
 		this.content_data = content_data;
@@ -115,6 +124,10 @@ public class HttpResp {
 	
 	public void setContent_type_as_Json() {
 		setContent_type(TYPE_APPL_JSON);
+	}
+	
+	public void setContent_type_as_BinaryStream() {
+		setContent_type(TYPE_BINARY);
 	}
 	
 	public void setContent_type(String content_type) {
