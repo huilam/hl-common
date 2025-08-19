@@ -130,6 +130,30 @@ public class HttpResp {
 		setContent_type(TYPE_BINARY);
 	}
 	
+	public void setContent_type_as_ImageJPG() {
+		setContent_type(TYPE_IMAGE_JPG);
+	}
+	
+	public void setContent_type_as_ImagePNG() {
+		setContent_type(TYPE_IMAGE_PNG);
+	}
+	
+	public void setContent_type_as_PDF() {
+		setContent_type(TYPE_APPL_PDF);
+	}
+	
+	public void setContent_type_as_Plaintext() {
+		setContent_type(TYPE_PLAINTEXT);
+	}
+	
+	public void setContent_type_as_VIDEO_MP4() {
+		setContent_type(TYPE_VIDEO_MP4);
+	}
+	
+	public void setContent_type_as_AUDIO_MP3() {
+		setContent_type(TYPE_AUDIO_MP3);
+	}
+	
 	public void setContent_type(String content_type) {
 		this.content_type = content_type;
 	}	
