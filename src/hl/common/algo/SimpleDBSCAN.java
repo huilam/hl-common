@@ -16,7 +16,7 @@ public class SimpleDBSCAN
 		
 	}
 
-    public static final class Result<T> {
+    public class Result<T> {
         public final List<List<T>> clusters;
         public final List<T> noise;
         public final int[] labels;
@@ -29,7 +29,7 @@ public class SimpleDBSCAN
     }
 
     /** Cluster arbitrary objects T using DBSCAN. */
-    public static <T> Result<T> cluster(List<T> items,
+    public <T> Result<T> cluster(List<T> items,
                                     Function<T, double[]> features,
                                     double eps, int minPts) {
 
@@ -58,7 +58,7 @@ public class SimpleDBSCAN
 
     // -------- Core DBSCAN on double[][] --------
 
-    private static int[] dbscan(double[][] data, double eps, int minPts) {
+    private int[] dbscan(double[][] data, double eps, int minPts) {
         final int n = data.length;
         int[] labels = new int[n];
         Arrays.fill(labels, UNCLASSIFIED);
@@ -80,7 +80,7 @@ public class SimpleDBSCAN
         return labels;
     }
 
-    private static void expandCluster(
+    private void expandCluster(
     		double[][] data, int[] labels, boolean[] visited,
     		int pointIdx, List<Integer> neighbors,
     		int clusterId, double eps, int minPts) 
@@ -103,7 +103,7 @@ public class SimpleDBSCAN
         }
     }
 
-    private static List<Integer> regionQuery(double[][] data, int idx, double eps) {
+    private List<Integer> regionQuery(double[][] data, int idx, double eps) {
         List<Integer> neighbors = new ArrayList<>();
         for (int i = 0; i < data.length; i++) {
             if (euclidean(data[idx], data[i]) <= eps) neighbors.add(i);
@@ -111,7 +111,7 @@ public class SimpleDBSCAN
         return neighbors;
     }
 
-    private static double euclidean(double[] a, double[] b) {
+    private double euclidean(double[] a, double[] b) {
         double s = 0.0;
         for (int d = 0; d < a.length; d++) {
             double diff = a[d] - b[d];
@@ -120,7 +120,7 @@ public class SimpleDBSCAN
         return Math.sqrt(s);
     }
     
-	public static <T> void printResult(Result<T> res) {
+	public <T> void printResult(Result<T> res) {
 	    int c = 0;
 	    for (List<T> cluster : res.clusters) {
 	        System.out.println("  Cluster " + (c++) + ": " + cluster);
@@ -154,16 +154,18 @@ public class SimpleDBSCAN
             new TextBox("e", 322, 128, 140),
             new TextBox("f", 700,  50,  62) // likely noise/outlier
         );
+        
+        SimpleDBSCAN dbscan = new SimpleDBSCAN();
 
         // 1) Cluster by X only (e.g., columns)
-        Result<TextBox> byX = cluster(
+        Result<TextBox> byX = dbscan.cluster(
             boxes,
             tb -> new double[]{ tb.x },
             /*eps*/ 15.0,
             /*minPts*/ 2
         );
         System.out.println("Clusters by X:");
-        printResult(byX);
+        dbscan.printResult(byX);
 
     }
 }
