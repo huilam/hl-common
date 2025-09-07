@@ -28,18 +28,21 @@ public class SimpleDBSCAN
         }
     }
 
+    public <T> Result<T> cluster(List<T> items, Function<T, double[]> features, double eps, int minPts) 
+    {
+    	return cluster(items, features, eps, 1.0, minPts);
+    }
+    
     /** Cluster arbitrary objects T using DBSCAN. */
-    public <T> Result<T> cluster(List<T> items,
-                                    Function<T, double[]> features,
-                                    double eps, int minPts) {
-
+    public <T> Result<T> cluster(List<T> items, Function<T, double[]> features, double eps, double epsScale, int minPts) 
+    {
         // Build data matrix (keeps original order)
         final int n = items.size();
         final double[][] data = new double[n][];
         for (int i = 0; i < n; i++) data[i] = features.apply(items.get(i));
 
         // Run DBSCAN over data indices
-        int[] labels = dbscan(data, eps, minPts);
+        int[] labels = dbscan(data, eps*epsScale, minPts);
 
         // Build clusters/noise mapped back to T
         Map<Integer, List<T>> map = new LinkedHashMap<>();
