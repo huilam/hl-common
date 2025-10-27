@@ -259,7 +259,40 @@ public class FileUtil {
 	        	bos.close();
         }
     }
-    
+
+	public static List<String> loadContentAsList(File aTextFile) throws IOException
+	{
+		List<String> list = new ArrayList<String>();
+		
+		BufferedReader rdr = null;
+		try {
+			rdr = new BufferedReader(new FileReader(aTextFile));
+			
+			String sLine = null;
+			
+			while((sLine = rdr.readLine())!=null)
+			{
+				boolean isRemark = sLine.trim().startsWith("##");
+				
+				if(!isRemark)
+					list.add(sLine);
+			}
+		}
+		finally
+		{
+			try {
+				if(rdr!=null);
+				rdr.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		return list;
+	}
+				
+				
 	public static List<String[]> loadCSV(File aCSVFile) throws IOException
 	{
 		List<String[]> list = new ArrayList<String[]>();
