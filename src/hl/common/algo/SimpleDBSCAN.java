@@ -16,25 +16,44 @@ public class SimpleDBSCAN
 		
 	}
 
-    public class Result<T> {
+    public class DBScanResult<T> {
         public final List<List<T>> clusters;
         public final List<T> noise;
         public final int[] labels;
 
-        Result(List<List<T>> clusters, List<T> noise, int[] labels) {
+        DBScanResult(List<List<T>> clusters, List<T> noise, int[] labels) {
             this.clusters = clusters;
             this.noise = noise;
             this.labels = labels;
         }
+        
+        public List<List<T>> getClusterGroups()
+        {
+        	return this.clusters;
+        }
+        
+        public int getTotalClusterCount()
+        {
+        	return this.clusters.size();
+        }
+        
+        public List<T> getOutliers()
+        {
+        	return this.noise;
+        }
     }
-
-    public <T> Result<T> cluster(List<T> items, Function<T, double[]> features, double eps, int minPts) 
+    
+    public <T> DBScanResult<T> cluster(List<T> items, Function<T, double[]> features, 
+    		double minDistance, //EPS
+    		int minClusterSampling) //Density
     {
-    	return cluster(items, features, eps, 1.0, minPts);
+    	return cluster(items, features, minDistance, 1.0, minClusterSampling);
     }
     
     /** Cluster arbitrary objects T using DBSCAN. */
-    public <T> Result<T> cluster(List<T> items, Function<T, double[]> features, double eps, double epsScale, int minPts) 
+    public <T> DBScanResult<T> cluster(List<T> items, Function<T, double[]> features, 
+    		double eps, double epsScale, 
+    		int minClusterSampling) 
     {
         // Build data matrix (keeps original order)
         final int n = items.size();
@@ -42,7 +61,7 @@ public class SimpleDBSCAN
         for (int i = 0; i < n; i++) data[i] = features.apply(items.get(i));
 
         // Run DBSCAN over data indices
-        int[] labels = dbscan(data, eps*epsScale, minPts);
+        int[] labels = dbscan(data, eps*epsScale, minClusterSampling);
 
         // Build clusters/noise mapped back to T
         Map<Integer, List<T>> map = new LinkedHashMap<>();
@@ -56,7 +75,7 @@ public class SimpleDBSCAN
             }
         }
         List<List<T>> clusters = new ArrayList<>(map.values());
-        return new Result<>(clusters, noise, labels);
+        return new DBScanResult<>(clusters, noise, labels);
     }
 
     // -------- Core DBSCAN on double[][] --------
@@ -123,7 +142,7 @@ public class SimpleDBSCAN
         return Math.sqrt(s);
     }
     
-	public <T> void printResult(Result<T> res) {
+	public <T> void printResult(DBScanResult<T> res) {
 	    int c = 0;
 	    for (List<T> cluster : res.clusters) {
 	        System.out.println("  Cluster " + (c++) + ": " + cluster);
@@ -161,7 +180,7 @@ public class SimpleDBSCAN
         SimpleDBSCAN dbscan = new SimpleDBSCAN();
 
         // 1) Cluster by X only (e.g., columns)
-        Result<TextBox> byX = dbscan.cluster(
+        DBScanResult<TextBox> byX = dbscan.cluster(
             boxes,
             tb -> new double[]{ tb.x },
             /*eps*/ 15.0,
