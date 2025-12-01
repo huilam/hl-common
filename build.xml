@@ -2,7 +2,7 @@
 
 	<property name="src" location="src"/>
 	<property name="build" location="build"/>
-	<property name="jdk.ver" value="17"/>
+	<property name="jdk.ver" value="21"/>
 	
 	<tstamp>
 	    <format property="buildno" pattern="yyyyMMdd-HHmm-ss"/>
