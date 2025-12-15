@@ -53,6 +53,11 @@ public class RestApiUtil {
 		apiClient.setConnTimeout(aTimeOutMs);
 	}
 	
+	public static void setReadTimeout(int aTimeOutMs)
+	{
+		apiClient.setReadTimeout(aTimeOutMs);
+	}
+	
 	public static String getReqContent(HttpServletRequest req)
 	{
 		return apiClient.getReqContent(req);
