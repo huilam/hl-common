@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
@@ -607,6 +608,12 @@ public class ImgUtil {
 	        Graphics2D g = null;
 	        try {
 		        g = newImage.createGraphics();
+		        
+		        // This is the magic sauce for quality
+		        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+		        g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+		        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		        
 		        g.transform(aAffineTransform);
 		        g.drawImage(aBufferedImage, 0, 0, null);
 	        }finally {
