@@ -1,14 +1,104 @@
 package hl.common;
 
-import java.util.HashMap;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import java.util.StringTokenizer;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class JsonUtil {
+	
+	public static JSONObject loadFromFile(File aJsonFile)
+	{
+		JSONObject jsonData = null;
+		List<String> listData = new ArrayList<>();
+				
+		if(aJsonFile!=null && aJsonFile.isFile())
+		{
+			BufferedReader rdr = null;
+			try {
+				rdr = new BufferedReader(new FileReader(aJsonFile));
+				
+	            String line = null;
+	            while ((line = rdr.readLine()) != null) {
+	                listData.add(line);
+	            }
+			}
+			catch(IOException ex)
+			{
+				ex.printStackTrace();
+			}
+			finally
+			{
+				if(rdr!=null)
+					try {
+						rdr.close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+			}
+		}
+		
+		if(listData!=null && listData.size()>0)
+		{
+			try {
+				jsonData = new JSONObject(String.join(" ", listData));
+			}
+			catch(JSONException ex)
+			{
+				ex.printStackTrace();
+				jsonData = null;
+			}
+		}
+				
+		
+		return jsonData;
+	}
+	
+	public static File writeToFile(JSONObject aJsonData, File aJsonFile)
+	{
+		File fileOutput = null;
+		if(aJsonData!=null)
+		{
+			FileWriter wrt = null;
+			
+			try {
+				wrt = new FileWriter(aJsonFile);
+				wrt.write(aJsonData.toString(4));
+				wrt.flush();
+				wrt.close();
+				wrt = null;
+				fileOutput = aJsonFile;
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} 
+			finally
+			{
+				if(wrt!=null)
+				{
+					try {
+						wrt.close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}
+		}
+		
+		return fileOutput;
+	}
 	
 	public static JSONObject convert(JSONObject aJSONObject, Map<String, String> aConvertMapping)
 	{
