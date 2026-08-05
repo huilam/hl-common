@@ -263,7 +263,11 @@ public class PropUtil{
 				String sFileContent = loadFileContentAsText(aClasses, sFileName);
 				if(sFileContent==null && aPropFolder!=null)
 				{
-					sFileContent = loadFileContentAsText(aClasses, aPropFolder.getAbsolutePath()+sFileName);
+					sFileContent = loadFileContentAsText(aClasses, aPropFolder.getName()+"/"+sFileName);
+					if(sFileContent==null)
+					{
+						sFileContent = loadFileContentAsText(aClasses, aPropFolder.getAbsolutePath()+"/"+sFileName);
+					}
 				}
 				
 				if(sFileContent!=null)
