@@ -8,6 +8,9 @@ import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBuffer;
+import java.awt.image.DataBufferInt;
+import java.awt.image.WritableRaster;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
@@ -909,6 +912,72 @@ public class ImgUtil {
 		}
 		return byteChecksum;
 	}
+	
+	public static Color isSolidColorOnly(BufferedImage image) {
+		
+		Color color = null;
+		
+        if (image == null) return null;
+        
+        int width = image.getWidth();
+        int height = image.getHeight();
+        if (width == 0 || height == 0) return null;
+
+        // ---------------------------------------------------------
+        // 1. THE HEURISTIC (O(1) Instant Fail-Fast)
+        // Check the 4 corners and the center. For most non-solid 
+        // images, this fails in a few nanoseconds, saving millions of loops.
+        // ---------------------------------------------------------
+        int targetColor = image.getRGB(0, 0);
+        if (image.getRGB(width - 1, 0) != targetColor ||
+            image.getRGB(0, height - 1) != targetColor ||
+            image.getRGB(width - 1, height - 1) != targetColor ||
+            image.getRGB(width / 2, height / 2) != targetColor) {
+            return null;
+        }
+        
+        color = new Color(targetColor, true);
+
+        // ---------------------------------------------------------
+        // 2. THE BARE METAL (Zero-Allocation Array Scan)
+        // Bypass getRGB() and read the primitive memory array directly.
+        // ---------------------------------------------------------
+        WritableRaster raster = image.getRaster();
+        DataBuffer buffer = raster.getDataBuffer();
+
+        // FAST PATH: For integer-based images (ARGB, RGB - the most common in memory)
+        if (buffer instanceof DataBufferInt) {
+            int[] data = ((DataBufferInt) buffer).getData();
+            // We already know data[0] is our color because of the heuristic,
+            // but the internal array color might not match the getRGB() color model.
+            // So we grab the raw integer target from the array itself.
+            int rawTarget = data[0]; 
+            
+            for (int i = 1; i < data.length; i++) {
+                if (data[i] != rawTarget) {
+                    return null;
+                }
+            }
+            return color;
+        }
+
+        // ---------------------------------------------------------
+        // 3. THE FALLBACK (For Byte-based images like Grayscale or BGR)
+        // ---------------------------------------------------------
+        // If the image uses a complex byte structure, falling back to the 
+        // batched row-by-row method is safest to avoid stride/padding bugs.
+        int[] rowBuffer = new int[width];
+        for (int y = 0; y < height; y++) {
+            image.getRGB(0, y, width, 1, rowBuffer, 0, width);
+            for (int x = 0; x < width; x++) {
+                if (rowBuffer[x] != targetColor) {
+                    return null;
+                }
+            }
+        }
+
+        return color;
+    }
 	
 	
 	////////////////////////////////////////////////////////////////////////////////////v
