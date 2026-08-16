@@ -9,10 +9,23 @@ import java.net.URLClassLoader;
 
 public class ClassLoaderUtil {
 	
-	
 	public static Object newClassInstance(String aClassName) throws ClassNotFoundException, InstantiationException
 	{
-		Class<?> clazz = Class.forName(aClassName);
+		return newClassInstance((ClassLoader)null, aClassName);
+	}
+	
+	public static Object newClassInstance(Class aClass, String aClassName) throws ClassNotFoundException, InstantiationException
+	{
+		if(aClass==null)
+			aClass = ClassLoaderUtil.class;
+		return newClassInstance(aClass.getClassLoader(), aClassName);
+	}
+	public static Object newClassInstance(ClassLoader aClassLoader, String aClassName) throws ClassNotFoundException, InstantiationException
+	{
+		if(aClassLoader==null)
+			aClassLoader = ClassLoaderUtil.class.getClassLoader();
+		
+		Class<?> clazz = aClassLoader.loadClass(aClassName);
 		try {
 			return clazz.getDeclaredConstructor().newInstance();
 		} catch (IllegalAccessException e) {
@@ -26,7 +39,7 @@ public class ClassLoaderUtil {
 		}
 	}
 	
-	public static Object getClassInstance(String aClassName, String aMethodName) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException
+	public static Object getSingletonInstance(String aClassName, String aMethodName) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException
 	{
 		Class<?> clazz = Class.forName(aClassName);
 		if(clazz!=null)
@@ -44,7 +57,7 @@ public class ClassLoaderUtil {
 	/**
      * Scans the directory for .jar files and creates a URLClassLoader.
      */
-    public static URLClassLoader createCustomClassLoader(
+    public static ClassLoader createCustomClassLoader(
     		Class aCallerClass, String aFolderPath) throws MalformedURLException {
     	
     	if(aCallerClass==null)
@@ -66,11 +79,12 @@ public class ClassLoaderUtil {
         }
 
         // Convert File objects to URLs
-        URL[] urls = new URL[jarFiles.length];
+        URL[] urls = new URL[jarFiles.length+1];
         for (int i = 0; i < jarFiles.length; i++) {
             // Use toURI().toURL() - standard File.toURL() is deprecated
             urls[i] = jarFiles[i].toURI().toURL(); 
         }
+        urls[jarFiles.length+1] = libDir.toURI().toURL(); // Add the directory itself to the classpath
 
         // Create the classloader. 
         // We pass PluginManager.class.getClassLoader() as the parent so the plugin 
