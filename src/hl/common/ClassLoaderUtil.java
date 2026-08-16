@@ -84,7 +84,7 @@ public class ClassLoaderUtil {
             // Use toURI().toURL() - standard File.toURL() is deprecated
             urls[i] = jarFiles[i].toURI().toURL(); 
         }
-        urls[jarFiles.length+1] = libDir.toURI().toURL(); // Add the directory itself to the classpath
+        urls[jarFiles.length] = libDir.toURI().toURL(); // Add the directory itself to the classpath
 
         // Create the classloader. 
         // We pass PluginManager.class.getClassLoader() as the parent so the plugin 
