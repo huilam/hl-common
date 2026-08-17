@@ -241,10 +241,13 @@ public class PropUtil{
 			if(urlLoadFrom!=null)
 			{
 				try {
-					File fileProp = new File(Paths.get(urlLoadFrom.toURI()).toFile().getAbsolutePath());
-					prop.put(LIB_PROP_KEY_PROP_PATH, fileProp.getParentFile().getAbsolutePath());
-					prop.put(LIB_PROP_KEY_PROP_NAME, fileProp.getName());
-				} catch (URISyntaxException e) {
+					File fileProp = new File(urlLoadFrom.getFile());
+					if(fileProp!=null)
+					{
+						prop.put(LIB_PROP_KEY_PROP_PATH, fileProp.getParentFile().getAbsolutePath());
+						prop.put(LIB_PROP_KEY_PROP_NAME, fileProp.getName());
+					}
+				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
