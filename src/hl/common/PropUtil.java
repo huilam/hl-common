@@ -28,7 +28,9 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -45,6 +47,8 @@ public class PropUtil{
 	
 	private static Pattern pattEnvParam = Pattern.compile("(\\$\\{env\\:(.*?)\\})");
 	private static Pattern pattFileParam = Pattern.compile("(\\$\\{file\\:(.*?)\\})");
+	public static String LIB_PROP_KEY_PROP_PATH = "PropUtil.prop.path";
+	public static String LIB_PROP_KEY_PROP_NAME = "PropUtil.prop.name";
 
 	private static Logger logger = Logger.getLogger(PropUtil.class.getName());
 	
@@ -158,6 +162,7 @@ public class PropUtil{
 	{
 		Properties prop = null;
 		InputStream in 	= null;
+		URL urlLoadFrom = null;
 		try{
 			
 			//To support tomcat webapp '#'
@@ -184,6 +189,7 @@ public class PropUtil{
 					in = new FileInputStream(fileProp);
 					prop = new Properties();
 					prop.load(in);
+					urlLoadFrom = fileProp.toURL();
 				} catch (Exception e) {
 					throw new IOException("Properties file NOT found ! - "+fileProp.getAbsolutePath());
 				}
@@ -195,16 +201,21 @@ public class PropUtil{
 					logger.log(Level.FINEST, "Trying to load from resource ... "+aPropFileName);
 					//
 					try{
-						is = aClass.getResourceAsStream(aPropFileName);	
+						is = aClass.getResourceAsStream(aPropFileName);
+						urlLoadFrom = aClass.getResource(aPropFileName);
 					}catch(Exception e){
 					}
 					
 					if(is==null)
+					{
 						is = aClass.getResourceAsStream("/"+aPropFileName);
+						urlLoadFrom = aClass.getResource("/"+aPropFileName);
+					}
 					
 					prop = new Properties();
 					prop.load(is);
 				}catch(Exception e){
+					urlLoadFrom = null;
 					 throw new IOException("Properties file NOT found ! - "+aPropFileName+"  aClass:"+aClass.getName());
 				}
 				finally
@@ -226,6 +237,18 @@ public class PropUtil{
 		{
 			File folder = new File(aPropFileName).getParentFile();
 			prop = replacePropVar(new Class[]{aClass, PropUtil.class}, prop, folder);
+			//
+			if(urlLoadFrom!=null)
+			{
+				try {
+					File fileProp = new File(Paths.get(urlLoadFrom.toURI()).toFile().getAbsolutePath());
+					prop.put(LIB_PROP_KEY_PROP_PATH, fileProp.getParentFile().getAbsolutePath());
+					prop.put(LIB_PROP_KEY_PROP_NAME, fileProp.getName());
+				} catch (URISyntaxException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
 		}
 		
 		return prop;
