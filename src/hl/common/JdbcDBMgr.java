@@ -329,16 +329,36 @@ public class JdbcDBMgr {
 					}
 				}
 			}
-			conn = DriverManager.getConnection (db_url, db_uid, db_pwd);
+			conn = initNewDBConnection();
 		}
 		
 		if(conn!=null)
 		{
 			mapConnInUse.put(conn, System.currentTimeMillis());
 		}
-			
-		
+
 		return conn;
+	}
+	
+	private Connection initNewDBConnection()
+	{
+		Connection conn = null;
+		try {
+			conn = DriverManager.getConnection (db_url, db_uid, db_pwd);
+			// Allow inherited classes to customize or wrap the connection
+            if (conn != null) {
+                conn = overrideDBConn(conn);
+            }
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return conn;
+	}
+	
+	//Allow customization of the connection
+	public Connection overrideDBConn(Connection aConn)
+	{
+		return aConn;
 	}
 	
 	protected long getTotalAvailConn()
