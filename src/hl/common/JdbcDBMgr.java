@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Array;
@@ -74,6 +75,7 @@ public class JdbcDBMgr {
 	public int db_conn_fetchsize	= 0;
 	public int db_conn_pool_size	= 2;
 	public int db_conn_max			= 0;
+	public Boolean vector_support   = null;
 	//
 	public long conn_wait_interval_ms	= 50; // wait when conn reach db_conn_max count
 	public long conn_timeout_ms 		= 5000; // 5 secs
@@ -347,12 +349,137 @@ public class JdbcDBMgr {
 			conn = DriverManager.getConnection (db_url, db_uid, db_pwd);
 			// Allow inherited classes to customize or wrap the connection
             if (conn != null) {
+            	conn = regVectorDBType(conn);
                 conn = overrideDBConn(conn);
             }
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
 		return conn;
+	}
+	//
+	private Connection regVectorDBType(Connection aConn)
+	{
+		DatabaseMetaData meta = null;
+		String sDBName = null;
+		int iDBMajorVersion = -1;
+		try {
+			 meta = aConn.getMetaData();
+			 sDBName = meta.getDatabaseProductName().toLowerCase();
+			 iDBMajorVersion = meta.getDatabaseMajorVersion();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		if(sDBName!=null && isVectorTypeSupport())
+		{
+			if(sDBName.contains("postgresql"))
+			{
+				try {
+					// 1. Load the PGvector class dynamically
+					Class<?> pgVectorClass = Class.forName("com.pgvector.PGvector");
+
+					// 2. Look up the static method: addVectorType(Connection conn)
+					java.lang.reflect.Method addVectorTypeMethod = 
+							pgVectorClass.getMethod("addVectorType", java.sql.Connection.class);
+
+					// 3. Invoke the static method (pass null as target instance)
+					addVectorTypeMethod.invoke(null, aConn);
+
+				} catch (ClassNotFoundException e) {
+					// TODO Auto-generated catch block
+					//e.printStackTrace();
+				} catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+			}
+			else if(sDBName.contains("oracle") 
+					|| (sDBName.contains("sqlserver") || sDBName.contains("mssql"))
+					|| (sDBName.contains("mysql")))
+			{
+				//do nothing, oracle,sqlserver driver already support vector type
+				//mysql 8.0.32+ support vector type, but need to use the new mysql driver
+			}
+		}
+       
+		return aConn;
+	}
+	
+	private boolean isVectorTypeSupport()
+	{
+		if(this.vector_support==null)
+		{
+			if(db_classname!=null && db_classname.trim().length()>0)
+			{
+				this.vector_support = false;
+			
+				if(db_classname.contains(".oracle."))
+				{
+						
+					try {
+						// 1. Load the OracleType enum class
+						@SuppressWarnings("unchecked")
+						Class<? extends Enum<?>> oracleTypeClass = 
+								(Class<? extends Enum<?>>) Class.forName("oracle.jdbc.OracleType");
+	
+						// 2. Check if the VECTOR enum constant exists
+						// Option A: Using Enum.valueOf
+						Object vectorType = Enum.valueOf(oracleTypeClass.asSubclass(Enum.class), "VECTOR");
+	
+						// Alternatively: oracleTypeClass.getField("VECTOR").get(null);
+	
+						// If reached, the Oracle JDBC driver (23.4+) supports vector operations natively.
+						// No registration is required on the connection.
+						this.vector_support = true;
+	
+					} catch (ClassNotFoundException e) {
+						// oracle.jdbc.OracleType class not found
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+	
+					
+				}
+				else if(db_classname.contains(".postgresql."))
+				{
+					try {
+						// 1. Load the PGvector class dynamically
+						Class.forName("com.pgvector.PGvector");
+						
+						this.vector_support = true;
+					} catch (ClassNotFoundException e) {
+						// TODO Auto-generated catch block
+						//e.printStackTrace();
+					}
+					
+					//TODO: If pgVector in classpath, register the vector type for Oracle
+				}
+				else if (db_classname.contains("sqlserver") || db_classname.contains("microsoft")) {
+					try {
+						// 1. Check if the mssql-jdbc driver supports native vector types
+						Class<?> sqlTypesClass = Class.forName("microsoft.sql.Types");
+						int vectorTypeCode = sqlTypesClass.getField("VECTOR").getInt(null);
+
+						// Driver supports native VECTOR (-160).
+						// No connection-level registration needed.
+						this.vector_support = true;
+						
+					} catch (ClassNotFoundException | NoSuchFieldException e) {
+						// Older driver: vectors must be bound/read as JSON strings ("[0.1, 0.2, 0.3]")
+					} catch (IllegalAccessException e) {
+						e.printStackTrace();
+					}
+				}
+				else if (db_classname.contains("mysql")) {
+					// NOT JDBC support for vector types in MySQL. 
+				}
+			}
+		}
+		
+		return this.vector_support;
 	}
 	
 	//Allow customization of the connection
