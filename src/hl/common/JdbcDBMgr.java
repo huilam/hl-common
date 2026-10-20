@@ -477,6 +477,13 @@ public class JdbcDBMgr {
 					// NOT JDBC support for vector types in MySQL. 
 				}
 			}
+			
+			
+			if(this.vector_support)
+			{
+				logger.info("@@ Vector type support is enabled for database: "+db_classname);
+			}
+			
 		}
 		
 		return this.vector_support;
